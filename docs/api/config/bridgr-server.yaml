@@ -10,5 +10,5 @@ output-options:
     - ErrorResponse
     - NotFoundErrorResponse
 additional-imports:
-  - package: github.com/hassleskip/bridgr-api/pkg/types
+  - package: github.com/Kanishkmittal55/bridgr-api/pkg/types
     alias: .

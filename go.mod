@@ -1,4 +1,4 @@
-module github.com/hassleskip/bridgr-api
+module github.com/Kanishkmittal55/bridgr-api
 
 go 1.24.0
 
@@ -12,10 +12,11 @@ require (
 	github.com/go-chi/chi/v5 v5.0.12
 	github.com/go-chi/cors v1.2.1
 	github.com/gofrs/uuid/v5 v5.2.0
+	github.com/go-chi/render v1.0.3
 	github.com/google/uuid v1.6.0
-	github.com/hassleskip/hassle-go v1.0.3
 	github.com/jackc/pgx/v5 v5.7.2
 	github.com/oapi-codegen/runtime v1.1.1
+	go.uber.org/zap v1.27.0
 )
 
 require (

@@ -8,71 +8,97 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+// Bridgr Skill Gap Navigator: analysis run linking user (and optional founder context) to CV/JD extraction and learning-path outputs.
 type HskipUsersBridgrSkillGapAnalysis struct {
-	Uuid               pgtype.UUID      `db:"uuid"`
-	ID                 int64            `db:"id"`
-	UserID             int32            `db:"user_id"`
-	FounderPersonaUuid pgtype.UUID      `db:"founder_persona_uuid"`
-	PursuitUuid        pgtype.UUID      `db:"pursuit_uuid"`
-	Title              pgtype.Text      `db:"title"`
-	Status             string           `db:"status"`
-	CvAssetUri         pgtype.Text      `db:"cv_asset_uri"`
-	JdAssetUri         pgtype.Text      `db:"jd_asset_uri"`
-	CvFingerprint      pgtype.Text      `db:"cv_fingerprint"`
-	JdFingerprint      pgtype.Text      `db:"jd_fingerprint"`
-	LlmModel           pgtype.Text      `db:"llm_model"`
-	PromptVersion      pgtype.Text      `db:"prompt_version"`
-	ExtractionPayload  []byte           `db:"extraction_payload"`
-	GapSummary         []byte           `db:"gap_summary"`
-	MermaidDiagram     pgtype.Text      `db:"mermaid_diagram"`
-	ErrorCode          pgtype.Text      `db:"error_code"`
-	ErrorDetail        pgtype.Text      `db:"error_detail"`
-	SqsMessageID       pgtype.Text      `db:"sqs_message_id"`
-	CreatedAt          pgtype.Timestamp `db:"created_at"`
-	UpdatedAt          pgtype.Timestamp `db:"updated_at"`
+	Uuid               pgtype.UUID `db:"uuid"`
+	ID                 int64       `db:"id"`
+	UserID             int32       `db:"user_id"`
+	FounderPersonaUuid pgtype.UUID `db:"founder_persona_uuid"`
+	PursuitUuid        pgtype.UUID `db:"pursuit_uuid"`
+	Title              pgtype.Text `db:"title"`
+	// pending, extracting, graphed, pathed, completed, failed
+	Status string `db:"status"`
+	// Pointer to stored CV (e.g. S3); optional if inline processing only
+	CvAssetUri pgtype.Text `db:"cv_asset_uri"`
+	// Pointer to stored job description
+	JdAssetUri pgtype.Text `db:"jd_asset_uri"`
+	// Hash for dedup / idempotency
+	CvFingerprint pgtype.Text `db:"cv_fingerprint"`
+	// Hash for dedup / idempotency
+	JdFingerprint pgtype.Text `db:"jd_fingerprint"`
+	LlmModel      pgtype.Text `db:"llm_model"`
+	PromptVersion pgtype.Text `db:"prompt_version"`
+	// Validated structured LLM output (skills graph extraction)
+	ExtractionPayload []byte `db:"extraction_payload"`
+	// Rollup metrics and narrative gap summary
+	GapSummary []byte `db:"gap_summary"`
+	// Optional v1 DAG visualization text
+	MermaidDiagram pgtype.Text `db:"mermaid_diagram"`
+	ErrorCode      pgtype.Text `db:"error_code"`
+	ErrorDetail    pgtype.Text `db:"error_detail"`
+	// AWS SQS MessageId after successful enqueue (debugging / dedupe)
+	SqsMessageID pgtype.Text      `db:"sqs_message_id"`
+	CreatedAt    pgtype.Timestamp `db:"created_at"`
+	UpdatedAt    pgtype.Timestamp `db:"updated_at"`
 }
 
+// Skill coverage / gap rows or summary metrics for an analysis.
 type HskipUsersBridgrSkillGapCoverage struct {
-	Uuid              pgtype.UUID      `db:"uuid"`
-	ID                int64            `db:"id"`
-	AnalysisUuid      pgtype.UUID      `db:"analysis_uuid"`
-	CoverageKind      string           `db:"coverage_kind"`
-	RoleSkillKey      pgtype.Text      `db:"role_skill_key"`
-	CandidateSkillKey pgtype.Text      `db:"candidate_skill_key"`
-	MatchStatus       string           `db:"match_status"`
-	Summary           pgtype.Text      `db:"summary"`
-	Metrics           []byte           `db:"metrics"`
-	CreatedAt         pgtype.Timestamp `db:"created_at"`
-	UpdatedAt         pgtype.Timestamp `db:"updated_at"`
+	Uuid pgtype.UUID `db:"uuid"`
+	ID   int64       `db:"id"`
+	// App-enforced FK to bridgr_skill_gap_analyses.uuid
+	AnalysisUuid pgtype.UUID `db:"analysis_uuid"`
+	// role_skill: pairing row; summary: one row roll-up; aggregate: optional bucket
+	CoverageKind      string      `db:"coverage_kind"`
+	RoleSkillKey      pgtype.Text `db:"role_skill_key"`
+	CandidateSkillKey pgtype.Text `db:"candidate_skill_key"`
+	// covered, gap, partial, surplus, not_applicable, unknown
+	MatchStatus string           `db:"match_status"`
+	Summary     pgtype.Text      `db:"summary"`
+	Metrics     []byte           `db:"metrics"`
+	CreatedAt   pgtype.Timestamp `db:"created_at"`
+	UpdatedAt   pgtype.Timestamp `db:"updated_at"`
 }
 
+// Directed edges between skill-gap nodes in a graph.
 type HskipUsersBridgrSkillGapEdge struct {
-	Uuid         pgtype.UUID      `db:"uuid"`
-	ID           int64            `db:"id"`
-	GraphUuid    pgtype.UUID      `db:"graph_uuid"`
-	FromNodeUuid pgtype.UUID      `db:"from_node_uuid"`
-	ToNodeUuid   pgtype.UUID      `db:"to_node_uuid"`
-	Relation     string           `db:"relation"`
-	Weight       pgtype.Numeric   `db:"weight"`
-	Metadata     []byte           `db:"metadata"`
-	CreatedAt    pgtype.Timestamp `db:"created_at"`
-	UpdatedAt    pgtype.Timestamp `db:"updated_at"`
+	Uuid pgtype.UUID `db:"uuid"`
+	ID   int64       `db:"id"`
+	// App-enforced FK to bridgr_skill_gap_graphs.uuid
+	GraphUuid pgtype.UUID `db:"graph_uuid"`
+	// App-enforced FK to bridgr_skill_gap_nodes.uuid
+	FromNodeUuid pgtype.UUID `db:"from_node_uuid"`
+	// App-enforced FK to bridgr_skill_gap_nodes.uuid
+	ToNodeUuid pgtype.UUID `db:"to_node_uuid"`
+	// prerequisite, similarity, required_by, etc.
+	Relation  string           `db:"relation"`
+	Weight    pgtype.Numeric   `db:"weight"`
+	Metadata  []byte           `db:"metadata"`
+	CreatedAt pgtype.Timestamp `db:"created_at"`
+	UpdatedAt pgtype.Timestamp `db:"updated_at"`
 }
 
+// Skill graphs for Bridgr: typically two per analysis (candidate skills vs role requirements).
 type HskipUsersBridgrSkillGapGraph struct {
-	Uuid         pgtype.UUID      `db:"uuid"`
-	ID           int64            `db:"id"`
-	AnalysisUuid pgtype.UUID      `db:"analysis_uuid"`
-	Kind         string           `db:"kind"`
-	Metadata     []byte           `db:"metadata"`
-	CreatedAt    pgtype.Timestamp `db:"created_at"`
-	UpdatedAt    pgtype.Timestamp `db:"updated_at"`
+	Uuid pgtype.UUID `db:"uuid"`
+	ID   int64       `db:"id"`
+	// App-enforced FK to bridgr_skill_gap_analyses.uuid
+	AnalysisUuid pgtype.UUID `db:"analysis_uuid"`
+	// candidate = graph from CV; role_requirement = graph from job description
+	Kind string `db:"kind"`
+	// Optional graph-level notes, model version, or layout hints
+	Metadata  []byte           `db:"metadata"`
+	CreatedAt pgtype.Timestamp `db:"created_at"`
+	UpdatedAt pgtype.Timestamp `db:"updated_at"`
 }
 
+// Learning plan / path for closing skill gaps from one analysis.
 type HskipUsersBridgrSkillGapLearningPath struct {
-	Uuid         pgtype.UUID      `db:"uuid"`
-	ID           int64            `db:"id"`
-	AnalysisUuid pgtype.UUID      `db:"analysis_uuid"`
+	Uuid pgtype.UUID `db:"uuid"`
+	ID   int64       `db:"id"`
+	// App-enforced FK to bridgr_skill_gap_analyses.uuid
+	AnalysisUuid pgtype.UUID `db:"analysis_uuid"`
+	// Increment when regenerating path for same analysis
 	PathVersion  int32            `db:"path_version"`
 	Algorithm    pgtype.Text      `db:"algorithm"`
 	Title        pgtype.Text      `db:"title"`
@@ -81,47 +107,68 @@ type HskipUsersBridgrSkillGapLearningPath struct {
 	UpdatedAt    pgtype.Timestamp `db:"updated_at"`
 }
 
+// Skill/concept nodes in a skill-gap graph (candidate or role requirement).
 type HskipUsersBridgrSkillGapNode struct {
-	Uuid            pgtype.UUID      `db:"uuid"`
-	ID              int64            `db:"id"`
-	GraphUuid       pgtype.UUID      `db:"graph_uuid"`
-	NodeKey         string           `db:"node_key"`
-	DisplayName     string           `db:"display_name"`
-	Description     pgtype.Text      `db:"description"`
-	ProficiencyHint pgtype.Text      `db:"proficiency_hint"`
-	Source          pgtype.Text      `db:"source"`
-	Evidence        []byte           `db:"evidence"`
-	Metadata        []byte           `db:"metadata"`
-	PositionX       pgtype.Int4      `db:"position_x"`
-	PositionY       pgtype.Int4      `db:"position_y"`
-	CreatedAt       pgtype.Timestamp `db:"created_at"`
-	UpdatedAt       pgtype.Timestamp `db:"updated_at"`
+	Uuid pgtype.UUID `db:"uuid"`
+	ID   int64       `db:"id"`
+	// App-enforced FK to bridgr_skill_gap_graphs.uuid
+	GraphUuid pgtype.UUID `db:"graph_uuid"`
+	// Stable key for this node within the graph (e.g. normalized skill id)
+	NodeKey string `db:"node_key"`
+	// Human-readable label
+	DisplayName     string      `db:"display_name"`
+	Description     pgtype.Text `db:"description"`
+	ProficiencyHint pgtype.Text `db:"proficiency_hint"`
+	// cv, jd, inferred, merged, etc.
+	Source pgtype.Text `db:"source"`
+	// Spans, quotes, or LLM citations supporting the node
+	Evidence  []byte           `db:"evidence"`
+	Metadata  []byte           `db:"metadata"`
+	PositionX pgtype.Int4      `db:"position_x"`
+	PositionY pgtype.Int4      `db:"position_y"`
+	CreatedAt pgtype.Timestamp `db:"created_at"`
+	UpdatedAt pgtype.Timestamp `db:"updated_at"`
 }
 
+// One step in a generated learning path.
 type HskipUsersBridgrSkillGapPathStep struct {
-	Uuid                    pgtype.UUID      `db:"uuid"`
-	ID                      int64            `db:"id"`
-	PathUuid                pgtype.UUID      `db:"path_uuid"`
-	StepIndex               int32            `db:"step_index"`
-	Title                   string           `db:"title"`
-	Rationale               pgtype.Text      `db:"rationale"`
-	EstimatedHours          pgtype.Numeric   `db:"estimated_hours"`
-	ResourceUri             pgtype.Text      `db:"resource_uri"`
-	ResourceKind            pgtype.Text      `db:"resource_kind"`
-	FounderLearningItemUuid pgtype.UUID      `db:"founder_learning_item_uuid"`
-	CourseLessonUuid        pgtype.UUID      `db:"course_lesson_uuid"`
-	LinkedNodeKeys          []byte           `db:"linked_node_keys"`
-	Metadata                []byte           `db:"metadata"`
-	CreatedAt               pgtype.Timestamp `db:"created_at"`
-	UpdatedAt               pgtype.Timestamp `db:"updated_at"`
+	Uuid pgtype.UUID `db:"uuid"`
+	ID   int64       `db:"id"`
+	// App-enforced FK to bridgr_skill_gap_learning_paths.uuid
+	PathUuid pgtype.UUID `db:"path_uuid"`
+	// Order within the path (0-based or 1-based per app convention)
+	StepIndex      int32          `db:"step_index"`
+	Title          string         `db:"title"`
+	Rationale      pgtype.Text    `db:"rationale"`
+	EstimatedHours pgtype.Numeric `db:"estimated_hours"`
+	ResourceUri    pgtype.Text    `db:"resource_uri"`
+	ResourceKind   pgtype.Text    `db:"resource_kind"`
+	// App-enforced FK to founder_learning_items.uuid when linked
+	FounderLearningItemUuid pgtype.UUID `db:"founder_learning_item_uuid"`
+	// App-enforced FK to course lesson when linked
+	CourseLessonUuid pgtype.UUID `db:"course_lesson_uuid"`
+	// JSON array of graph node_key values this step addresses
+	LinkedNodeKeys []byte           `db:"linked_node_keys"`
+	Metadata       []byte           `db:"metadata"`
+	CreatedAt      pgtype.Timestamp `db:"created_at"`
+	UpdatedAt      pgtype.Timestamp `db:"updated_at"`
 }
 
+// Prerequisite edges between steps in a learning path (DAG).
 type HskipUsersBridgrSkillGapPathStepDep struct {
-	Uuid              pgtype.UUID      `db:"uuid"`
-	ID                int64            `db:"id"`
-	PathUuid          pgtype.UUID      `db:"path_uuid"`
-	StepUuid          pgtype.UUID      `db:"step_uuid"`
+	Uuid pgtype.UUID `db:"uuid"`
+	ID   int64       `db:"id"`
+	// App-enforced FK to bridgr_skill_gap_learning_paths.uuid
+	PathUuid pgtype.UUID `db:"path_uuid"`
+	// App-enforced FK to bridgr_skill_gap_path_steps.uuid — dependent step
+	StepUuid pgtype.UUID `db:"step_uuid"`
+	// App-enforced FK to bridgr_skill_gap_path_steps.uuid — must be done first
 	DependsOnStepUuid pgtype.UUID      `db:"depends_on_step_uuid"`
 	CreatedAt         pgtype.Timestamp `db:"created_at"`
 	UpdatedAt         pgtype.Timestamp `db:"updated_at"`
+}
+
+type SchemaMigration struct {
+	Version int64 `db:"version"`
+	Dirty   bool  `db:"dirty"`
 }

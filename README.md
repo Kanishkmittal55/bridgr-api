@@ -4,10 +4,10 @@ Standalone Bridgr skill-gap HTTP API + SQS worker. Chi router, sqlc + Postgres, 
 
 ## Run with Docker
 
-From the **parent folder** of this repo (`users/`), so `hassle-go/` is available for the image build:
+From the **`bridgr-api`** repository root:
 
 ```bash
-docker compose -f bridgr-api/docker-compose.yaml up --build
+docker compose up --build
 ```
 
 - API: `http://localhost:8080` (header `X-API-KEY: test-all-access-key`)
@@ -15,9 +15,9 @@ docker compose -f bridgr-api/docker-compose.yaml up --build
 - MinIO: `9000` / console `9001`
 - LocalStack SQS: `4566`, queue `bridgr-skill-gap`
 
-Set `ENV=development` (required by `hassle-go` env resolution). Compose does this for `api` and `worker`.
+Set `ENV=development` (required env validation in `internal/env`). Compose sets this for `api` and `worker`.
 
-Compose project name is **`bridgr-api`** (see top-level `name:`), so the default network is **`bridgr-api_default`** — used by `make migration-structure-sql`.
+Compose uses an explicit dev network **`bridgr-api-network`** (same idea as users `hassleSkipApi-network`). Local service env for **api**, **worker**, **migrate**, and **localstack** comes from **`config/docker.development.env`** (parallel to `users/config/docker.development.env`).
 
 ## Makefile (aligned with `users/users/Makefile`)
 
@@ -32,10 +32,10 @@ Compose project name is **`bridgr-api`** (see top-level `name:`), so the default
 
 ### When to run `make migration-structure-sql`
 
-Run it when:
+Same pattern as **users**: the target depends on **`make up`**, then runs **`postgres:16` `pg_dump`** with **`--network=bridgr-api-network`** and URL host **`postgres:5432`**, so DNS matches the running compose stack.
 
-1. **Postgres is up** on `bridgr-api_default` (e.g. after `make up` or at least `docker compose up -d postgres migrate` so the DB exists **and migrations have been applied**).
-2. You want to **refresh** `db/migration-structure.sql` (full `--create` style dump) and **`db/sqlc-structure.sql`** (schema-only for sqlc, matches users’ second `pg_dump`).
+1. You want to **refresh** `db/migration-structure.sql` and **`db/sqlc-structure.sql`** (both are **schema-only** `pg_dump -s` against database `bridgr`). The first file is symlinked from `db/init/200-schema.sql` for Docker init — it must **not** include `CREATE DATABASE` (unlike users’ first `pg_dump --create`, because the Postgres image already creates `POSTGRES_DB`).
+2. Optional: `make migration-structure-sql PG_DUMP_URL='postgres://...'` if you use non-default DB creds.
 
 **Immediately after**, run:
 

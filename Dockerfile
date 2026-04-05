@@ -1,12 +1,10 @@
 # syntax=docker/dockerfile:1
-# Run from `users/`: docker compose -f bridgr-api/docker-compose.yaml build
+# Build from the bridgr-api directory (default compose context).
 FROM golang:1.24-alpine AS build
 RUN apk add --no-cache git ca-certificates
 WORKDIR /src
-COPY bridgr-api/ .
-COPY hassle-go/hassle-go /deps/hassle-go
-RUN printf '\nreplace github.com/hassleskip/hassle-go => /deps/hassle-go\n' >> go.mod \
-  && go mod download \
+COPY . .
+RUN go mod download \
   && CGO_ENABLED=0 go build -trimpath -ldflags="-s -w" -o /out/bridgr-api ./cmd/api \
   && CGO_ENABLED=0 go build -trimpath -ldflags="-s -w" -o /out/bridgr-worker ./cmd/worker
 

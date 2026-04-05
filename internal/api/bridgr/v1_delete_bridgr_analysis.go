@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"net/http"
 
-	types "github.com/hassleskip/bridgr-api/pkg/types"
-	hserr "github.com/hassleskip/hassle-go/pkg/errors"
+	apierrors "github.com/Kanishkmittal55/bridgr-api/internal/apierrors"
+	types "github.com/Kanishkmittal55/bridgr-api/pkg/types"
 	openapi_types "github.com/oapi-codegen/runtime/types"
 )
 
@@ -27,7 +27,7 @@ func (s *server) v1DeleteBridgrAnalysis(ctx context.Context, analysisUUID openap
 		return err
 	}
 	if err := s.deps.Repo.DeleteSkillGapAnalysisByUUID(ctx, s.querier(), pgid); err != nil {
-		return fmt.Errorf("%w: delete analysis: %w", hserr.ErrInternal, err)
+		return fmt.Errorf("%w: delete analysis: %w", apierrors.ErrInternal, err)
 	}
 	return nil
 }

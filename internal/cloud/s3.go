@@ -13,8 +13,8 @@ import (
 	"github.com/aws/aws-sdk-go-v2/credentials"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
-	"github.com/hassleskip/bridgr-api/internal/config"
-	"github.com/hassleskip/hassle-go/pkg/env"
+	"github.com/Kanishkmittal55/bridgr-api/internal/config"
+	"github.com/Kanishkmittal55/bridgr-api/internal/env"
 )
 
 // Interface is the S3 surface Bridgr needs (presigned uploads, reads).

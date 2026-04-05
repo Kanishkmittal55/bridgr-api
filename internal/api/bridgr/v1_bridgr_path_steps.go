@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"net/http"
 
-	types "github.com/hassleskip/bridgr-api/pkg/types"
-	hserr "github.com/hassleskip/hassle-go/pkg/errors"
+	apierrors "github.com/Kanishkmittal55/bridgr-api/internal/apierrors"
+	types "github.com/Kanishkmittal55/bridgr-api/pkg/types"
 	openapi_types "github.com/oapi-codegen/runtime/types"
 )
 
@@ -24,13 +24,13 @@ func (s *server) v1GetBridgrPathSteps(ctx context.Context, pathUUID openapi_type
 	}
 	rows, err := s.deps.Repo.ListSkillGapPathStepsByPath(ctx, s.querier(), pgid)
 	if err != nil {
-		return nil, fmt.Errorf("%w: list steps: %w", hserr.ErrInternal, err)
+		return nil, fmt.Errorf("%w: list steps: %w", apierrors.ErrInternal, err)
 	}
 	out := types.BridgrSkillGapPathStepListResponse{Steps: make([]types.BridgrSkillGapPathStep, 0, len(rows))}
 	for i := range rows {
 		st, err := pathStepFromRow(&rows[i])
 		if err != nil {
-			return nil, fmt.Errorf("%w: map step: %w", hserr.ErrInternal, err)
+			return nil, fmt.Errorf("%w: map step: %w", apierrors.ErrInternal, err)
 		}
 		out.Steps = append(out.Steps, st)
 	}

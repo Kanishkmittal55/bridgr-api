@@ -6,16 +6,16 @@ import (
 	"os/signal"
 	"syscall"
 
+	"github.com/Kanishkmittal55/bridgr-api/internal/bridgr_worker"
+	"github.com/Kanishkmittal55/bridgr-api/internal/config"
+	"github.com/Kanishkmittal55/bridgr-api/internal/logger"
+	"github.com/Kanishkmittal55/bridgr-api/internal/rdbms"
+	"github.com/Kanishkmittal55/bridgr-api/internal/repository"
+	"github.com/Kanishkmittal55/bridgr-api/internal/repository/sqlc"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awsconfig "github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/credentials"
 	"github.com/aws/aws-sdk-go-v2/service/sqs"
-	"github.com/hassleskip/bridgr-api/internal/bridgr_worker"
-	"github.com/hassleskip/bridgr-api/internal/config"
-	"github.com/hassleskip/bridgr-api/internal/logger"
-	"github.com/hassleskip/bridgr-api/internal/rdbms"
-	"github.com/hassleskip/bridgr-api/internal/repository"
-	"github.com/hassleskip/bridgr-api/internal/repository/sqlc"
 )
 
 func main() {

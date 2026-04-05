@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"net/http"
 
-	types "github.com/hassleskip/bridgr-api/pkg/types"
-	hserr "github.com/hassleskip/hassle-go/pkg/errors"
+	apierrors "github.com/Kanishkmittal55/bridgr-api/internal/apierrors"
+	types "github.com/Kanishkmittal55/bridgr-api/pkg/types"
 	openapi_types "github.com/oapi-codegen/runtime/types"
 )
 
@@ -24,7 +24,7 @@ func (s *server) v1GetBridgrAnalysis(ctx context.Context, analysisUUID openapi_t
 	}
 	out, err := analysisFromRow(row)
 	if err != nil {
-		return nil, fmt.Errorf("%w: %w", hserr.ErrInternal, err)
+		return nil, fmt.Errorf("%w: %w", apierrors.ErrInternal, err)
 	}
 	return &out, nil
 }

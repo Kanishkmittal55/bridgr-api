@@ -6,7 +6,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/hassleskip/bridgr-api/internal/config"
+	"github.com/Kanishkmittal55/bridgr-api/internal/config"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 

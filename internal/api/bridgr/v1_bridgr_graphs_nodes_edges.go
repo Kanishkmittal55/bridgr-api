@@ -7,10 +7,10 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/hassleskip/bridgr-api/internal/repository/sqlc"
-	"github.com/hassleskip/bridgr-api/internal/uuid"
-	types "github.com/hassleskip/bridgr-api/pkg/types"
-	hserr "github.com/hassleskip/hassle-go/pkg/errors"
+	apierrors "github.com/Kanishkmittal55/bridgr-api/internal/apierrors"
+	"github.com/Kanishkmittal55/bridgr-api/internal/repository/sqlc"
+	"github.com/Kanishkmittal55/bridgr-api/internal/uuid"
+	types "github.com/Kanishkmittal55/bridgr-api/pkg/types"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgtype"
@@ -31,13 +31,13 @@ func (s *server) v1GetBridgrGraphNodes(ctx context.Context, graphUUID openapi_ty
 	}
 	rows, err := s.deps.Repo.ListSkillGapNodesByGraph(ctx, s.querier(), pgid)
 	if err != nil {
-		return nil, fmt.Errorf("%w: list nodes: %w", hserr.ErrInternal, err)
+		return nil, fmt.Errorf("%w: list nodes: %w", apierrors.ErrInternal, err)
 	}
 	out := types.BridgrSkillGapNodeListResponse{Nodes: make([]types.BridgrSkillGapNode, 0, len(rows))}
 	for i := range rows {
 		n, err := nodeFromRow(&rows[i])
 		if err != nil {
-			return nil, fmt.Errorf("%w: map node: %w", hserr.ErrInternal, err)
+			return nil, fmt.Errorf("%w: map node: %w", apierrors.ErrInternal, err)
 		}
 		out.Nodes = append(out.Nodes, n)
 	}
@@ -58,13 +58,13 @@ func (s *server) v1GetBridgrGraphEdges(ctx context.Context, graphUUID openapi_ty
 	}
 	rows, err := s.deps.Repo.ListSkillGapEdgesByGraph(ctx, s.querier(), pgid)
 	if err != nil {
-		return nil, fmt.Errorf("%w: list edges: %w", hserr.ErrInternal, err)
+		return nil, fmt.Errorf("%w: list edges: %w", apierrors.ErrInternal, err)
 	}
 	out := types.BridgrSkillGapEdgeListResponse{Edges: make([]types.BridgrSkillGapEdge, 0, len(rows))}
 	for i := range rows {
 		e, err := edgeFromRow(&rows[i])
 		if err != nil {
-			return nil, fmt.Errorf("%w: map edge: %w", hserr.ErrInternal, err)
+			return nil, fmt.Errorf("%w: map edge: %w", apierrors.ErrInternal, err)
 		}
 		out.Edges = append(out.Edges, e)
 	}
@@ -89,13 +89,13 @@ func (s *server) v1GetBridgrGraphNodeByKey(ctx context.Context, graphUUID openap
 	})
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, fmt.Errorf("%w: node not found", hserr.ErrNotFound)
+			return nil, fmt.Errorf("%w: node not found", apierrors.ErrNotFound)
 		}
-		return nil, fmt.Errorf("%w: %w", hserr.ErrInternal, err)
+		return nil, fmt.Errorf("%w: %w", apierrors.ErrInternal, err)
 	}
 	out, err := nodeFromRow(row)
 	if err != nil {
-		return nil, fmt.Errorf("%w: %w", hserr.ErrInternal, err)
+		return nil, fmt.Errorf("%w: %w", apierrors.ErrInternal, err)
 	}
 	return &out, nil
 }
@@ -105,7 +105,7 @@ func (s *server) V1PostBridgrGraphNodes(w http.ResponseWriter, r *http.Request, 
 	ctx := r.Context()
 	var body types.CreateBridgrSkillGapNodeRequest
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
-		s.deps.ResponseWriter.WriteOkResponse(ctx, w, r, nil, fmt.Errorf("%w: invalid JSON body: %v", hserr.ErrBadRequest, err))
+		s.deps.ResponseWriter.WriteOkResponse(ctx, w, r, nil, fmt.Errorf("%w: invalid JSON body: %v", apierrors.ErrBadRequest, err))
 		return
 	}
 	resp, err := s.v1PostBridgrGraphNodes(ctx, graphUUID, body)
@@ -118,7 +118,7 @@ func (s *server) V1PostBridgrGraphNodes(w http.ResponseWriter, r *http.Request, 
 
 func (s *server) v1PostBridgrGraphNodes(ctx context.Context, graphUUID openapi_types.UUID, body types.CreateBridgrSkillGapNodeRequest) (*types.BridgrSkillGapNode, error) {
 	if body.DisplayName == "" || body.NodeKey == "" {
-		return nil, fmt.Errorf("%w: display_name and node_key are required", hserr.ErrBadRequest)
+		return nil, fmt.Errorf("%w: display_name and node_key are required", apierrors.ErrBadRequest)
 	}
 	pgid, _, err := s.loadGraph(ctx, graphUUID)
 	if err != nil {
@@ -126,11 +126,11 @@ func (s *server) v1PostBridgrGraphNodes(ctx context.Context, graphUUID openapi_t
 	}
 	evidence, err := mapToJSONBytes(body.Evidence)
 	if err != nil {
-		return nil, fmt.Errorf("%w: evidence: %v", hserr.ErrBadRequest, err)
+		return nil, fmt.Errorf("%w: evidence: %v", apierrors.ErrBadRequest, err)
 	}
 	meta, err := mapToJSONBytes(body.Metadata)
 	if err != nil {
-		return nil, fmt.Errorf("%w: metadata: %v", hserr.ErrBadRequest, err)
+		return nil, fmt.Errorf("%w: metadata: %v", apierrors.ErrBadRequest, err)
 	}
 	params := sqlc.CreateSkillGapNodeParams{
 		GraphUuid:       pgid,
@@ -162,13 +162,13 @@ func (s *server) v1PostBridgrGraphNodes(ctx context.Context, graphUUID openapi_t
 	row, err := s.deps.Repo.CreateSkillGapNode(ctx, s.querier(), params)
 	if err != nil {
 		if bridgrFKOrNotFound(err) {
-			return nil, fmt.Errorf("%w: graph not found or invalid reference", hserr.ErrNotFound)
+			return nil, fmt.Errorf("%w: graph not found or invalid reference", apierrors.ErrNotFound)
 		}
-		return nil, fmt.Errorf("%w: create node: %w", hserr.ErrInternal, err)
+		return nil, fmt.Errorf("%w: create node: %w", apierrors.ErrInternal, err)
 	}
 	out, err := nodeFromRow(row)
 	if err != nil {
-		return nil, fmt.Errorf("%w: %w", hserr.ErrInternal, err)
+		return nil, fmt.Errorf("%w: %w", apierrors.ErrInternal, err)
 	}
 	return &out, nil
 }
@@ -178,7 +178,7 @@ func (s *server) V1PostBridgrGraphEdges(w http.ResponseWriter, r *http.Request, 
 	ctx := r.Context()
 	var body types.CreateBridgrSkillGapEdgeRequest
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
-		s.deps.ResponseWriter.WriteOkResponse(ctx, w, r, nil, fmt.Errorf("%w: invalid JSON body: %v", hserr.ErrBadRequest, err))
+		s.deps.ResponseWriter.WriteOkResponse(ctx, w, r, nil, fmt.Errorf("%w: invalid JSON body: %v", apierrors.ErrBadRequest, err))
 		return
 	}
 	resp, err := s.v1PostBridgrGraphEdges(ctx, graphUUID, body)
@@ -191,7 +191,7 @@ func (s *server) V1PostBridgrGraphEdges(w http.ResponseWriter, r *http.Request, 
 
 func (s *server) v1PostBridgrGraphEdges(ctx context.Context, graphUUID openapi_types.UUID, body types.CreateBridgrSkillGapEdgeRequest) (*types.BridgrSkillGapEdge, error) {
 	if body.Relation == "" {
-		return nil, fmt.Errorf("%w: relation is required", hserr.ErrBadRequest)
+		return nil, fmt.Errorf("%w: relation is required", apierrors.ErrBadRequest)
 	}
 	pgid, _, err := s.loadGraph(ctx, graphUUID)
 	if err != nil {
@@ -199,15 +199,15 @@ func (s *server) v1PostBridgrGraphEdges(ctx context.Context, graphUUID openapi_t
 	}
 	fromPg, err := uuid.ConvertOapiUUIDToPgUUID(body.FromNodeUuid)
 	if err != nil {
-		return nil, fmt.Errorf("%w: from_node_uuid: %v", hserr.ErrBadRequest, err)
+		return nil, fmt.Errorf("%w: from_node_uuid: %v", apierrors.ErrBadRequest, err)
 	}
 	toPg, err := uuid.ConvertOapiUUIDToPgUUID(body.ToNodeUuid)
 	if err != nil {
-		return nil, fmt.Errorf("%w: to_node_uuid: %v", hserr.ErrBadRequest, err)
+		return nil, fmt.Errorf("%w: to_node_uuid: %v", apierrors.ErrBadRequest, err)
 	}
 	meta, err := mapToJSONBytes(body.Metadata)
 	if err != nil {
-		return nil, fmt.Errorf("%w: metadata: %v", hserr.ErrBadRequest, err)
+		return nil, fmt.Errorf("%w: metadata: %v", apierrors.ErrBadRequest, err)
 	}
 	row, err := s.deps.Repo.CreateSkillGapEdge(ctx, s.querier(), sqlc.CreateSkillGapEdgeParams{
 		GraphUuid:    pgid,
@@ -219,13 +219,13 @@ func (s *server) v1PostBridgrGraphEdges(ctx context.Context, graphUUID openapi_t
 	})
 	if err != nil {
 		if bridgrFKOrNotFound(err) {
-			return nil, fmt.Errorf("%w: graph or node reference not found", hserr.ErrNotFound)
+			return nil, fmt.Errorf("%w: graph or node reference not found", apierrors.ErrNotFound)
 		}
-		return nil, fmt.Errorf("%w: create edge: %w", hserr.ErrInternal, err)
+		return nil, fmt.Errorf("%w: create edge: %w", apierrors.ErrInternal, err)
 	}
 	out, err := edgeFromRow(row)
 	if err != nil {
-		return nil, fmt.Errorf("%w: %w", hserr.ErrInternal, err)
+		return nil, fmt.Errorf("%w: %w", apierrors.ErrInternal, err)
 	}
 	return &out, nil
 }

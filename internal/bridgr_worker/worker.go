@@ -4,10 +4,10 @@ import (
 	"context"
 	"time"
 
+	"github.com/Kanishkmittal55/bridgr-api/internal/logger"
+	"github.com/Kanishkmittal55/bridgr-api/internal/repository"
+	"github.com/Kanishkmittal55/bridgr-api/internal/repository/sqlc"
 	awssqs "github.com/aws/aws-sdk-go-v2/service/sqs"
-	"github.com/hassleskip/bridgr-api/internal/logger"
-	"github.com/hassleskip/bridgr-api/internal/repository"
-	"github.com/hassleskip/bridgr-api/internal/repository/sqlc"
 )
 
 // Worker polls the Bridgr skill-gap SQS queue.

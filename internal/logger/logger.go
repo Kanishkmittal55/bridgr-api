@@ -4,25 +4,25 @@ import (
 	"context"
 	"sync"
 
-	"github.com/hassleskip/bridgr-api/internal/config"
-	"github.com/hassleskip/hassle-go/pkg/ctxlogger"
-	"github.com/hassleskip/hassle-go/pkg/env"
+	"github.com/Kanishkmittal55/bridgr-api/internal/config"
+	"github.com/Kanishkmittal55/bridgr-api/internal/ctxlog"
+	"github.com/Kanishkmittal55/bridgr-api/internal/env"
 )
 
 var (
-	base *ctxlogger.ContextualLogger
+	base *ctxlog.ContextualLogger
 	once sync.Once
 )
 
 // Get returns the process logger, optionally scoped to context.
-func Get(ctx ...context.Context) *ctxlogger.ContextualLogger {
+func Get(ctx ...context.Context) *ctxlog.ContextualLogger {
 	once.Do(func() {
 		cfg := config.Load()
-		opts := []ctxlogger.Option{ctxlogger.MinLevel(cfg.LogLevel)}
+		opts := []ctxlog.Option{ctxlog.MinLevel(cfg.LogLevel)}
 		if !env.IsNonDevelopment(cfg.Env) {
-			opts = append(opts, ctxlogger.DevMode())
+			opts = append(opts, ctxlog.DevMode())
 		}
-		l, err := ctxlogger.New(opts...)
+		l, err := ctxlog.New(opts...)
 		if err != nil {
 			panic(err)
 		}

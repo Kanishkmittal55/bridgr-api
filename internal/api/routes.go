@@ -4,11 +4,11 @@ import (
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
-	authmiddleware "github.com/hassleskip/hassle-go/pkg/middleware/auth"
 
-	"github.com/hassleskip/bridgr-api/internal/api/bridgr"
-	"github.com/hassleskip/bridgr-api/internal/api/deps"
-	"github.com/hassleskip/bridgr-api/internal/api/response"
+	"github.com/Kanishkmittal55/bridgr-api/internal/auth"
+	"github.com/Kanishkmittal55/bridgr-api/internal/api/bridgr"
+	"github.com/Kanishkmittal55/bridgr-api/internal/api/deps"
+	"github.com/Kanishkmittal55/bridgr-api/internal/api/response"
 )
 
 // Routes is the route tree for bridgr-api (health, /v1); global middleware is applied in ApplyDefaultMiddleware.
@@ -30,7 +30,7 @@ func Routes(d *deps.Deps) http.Handler {
 	r.Route("/v1", func(r chi.Router) {
 		r.Route("/autograph", func(r chi.Router) {
 			r.Group(func(r chi.Router) {
-				r.Use(authmiddleware.ApiKeyAuthenticatorWithOptions(d.AccessToApiKeys[authmiddleware.AccessWrite], &authmiddleware.Options{ErrorHandler: response.DefaultUnauthorizedHandler}))
+				r.Use(auth.ApiKeyAuthenticatorWithOptions(d.AccessToApiKeys[auth.AccessWrite], &auth.Options{ErrorHandler: response.DefaultUnauthorizedHandler}))
 				r.Post("/upload-url", w.V1PostGenerateUploadUrl)
 			})
 		})
@@ -44,7 +44,7 @@ func mountBridgr(w *bridgr.ServerInterfaceWrapper, d *deps.Deps) func(chi.Router
 	return func(r chi.Router) {
 		r.Get("/ping", w.V1GetBridgrPing)
 		r.Group(func(r chi.Router) {
-			r.Use(authmiddleware.ApiKeyAuthenticatorWithOptions(d.AccessToApiKeys[authmiddleware.AccessRead], &authmiddleware.Options{ErrorHandler: response.DefaultUnauthorizedHandler}))
+			r.Use(auth.ApiKeyAuthenticatorWithOptions(d.AccessToApiKeys[auth.AccessRead], &auth.Options{ErrorHandler: response.DefaultUnauthorizedHandler}))
 			r.Get("/analyses/{analysisUUID}", w.V1GetBridgrAnalysis)
 			r.Get("/analyses/{analysisUUID}/coverage", w.V1GetBridgrAnalysisCoverage)
 			r.Get("/analyses/{analysisUUID}/graphs", w.V1GetBridgrAnalysisGraphs)
@@ -60,7 +60,7 @@ func mountBridgr(w *bridgr.ServerInterfaceWrapper, d *deps.Deps) func(chi.Router
 			r.Get("/users/{userID}/coverage", w.V1GetBridgrUserCoverage)
 		})
 		r.Group(func(r chi.Router) {
-			r.Use(authmiddleware.ApiKeyAuthenticatorWithOptions(d.AccessToApiKeys[authmiddleware.AccessWrite], &authmiddleware.Options{ErrorHandler: response.DefaultUnauthorizedHandler}))
+			r.Use(auth.ApiKeyAuthenticatorWithOptions(d.AccessToApiKeys[auth.AccessWrite], &auth.Options{ErrorHandler: response.DefaultUnauthorizedHandler}))
 			r.Post("/analyses", w.V1PostBridgrAnalyses)
 			r.Delete("/analyses/{analysisUUID}", w.V1DeleteBridgrAnalysis)
 			r.Patch("/analyses/{analysisUUID}/status", w.V1PatchBridgrAnalysisStatus)

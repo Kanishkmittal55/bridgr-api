@@ -3,7 +3,7 @@ package bridgr
 import (
 	"log"
 
-	"github.com/hassleskip/bridgr-api/internal/api/deps"
+	"github.com/Kanishkmittal55/bridgr-api/internal/api/deps"
 )
 
 type server struct {

@@ -7,8 +7,8 @@ import (
 	"fmt"
 	"net/http"
 
+	. "github.com/Kanishkmittal55/bridgr-api/pkg/types"
 	"github.com/go-chi/chi/v5"
-	. "github.com/hassleskip/bridgr-api/pkg/types"
 	"github.com/oapi-codegen/runtime"
 	openapi_types "github.com/oapi-codegen/runtime/types"
 )

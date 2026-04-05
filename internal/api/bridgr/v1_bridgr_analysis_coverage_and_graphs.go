@@ -7,9 +7,9 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/hassleskip/bridgr-api/internal/repository/sqlc"
-	types "github.com/hassleskip/bridgr-api/pkg/types"
-	hserr "github.com/hassleskip/hassle-go/pkg/errors"
+	apierrors "github.com/Kanishkmittal55/bridgr-api/internal/apierrors"
+	"github.com/Kanishkmittal55/bridgr-api/internal/repository/sqlc"
+	types "github.com/Kanishkmittal55/bridgr-api/pkg/types"
 	"github.com/jackc/pgx/v5"
 	openapi_types "github.com/oapi-codegen/runtime/types"
 )
@@ -28,7 +28,7 @@ func (s *server) v1GetBridgrAnalysisCoverage(ctx context.Context, analysisUUID o
 	}
 	row, err := s.deps.Repo.GetSkillGapCoverage(ctx, s.querier(), pgid)
 	if err != nil {
-		return nil, fmt.Errorf("%w: coverage: %w", hserr.ErrInternal, err)
+		return nil, fmt.Errorf("%w: coverage: %w", apierrors.ErrInternal, err)
 	}
 	out := types.BridgrSkillGapCoverageSnapshot{
 		CandidateSkills: countToInterfacePtr(row.CandidateSkills),
@@ -53,13 +53,13 @@ func (s *server) v1GetBridgrAnalysisGraphs(ctx context.Context, analysisUUID ope
 	}
 	rows, err := s.deps.Repo.GetSkillGapGraphsByAnalysis(ctx, s.querier(), pgid)
 	if err != nil {
-		return nil, fmt.Errorf("%w: list graphs: %w", hserr.ErrInternal, err)
+		return nil, fmt.Errorf("%w: list graphs: %w", apierrors.ErrInternal, err)
 	}
 	out := types.BridgrSkillGapGraphListResponse{Graphs: make([]types.BridgrSkillGapGraph, 0, len(rows))}
 	for i := range rows {
 		g, err := graphFromRow(&rows[i])
 		if err != nil {
-			return nil, fmt.Errorf("%w: map graph: %w", hserr.ErrInternal, err)
+			return nil, fmt.Errorf("%w: map graph: %w", apierrors.ErrInternal, err)
 		}
 		out.Graphs = append(out.Graphs, g)
 	}
@@ -84,13 +84,13 @@ func (s *server) v1GetBridgrAnalysisGraphByKind(ctx context.Context, analysisUUI
 	})
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, fmt.Errorf("%w: graph not found for kind", hserr.ErrNotFound)
+			return nil, fmt.Errorf("%w: graph not found for kind", apierrors.ErrNotFound)
 		}
-		return nil, fmt.Errorf("%w: %w", hserr.ErrInternal, err)
+		return nil, fmt.Errorf("%w: %w", apierrors.ErrInternal, err)
 	}
 	out, err := graphFromRow(row)
 	if err != nil {
-		return nil, fmt.Errorf("%w: %w", hserr.ErrInternal, err)
+		return nil, fmt.Errorf("%w: %w", apierrors.ErrInternal, err)
 	}
 	return &out, nil
 }
@@ -100,7 +100,7 @@ func (s *server) V1PostBridgrAnalysisGraphs(w http.ResponseWriter, r *http.Reque
 	ctx := r.Context()
 	var body types.CreateBridgrSkillGapGraphRequest
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
-		s.deps.ResponseWriter.WriteOkResponse(ctx, w, r, nil, fmt.Errorf("%w: invalid JSON body: %v", hserr.ErrBadRequest, err))
+		s.deps.ResponseWriter.WriteOkResponse(ctx, w, r, nil, fmt.Errorf("%w: invalid JSON body: %v", apierrors.ErrBadRequest, err))
 		return
 	}
 	resp, err := s.v1PostBridgrAnalysisGraphs(ctx, analysisUUID, body)
@@ -118,7 +118,7 @@ func (s *server) v1PostBridgrAnalysisGraphs(ctx context.Context, analysisUUID op
 	}
 	meta, err := mapToJSONBytes(body.Metadata)
 	if err != nil {
-		return nil, fmt.Errorf("%w: metadata: %v", hserr.ErrBadRequest, err)
+		return nil, fmt.Errorf("%w: metadata: %v", apierrors.ErrBadRequest, err)
 	}
 	row, err := s.deps.Repo.CreateSkillGapGraph(ctx, s.querier(), sqlc.CreateSkillGapGraphParams{
 		AnalysisUuid: pgid,
@@ -126,11 +126,11 @@ func (s *server) v1PostBridgrAnalysisGraphs(ctx context.Context, analysisUUID op
 		Metadata:     meta,
 	})
 	if err != nil {
-		return nil, fmt.Errorf("%w: create graph: %w", hserr.ErrInternal, err)
+		return nil, fmt.Errorf("%w: create graph: %w", apierrors.ErrInternal, err)
 	}
 	out, err := graphFromRow(row)
 	if err != nil {
-		return nil, fmt.Errorf("%w: %w", hserr.ErrInternal, err)
+		return nil, fmt.Errorf("%w: %w", apierrors.ErrInternal, err)
 	}
 	return &out, nil
 }
@@ -152,7 +152,7 @@ func (s *server) v1DeleteBridgrAnalysisGraphs(ctx context.Context, analysisUUID 
 		return err
 	}
 	if err := s.deps.Repo.DeleteSkillGapGraphsByAnalysis(ctx, s.querier(), pgid); err != nil {
-		return fmt.Errorf("%w: delete graphs: %w", hserr.ErrInternal, err)
+		return fmt.Errorf("%w: delete graphs: %w", apierrors.ErrInternal, err)
 	}
 	return nil
 }

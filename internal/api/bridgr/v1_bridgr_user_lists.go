@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/hassleskip/bridgr-api/internal/repository/sqlc"
-	types "github.com/hassleskip/bridgr-api/pkg/types"
-	hserr "github.com/hassleskip/hassle-go/pkg/errors"
+	apierrors "github.com/Kanishkmittal55/bridgr-api/internal/apierrors"
+	"github.com/Kanishkmittal55/bridgr-api/internal/repository/sqlc"
+	types "github.com/Kanishkmittal55/bridgr-api/pkg/types"
 )
 
 // V1GetBridgrUserAnalyses handles GET /v1/bridgr/users/{userID}/analyses
@@ -28,13 +28,13 @@ func (s *server) v1GetBridgrUserAnalyses(ctx context.Context, userID int32, para
 		Offset: offset,
 	})
 	if err != nil {
-		return nil, fmt.Errorf("%w: list analyses: %w", hserr.ErrInternal, err)
+		return nil, fmt.Errorf("%w: list analyses: %w", apierrors.ErrInternal, err)
 	}
 	out := types.BridgrSkillGapAnalysisListResponse{Analyses: make([]types.BridgrSkillGapAnalysis, 0, len(rows))}
 	for i := range rows {
 		a, err := analysisFromRow(&rows[i])
 		if err != nil {
-			return nil, fmt.Errorf("%w: map analysis: %w", hserr.ErrInternal, err)
+			return nil, fmt.Errorf("%w: map analysis: %w", apierrors.ErrInternal, err)
 		}
 		out.Analyses = append(out.Analyses, a)
 	}
@@ -59,13 +59,13 @@ func (s *server) v1GetBridgrUserCoverage(ctx context.Context, userID int32, para
 		Offset: offset,
 	})
 	if err != nil {
-		return nil, fmt.Errorf("%w: list coverage: %w", hserr.ErrInternal, err)
+		return nil, fmt.Errorf("%w: list coverage: %w", apierrors.ErrInternal, err)
 	}
 	out := types.BridgrSkillGapUserCoverageListResponse{Items: make([]types.BridgrSkillGapUserCoverageRow, 0, len(rows))}
 	for i := range rows {
 		item, err := coverageUserRowFromSQL(rows[i])
 		if err != nil {
-			return nil, fmt.Errorf("%w: map coverage row: %w", hserr.ErrInternal, err)
+			return nil, fmt.Errorf("%w: map coverage row: %w", apierrors.ErrInternal, err)
 		}
 		out.Items = append(out.Items, item)
 	}

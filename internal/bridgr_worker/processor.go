@@ -6,11 +6,11 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/Kanishkmittal55/bridgr-api/internal/logger"
+	"github.com/Kanishkmittal55/bridgr-api/internal/repository"
+	"github.com/Kanishkmittal55/bridgr-api/internal/repository/sqlc"
+	"github.com/Kanishkmittal55/bridgr-api/internal/uuid"
 	guuid "github.com/gofrs/uuid/v5"
-	"github.com/hassleskip/bridgr-api/internal/logger"
-	"github.com/hassleskip/bridgr-api/internal/repository"
-	"github.com/hassleskip/bridgr-api/internal/repository/sqlc"
-	"github.com/hassleskip/bridgr-api/internal/uuid"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
 )

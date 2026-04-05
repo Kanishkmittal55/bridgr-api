@@ -6,13 +6,13 @@ import (
 	"fmt"
 	"net/http"
 
+	apierrors "github.com/Kanishkmittal55/bridgr-api/internal/apierrors"
+	"github.com/Kanishkmittal55/bridgr-api/internal/bridgr_worker"
+	"github.com/Kanishkmittal55/bridgr-api/internal/config"
+	"github.com/Kanishkmittal55/bridgr-api/internal/repository/sqlc"
+	"github.com/Kanishkmittal55/bridgr-api/internal/uuid"
+	types "github.com/Kanishkmittal55/bridgr-api/pkg/types"
 	guuid "github.com/gofrs/uuid/v5"
-	"github.com/hassleskip/bridgr-api/internal/bridgr_worker"
-	"github.com/hassleskip/bridgr-api/internal/config"
-	"github.com/hassleskip/bridgr-api/internal/repository/sqlc"
-	"github.com/hassleskip/bridgr-api/internal/uuid"
-	types "github.com/hassleskip/bridgr-api/pkg/types"
-	hserr "github.com/hassleskip/hassle-go/pkg/errors"
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
@@ -21,7 +21,7 @@ func (s *server) V1PostBridgrAnalyses(w http.ResponseWriter, r *http.Request, _ 
 	ctx := r.Context()
 	var payload types.CreateBridgrSkillGapAnalysisRequest
 	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
-		s.deps.ResponseWriter.WriteOkResponse(ctx, w, r, nil, fmt.Errorf("%w: invalid JSON body: %v", hserr.ErrBadRequest, err))
+		s.deps.ResponseWriter.WriteOkResponse(ctx, w, r, nil, fmt.Errorf("%w: invalid JSON body: %v", apierrors.ErrBadRequest, err))
 		return
 	}
 	resp, err := s.v1PostBridgrAnalyses(ctx, payload)
@@ -37,7 +37,7 @@ func (s *server) v1PostBridgrAnalyses(ctx context.Context, payload types.CreateB
 		return nil, err
 	}
 	if payload.UserId == 0 {
-		return nil, fmt.Errorf("%w: user_id is required", hserr.ErrBadRequest)
+		return nil, fmt.Errorf("%w: user_id is required", apierrors.ErrBadRequest)
 	}
 	params := sqlc.CreateSkillGapAnalysisParams{
 		UserID: payload.UserId,
@@ -68,36 +68,36 @@ func (s *server) v1PostBridgrAnalyses(ctx context.Context, payload types.CreateB
 	if payload.FounderPersonaUuid != nil {
 		pg, err := uuid.ConvertOapiUUIDToPgUUID(*payload.FounderPersonaUuid)
 		if err != nil {
-			return nil, fmt.Errorf("%w: founder_persona_uuid: %v", hserr.ErrBadRequest, err)
+			return nil, fmt.Errorf("%w: founder_persona_uuid: %v", apierrors.ErrBadRequest, err)
 		}
 		params.FounderPersonaUuid = pg
 	}
 	if payload.PursuitUuid != nil {
 		pg, err := uuid.ConvertOapiUUIDToPgUUID(*payload.PursuitUuid)
 		if err != nil {
-			return nil, fmt.Errorf("%w: pursuit_uuid: %v", hserr.ErrBadRequest, err)
+			return nil, fmt.Errorf("%w: pursuit_uuid: %v", apierrors.ErrBadRequest, err)
 		}
 		params.PursuitUuid = pg
 	}
 	row, err := s.deps.Repo.CreateSkillGapAnalysis(ctx, s.querier(), params)
 	if err != nil {
-		return nil, fmt.Errorf("%w: create analysis: %w", hserr.ErrInternal, err)
+		return nil, fmt.Errorf("%w: create analysis: %w", apierrors.ErrInternal, err)
 	}
 
 	cfg := config.Get()
 	if cfg.BridgrQueueURL != "" && s.deps.SQSClient != nil {
 		uid, uerr := guuid.FromBytes(row.Uuid.Bytes[:])
 		if uerr != nil {
-			return nil, fmt.Errorf("%w: analysis uuid: %w", hserr.ErrInternal, uerr)
+			return nil, fmt.Errorf("%w: analysis uuid: %w", apierrors.ErrInternal, uerr)
 		}
 		if err := bridgr_worker.EnqueueSkillGapAnalysis(ctx, s.deps.SQSClient, cfg.BridgrQueueURL, uid); err != nil {
-			return nil, fmt.Errorf("%w: enqueue skill-gap job: %w", hserr.ErrInternal, err)
+			return nil, fmt.Errorf("%w: enqueue skill-gap job: %w", apierrors.ErrInternal, err)
 		}
 	}
 
 	out, err := analysisFromRow(row)
 	if err != nil {
-		return nil, fmt.Errorf("%w: map response: %w", hserr.ErrInternal, err)
+		return nil, fmt.Errorf("%w: map response: %w", apierrors.ErrInternal, err)
 	}
 	return &out, nil
 }

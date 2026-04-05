@@ -10,16 +10,15 @@ import (
 	awsconfig "github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/credentials"
 	"github.com/aws/aws-sdk-go-v2/service/sqs"
-	hshttp "github.com/hassleskip/hassle-go/pkg/http"
-	authmiddleware "github.com/hassleskip/hassle-go/pkg/middleware/auth"
-
-	"github.com/hassleskip/bridgr-api/internal/api/deps"
-	"github.com/hassleskip/bridgr-api/internal/cloud"
-	"github.com/hassleskip/bridgr-api/internal/config"
-	"github.com/hassleskip/bridgr-api/internal/logger"
-	"github.com/hassleskip/bridgr-api/internal/rdbms"
-	"github.com/hassleskip/bridgr-api/internal/repository"
-	"github.com/hassleskip/bridgr-api/internal/repository/sqlc"
+	"github.com/Kanishkmittal55/bridgr-api/internal/api/deps"
+	"github.com/Kanishkmittal55/bridgr-api/internal/auth"
+	"github.com/Kanishkmittal55/bridgr-api/internal/cloud"
+	"github.com/Kanishkmittal55/bridgr-api/internal/config"
+	"github.com/Kanishkmittal55/bridgr-api/internal/httpx"
+	"github.com/Kanishkmittal55/bridgr-api/internal/logger"
+	"github.com/Kanishkmittal55/bridgr-api/internal/rdbms"
+	"github.com/Kanishkmittal55/bridgr-api/internal/repository"
+	"github.com/Kanishkmittal55/bridgr-api/internal/repository/sqlc"
 )
 
 // Run boots the HTTP server and blocks until ctx is cancelled, then shuts down gracefully
@@ -36,7 +35,7 @@ func Run(ctx context.Context) error {
 
 	hsQ := sqlc.New(pool)
 	repo := repository.New()
-	rw := hshttp.NewResponseWriterWithCapture(logger.Get(ctx), cfg.CaptureTestOutput)
+	rw := httpx.NewResponseWriterWithCapture(logger.Get(ctx), cfg.CaptureTestOutput)
 
 	sqsClient, err := createSQSClient(ctx, cfg)
 	if err != nil {
@@ -86,9 +85,9 @@ func Run(ctx context.Context) error {
 	}
 }
 
-func buildAccessMap(cfg *config.Config) map[authmiddleware.Access][]string {
-	m := map[authmiddleware.Access][]string{}
-	add := func(a authmiddleware.Access, keys ...string) {
+func buildAccessMap(cfg *config.Config) map[auth.Access][]string {
+	m := map[auth.Access][]string{}
+	add := func(a auth.Access, keys ...string) {
 		for _, k := range keys {
 			if k == "" {
 				continue
@@ -96,8 +95,8 @@ func buildAccessMap(cfg *config.Config) map[authmiddleware.Access][]string {
 			m[a] = append(m[a], k)
 		}
 	}
-	add(authmiddleware.AccessRead, cfg.ReadAPIKey, cfg.AllAccessAPIKey)
-	add(authmiddleware.AccessWrite, cfg.WriteAPIKey, cfg.AllAccessAPIKey)
+	add(auth.AccessRead, cfg.ReadAPIKey, cfg.AllAccessAPIKey)
+	add(auth.AccessWrite, cfg.WriteAPIKey, cfg.AllAccessAPIKey)
 	return m
 }
 

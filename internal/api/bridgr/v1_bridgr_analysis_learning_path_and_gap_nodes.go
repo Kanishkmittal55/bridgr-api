@@ -7,9 +7,9 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/hassleskip/bridgr-api/internal/repository/sqlc"
-	types "github.com/hassleskip/bridgr-api/pkg/types"
-	hserr "github.com/hassleskip/hassle-go/pkg/errors"
+	apierrors "github.com/Kanishkmittal55/bridgr-api/internal/apierrors"
+	"github.com/Kanishkmittal55/bridgr-api/internal/repository/sqlc"
+	types "github.com/Kanishkmittal55/bridgr-api/pkg/types"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
 	openapi_types "github.com/oapi-codegen/runtime/types"
@@ -30,13 +30,13 @@ func (s *server) v1GetBridgrAnalysisLearningPath(ctx context.Context, analysisUU
 	row, err := s.deps.Repo.GetSkillGapLearningPathByAnalysis(ctx, s.querier(), pgid)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, fmt.Errorf("%w: learning path not found", hserr.ErrNotFound)
+			return nil, fmt.Errorf("%w: learning path not found", apierrors.ErrNotFound)
 		}
-		return nil, fmt.Errorf("%w: %w", hserr.ErrInternal, err)
+		return nil, fmt.Errorf("%w: %w", apierrors.ErrInternal, err)
 	}
 	out, err := learningPathFromRow(row)
 	if err != nil {
-		return nil, fmt.Errorf("%w: %w", hserr.ErrInternal, err)
+		return nil, fmt.Errorf("%w: %w", apierrors.ErrInternal, err)
 	}
 	return &out, nil
 }
@@ -46,7 +46,7 @@ func (s *server) V1PostBridgrAnalysisLearningPath(w http.ResponseWriter, r *http
 	ctx := r.Context()
 	var body types.CreateBridgrSkillGapLearningPathRequest
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
-		s.deps.ResponseWriter.WriteOkResponse(ctx, w, r, nil, fmt.Errorf("%w: invalid JSON body: %v", hserr.ErrBadRequest, err))
+		s.deps.ResponseWriter.WriteOkResponse(ctx, w, r, nil, fmt.Errorf("%w: invalid JSON body: %v", apierrors.ErrBadRequest, err))
 		return
 	}
 	resp, err := s.v1PostBridgrAnalysisLearningPath(ctx, analysisUUID, body)
@@ -68,7 +68,7 @@ func (s *server) v1PostBridgrAnalysisLearningPath(ctx context.Context, analysisU
 	}
 	meta, err := mapToJSONBytes(body.PathMetadata)
 	if err != nil {
-		return nil, fmt.Errorf("%w: path_metadata: %v", hserr.ErrBadRequest, err)
+		return nil, fmt.Errorf("%w: path_metadata: %v", apierrors.ErrBadRequest, err)
 	}
 	params := sqlc.CreateSkillGapLearningPathParams{
 		AnalysisUuid: pgid,
@@ -85,11 +85,11 @@ func (s *server) v1PostBridgrAnalysisLearningPath(ctx context.Context, analysisU
 	}
 	row, err := s.deps.Repo.CreateSkillGapLearningPath(ctx, s.querier(), params)
 	if err != nil {
-		return nil, fmt.Errorf("%w: create learning path: %w", hserr.ErrInternal, err)
+		return nil, fmt.Errorf("%w: create learning path: %w", apierrors.ErrInternal, err)
 	}
 	out, err := learningPathFromRow(row)
 	if err != nil {
-		return nil, fmt.Errorf("%w: %w", hserr.ErrInternal, err)
+		return nil, fmt.Errorf("%w: %w", apierrors.ErrInternal, err)
 	}
 	return &out, nil
 }
@@ -111,7 +111,7 @@ func (s *server) v1DeleteBridgrAnalysisLearningPath(ctx context.Context, analysi
 		return err
 	}
 	if err := s.deps.Repo.DeleteSkillGapLearningPathByAnalysis(ctx, s.querier(), pgid); err != nil {
-		return fmt.Errorf("%w: delete learning paths: %w", hserr.ErrInternal, err)
+		return fmt.Errorf("%w: delete learning paths: %w", apierrors.ErrInternal, err)
 	}
 	return nil
 }
@@ -142,13 +142,13 @@ func (s *server) v1ListAnalysisGapNodes(ctx context.Context, analysisUUID openap
 		rows, err = s.deps.Repo.ListUnmatchedNodes(ctx, s.querier(), pgid)
 	}
 	if err != nil {
-		return nil, fmt.Errorf("%w: list nodes: %w", hserr.ErrInternal, err)
+		return nil, fmt.Errorf("%w: list nodes: %w", apierrors.ErrInternal, err)
 	}
 	out := types.BridgrSkillGapNodeListResponse{Nodes: make([]types.BridgrSkillGapNode, 0, len(rows))}
 	for i := range rows {
 		n, err := nodeFromRow(&rows[i])
 		if err != nil {
-			return nil, fmt.Errorf("%w: map node: %w", hserr.ErrInternal, err)
+			return nil, fmt.Errorf("%w: map node: %w", apierrors.ErrInternal, err)
 		}
 		out.Nodes = append(out.Nodes, n)
 	}

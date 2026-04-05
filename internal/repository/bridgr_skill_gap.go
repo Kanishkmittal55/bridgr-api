@@ -5,7 +5,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/hassleskip/bridgr-api/internal/repository/sqlc"
+	"github.com/Kanishkmittal55/bridgr-api/internal/repository/sqlc"
 	"github.com/jackc/pgx/v5/pgtype"
 )
 

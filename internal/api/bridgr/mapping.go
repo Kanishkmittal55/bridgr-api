@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/hassleskip/bridgr-api/internal/repository/sqlc"
-	"github.com/hassleskip/bridgr-api/internal/uuid"
-	types "github.com/hassleskip/bridgr-api/pkg/types"
+	"github.com/Kanishkmittal55/bridgr-api/internal/repository/sqlc"
+	"github.com/Kanishkmittal55/bridgr-api/internal/uuid"
+	types "github.com/Kanishkmittal55/bridgr-api/pkg/types"
 	"github.com/jackc/pgx/v5/pgtype"
 	openapi_types "github.com/oapi-codegen/runtime/types"
 )

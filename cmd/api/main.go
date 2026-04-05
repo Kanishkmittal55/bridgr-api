@@ -5,8 +5,8 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/hassleskip/bridgr-api/internal/api"
-	"github.com/hassleskip/bridgr-api/internal/logger"
+	"github.com/Kanishkmittal55/bridgr-api/internal/api"
+	"github.com/Kanishkmittal55/bridgr-api/internal/logger"
 )
 
 func main() {

@@ -7,14 +7,14 @@ import (
 	"sync"
 	"time"
 
-	"github.com/hassleskip/hassle-go/pkg/ctxlogger"
-	"github.com/hassleskip/hassle-go/pkg/env"
+	"github.com/Kanishkmittal55/bridgr-api/internal/ctxlog"
+	"github.com/Kanishkmittal55/bridgr-api/internal/env"
 )
 
 // Config holds Bridgr API / worker settings (env-first).
 type Config struct {
 	Env               env.Env
-	LogLevel          ctxlogger.Level
+	LogLevel          ctxlog.Level
 	Port              int
 	Version           string
 	CaptureTestOutput bool
@@ -62,7 +62,7 @@ func Load() *Config {
 func loadFromEnv() *Config {
 	c := &Config{
 		Env:                     env.ResolveEnvOrDie(),
-		LogLevel:                ctxlogger.InfoLevel,
+		LogLevel:                ctxlog.InfoLevel,
 		Port:                    8080,
 		PostgresHost:            "localhost",
 		PostgresPort:            "5432",
@@ -84,13 +84,13 @@ func loadFromEnv() *Config {
 
 	switch strings.ToLower(os.Getenv("LOG_LEVEL")) {
 	case "debug":
-		c.LogLevel = ctxlogger.DebugLevel
+		c.LogLevel = ctxlog.DebugLevel
 	case "warn":
-		c.LogLevel = ctxlogger.WarnLevel
+		c.LogLevel = ctxlog.WarnLevel
 	case "error":
-		c.LogLevel = ctxlogger.ErrorLevel
+		c.LogLevel = ctxlog.ErrorLevel
 	default:
-		c.LogLevel = ctxlogger.InfoLevel
+		c.LogLevel = ctxlog.InfoLevel
 	}
 	if v := os.Getenv("PORT"); v != "" {
 		if n, err := strconv.Atoi(v); err == nil {
