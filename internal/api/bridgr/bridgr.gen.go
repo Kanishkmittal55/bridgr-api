@@ -27,6 +27,12 @@ type ServerInterface interface {
 	// Get analysis by UUID
 	// (GET /v1/bridgr/analyses/{analysisUUID})
 	V1GetBridgrAnalysis(w http.ResponseWriter, r *http.Request, analysisUUID openapi_types.UUID, params V1GetBridgrAnalysisParams)
+	// Get browser-readable URL for the analysis CV asset
+	// (GET /v1/bridgr/analyses/{analysisUUID}/assets/cv/read-url)
+	V1GetBridgrAnalysisCvAssetReadUrl(w http.ResponseWriter, r *http.Request, analysisUUID openapi_types.UUID, params V1GetBridgrAnalysisCvAssetReadUrlParams)
+	// Get browser-readable URL for the analysis job description asset
+	// (GET /v1/bridgr/analyses/{analysisUUID}/assets/jd/read-url)
+	V1GetBridgrAnalysisJdAssetReadUrl(w http.ResponseWriter, r *http.Request, analysisUUID openapi_types.UUID, params V1GetBridgrAnalysisJdAssetReadUrlParams)
 	// Coverage snapshot for analysis
 	// (GET /v1/bridgr/analyses/{analysisUUID}/coverage)
 	V1GetBridgrAnalysisCoverage(w http.ResponseWriter, r *http.Request, analysisUUID openapi_types.UUID, params V1GetBridgrAnalysisCoverageParams)
@@ -75,6 +81,15 @@ type ServerInterface interface {
 	// Get node by graph and node_key
 	// (GET /v1/bridgr/graphs/{graphUUID}/nodes/by-key/{nodeKey})
 	V1GetBridgrGraphNodeByKey(w http.ResponseWriter, r *http.Request, graphUUID openapi_types.UUID, nodeKey string, params V1GetBridgrGraphNodeByKeyParams)
+	// Get job candidate by UUID
+	// (GET /v1/bridgr/job-candidates/{candidateUUID})
+	V1GetBridgrJobCandidate(w http.ResponseWriter, r *http.Request, candidateUUID openapi_types.UUID, params V1GetBridgrJobCandidateParams)
+	// Get one discovery run by UUID
+	// (GET /v1/bridgr/job-discovery/runs/{runUUID})
+	V1GetBridgrJobDiscoveryRun(w http.ResponseWriter, r *http.Request, runUUID openapi_types.UUID, params V1GetBridgrJobDiscoveryRunParams)
+	// Update notification (mark seen or status)
+	// (PATCH /v1/bridgr/job-notifications/{notificationUUID})
+	V1PatchBridgrJobNotification(w http.ResponseWriter, r *http.Request, notificationUUID openapi_types.UUID, params V1PatchBridgrJobNotificationParams)
 	// List ordered path steps
 	// (GET /v1/bridgr/paths/{pathUUID}/steps)
 	V1GetBridgrPathSteps(w http.ResponseWriter, r *http.Request, pathUUID openapi_types.UUID, params V1GetBridgrPathStepsParams)
@@ -87,6 +102,27 @@ type ServerInterface interface {
 	// List analyses with coverage for a user
 	// (GET /v1/bridgr/users/{userID}/coverage)
 	V1GetBridgrUserCoverage(w http.ResponseWriter, r *http.Request, userID int32, params V1GetBridgrUserCoverageParams)
+	// List job candidates for user
+	// (GET /v1/bridgr/users/{userID}/job-candidates)
+	V1GetBridgrUserJobCandidates(w http.ResponseWriter, r *http.Request, userID int32, params V1GetBridgrUserJobCandidatesParams)
+	// List job discovery runs for user (newest first)
+	// (GET /v1/bridgr/users/{userID}/job-discovery/runs)
+	V1GetBridgrUserJobDiscoveryRuns(w http.ResponseWriter, r *http.Request, userID int32, params V1GetBridgrUserJobDiscoveryRunsParams)
+	// Start a job discovery run (async via queue when configured)
+	// (POST /v1/bridgr/users/{userID}/job-discovery/runs)
+	V1PostBridgrUserJobDiscoveryRuns(w http.ResponseWriter, r *http.Request, userID int32, params V1PostBridgrUserJobDiscoveryRunsParams)
+	// Cancel an in-progress job discovery run (signals Radar CancelCrawl when configured)
+	// (POST /v1/bridgr/users/{userID}/job-discovery/runs/{runUUID}/cancel)
+	V1PostBridgrUserJobDiscoveryRunCancel(w http.ResponseWriter, r *http.Request, userID int32, runUUID openapi_types.UUID, params V1PostBridgrUserJobDiscoveryRunCancelParams)
+	// List job notifications for user
+	// (GET /v1/bridgr/users/{userID}/job-notifications)
+	V1GetBridgrUserJobNotifications(w http.ResponseWriter, r *http.Request, userID int32, params V1GetBridgrUserJobNotificationsParams)
+	// Get job search profile for user
+	// (GET /v1/bridgr/users/{userID}/job-search-profile)
+	V1GetBridgrUserJobSearchProfile(w http.ResponseWriter, r *http.Request, userID int32, params V1GetBridgrUserJobSearchProfileParams)
+	// Create or update job search profile
+	// (PUT /v1/bridgr/users/{userID}/job-search-profile)
+	V1PutBridgrUserJobSearchProfile(w http.ResponseWriter, r *http.Request, userID int32, params V1PutBridgrUserJobSearchProfileParams)
 }
 
 // Unimplemented server implementation that returns http.StatusNotImplemented for each endpoint.
@@ -114,6 +150,18 @@ func (_ Unimplemented) V1DeleteBridgrAnalysis(w http.ResponseWriter, r *http.Req
 // Get analysis by UUID
 // (GET /v1/bridgr/analyses/{analysisUUID})
 func (_ Unimplemented) V1GetBridgrAnalysis(w http.ResponseWriter, r *http.Request, analysisUUID openapi_types.UUID, params V1GetBridgrAnalysisParams) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// Get browser-readable URL for the analysis CV asset
+// (GET /v1/bridgr/analyses/{analysisUUID}/assets/cv/read-url)
+func (_ Unimplemented) V1GetBridgrAnalysisCvAssetReadUrl(w http.ResponseWriter, r *http.Request, analysisUUID openapi_types.UUID, params V1GetBridgrAnalysisCvAssetReadUrlParams) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// Get browser-readable URL for the analysis job description asset
+// (GET /v1/bridgr/analyses/{analysisUUID}/assets/jd/read-url)
+func (_ Unimplemented) V1GetBridgrAnalysisJdAssetReadUrl(w http.ResponseWriter, r *http.Request, analysisUUID openapi_types.UUID, params V1GetBridgrAnalysisJdAssetReadUrlParams) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
@@ -213,6 +261,24 @@ func (_ Unimplemented) V1GetBridgrGraphNodeByKey(w http.ResponseWriter, r *http.
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
+// Get job candidate by UUID
+// (GET /v1/bridgr/job-candidates/{candidateUUID})
+func (_ Unimplemented) V1GetBridgrJobCandidate(w http.ResponseWriter, r *http.Request, candidateUUID openapi_types.UUID, params V1GetBridgrJobCandidateParams) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// Get one discovery run by UUID
+// (GET /v1/bridgr/job-discovery/runs/{runUUID})
+func (_ Unimplemented) V1GetBridgrJobDiscoveryRun(w http.ResponseWriter, r *http.Request, runUUID openapi_types.UUID, params V1GetBridgrJobDiscoveryRunParams) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// Update notification (mark seen or status)
+// (PATCH /v1/bridgr/job-notifications/{notificationUUID})
+func (_ Unimplemented) V1PatchBridgrJobNotification(w http.ResponseWriter, r *http.Request, notificationUUID openapi_types.UUID, params V1PatchBridgrJobNotificationParams) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
 // List ordered path steps
 // (GET /v1/bridgr/paths/{pathUUID}/steps)
 func (_ Unimplemented) V1GetBridgrPathSteps(w http.ResponseWriter, r *http.Request, pathUUID openapi_types.UUID, params V1GetBridgrPathStepsParams) {
@@ -234,6 +300,48 @@ func (_ Unimplemented) V1GetBridgrUserAnalyses(w http.ResponseWriter, r *http.Re
 // List analyses with coverage for a user
 // (GET /v1/bridgr/users/{userID}/coverage)
 func (_ Unimplemented) V1GetBridgrUserCoverage(w http.ResponseWriter, r *http.Request, userID int32, params V1GetBridgrUserCoverageParams) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// List job candidates for user
+// (GET /v1/bridgr/users/{userID}/job-candidates)
+func (_ Unimplemented) V1GetBridgrUserJobCandidates(w http.ResponseWriter, r *http.Request, userID int32, params V1GetBridgrUserJobCandidatesParams) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// List job discovery runs for user (newest first)
+// (GET /v1/bridgr/users/{userID}/job-discovery/runs)
+func (_ Unimplemented) V1GetBridgrUserJobDiscoveryRuns(w http.ResponseWriter, r *http.Request, userID int32, params V1GetBridgrUserJobDiscoveryRunsParams) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// Start a job discovery run (async via queue when configured)
+// (POST /v1/bridgr/users/{userID}/job-discovery/runs)
+func (_ Unimplemented) V1PostBridgrUserJobDiscoveryRuns(w http.ResponseWriter, r *http.Request, userID int32, params V1PostBridgrUserJobDiscoveryRunsParams) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// Cancel an in-progress job discovery run (signals Radar CancelCrawl when configured)
+// (POST /v1/bridgr/users/{userID}/job-discovery/runs/{runUUID}/cancel)
+func (_ Unimplemented) V1PostBridgrUserJobDiscoveryRunCancel(w http.ResponseWriter, r *http.Request, userID int32, runUUID openapi_types.UUID, params V1PostBridgrUserJobDiscoveryRunCancelParams) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// List job notifications for user
+// (GET /v1/bridgr/users/{userID}/job-notifications)
+func (_ Unimplemented) V1GetBridgrUserJobNotifications(w http.ResponseWriter, r *http.Request, userID int32, params V1GetBridgrUserJobNotificationsParams) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// Get job search profile for user
+// (GET /v1/bridgr/users/{userID}/job-search-profile)
+func (_ Unimplemented) V1GetBridgrUserJobSearchProfile(w http.ResponseWriter, r *http.Request, userID int32, params V1GetBridgrUserJobSearchProfileParams) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// Create or update job search profile
+// (PUT /v1/bridgr/users/{userID}/job-search-profile)
+func (_ Unimplemented) V1PutBridgrUserJobSearchProfile(w http.ResponseWriter, r *http.Request, userID int32, params V1PutBridgrUserJobSearchProfileParams) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
@@ -435,6 +543,114 @@ func (siw *ServerInterfaceWrapper) V1GetBridgrAnalysis(w http.ResponseWriter, r 
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.V1GetBridgrAnalysis(w, r, analysisUUID, params)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r.WithContext(ctx))
+}
+
+// V1GetBridgrAnalysisCvAssetReadUrl operation middleware
+func (siw *ServerInterfaceWrapper) V1GetBridgrAnalysisCvAssetReadUrl(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	var err error
+
+	// ------------- Path parameter "analysisUUID" -------------
+	var analysisUUID openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithLocation("simple", false, "analysisUUID", runtime.ParamLocationPath, chi.URLParam(r, "analysisUUID"), &analysisUUID)
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "analysisUUID", Err: err})
+		return
+	}
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params V1GetBridgrAnalysisCvAssetReadUrlParams
+
+	headers := r.Header
+
+	// ------------- Required header parameter "X-API-KEY" -------------
+	if valueList, found := headers[http.CanonicalHeaderKey("X-API-KEY")]; found {
+		var XAPIKEY string
+		n := len(valueList)
+		if n != 1 {
+			siw.ErrorHandlerFunc(w, r, &TooManyValuesForParamError{ParamName: "X-API-KEY", Count: n})
+			return
+		}
+
+		err = runtime.BindStyledParameterWithLocation("simple", false, "X-API-KEY", runtime.ParamLocationHeader, valueList[0], &XAPIKEY)
+		if err != nil {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "X-API-KEY", Err: err})
+			return
+		}
+
+		params.XAPIKEY = XAPIKEY
+
+	} else {
+		err := fmt.Errorf("Header parameter X-API-KEY is required, but not found")
+		siw.ErrorHandlerFunc(w, r, &RequiredHeaderError{ParamName: "X-API-KEY", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.V1GetBridgrAnalysisCvAssetReadUrl(w, r, analysisUUID, params)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r.WithContext(ctx))
+}
+
+// V1GetBridgrAnalysisJdAssetReadUrl operation middleware
+func (siw *ServerInterfaceWrapper) V1GetBridgrAnalysisJdAssetReadUrl(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	var err error
+
+	// ------------- Path parameter "analysisUUID" -------------
+	var analysisUUID openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithLocation("simple", false, "analysisUUID", runtime.ParamLocationPath, chi.URLParam(r, "analysisUUID"), &analysisUUID)
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "analysisUUID", Err: err})
+		return
+	}
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params V1GetBridgrAnalysisJdAssetReadUrlParams
+
+	headers := r.Header
+
+	// ------------- Required header parameter "X-API-KEY" -------------
+	if valueList, found := headers[http.CanonicalHeaderKey("X-API-KEY")]; found {
+		var XAPIKEY string
+		n := len(valueList)
+		if n != 1 {
+			siw.ErrorHandlerFunc(w, r, &TooManyValuesForParamError{ParamName: "X-API-KEY", Count: n})
+			return
+		}
+
+		err = runtime.BindStyledParameterWithLocation("simple", false, "X-API-KEY", runtime.ParamLocationHeader, valueList[0], &XAPIKEY)
+		if err != nil {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "X-API-KEY", Err: err})
+			return
+		}
+
+		params.XAPIKEY = XAPIKEY
+
+	} else {
+		err := fmt.Errorf("Header parameter X-API-KEY is required, but not found")
+		siw.ErrorHandlerFunc(w, r, &RequiredHeaderError{ParamName: "X-API-KEY", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.V1GetBridgrAnalysisJdAssetReadUrl(w, r, analysisUUID, params)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -1326,6 +1542,168 @@ func (siw *ServerInterfaceWrapper) V1GetBridgrGraphNodeByKey(w http.ResponseWrit
 	handler.ServeHTTP(w, r.WithContext(ctx))
 }
 
+// V1GetBridgrJobCandidate operation middleware
+func (siw *ServerInterfaceWrapper) V1GetBridgrJobCandidate(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	var err error
+
+	// ------------- Path parameter "candidateUUID" -------------
+	var candidateUUID openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithLocation("simple", false, "candidateUUID", runtime.ParamLocationPath, chi.URLParam(r, "candidateUUID"), &candidateUUID)
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "candidateUUID", Err: err})
+		return
+	}
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params V1GetBridgrJobCandidateParams
+
+	headers := r.Header
+
+	// ------------- Required header parameter "X-API-KEY" -------------
+	if valueList, found := headers[http.CanonicalHeaderKey("X-API-KEY")]; found {
+		var XAPIKEY string
+		n := len(valueList)
+		if n != 1 {
+			siw.ErrorHandlerFunc(w, r, &TooManyValuesForParamError{ParamName: "X-API-KEY", Count: n})
+			return
+		}
+
+		err = runtime.BindStyledParameterWithLocation("simple", false, "X-API-KEY", runtime.ParamLocationHeader, valueList[0], &XAPIKEY)
+		if err != nil {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "X-API-KEY", Err: err})
+			return
+		}
+
+		params.XAPIKEY = XAPIKEY
+
+	} else {
+		err := fmt.Errorf("Header parameter X-API-KEY is required, but not found")
+		siw.ErrorHandlerFunc(w, r, &RequiredHeaderError{ParamName: "X-API-KEY", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.V1GetBridgrJobCandidate(w, r, candidateUUID, params)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r.WithContext(ctx))
+}
+
+// V1GetBridgrJobDiscoveryRun operation middleware
+func (siw *ServerInterfaceWrapper) V1GetBridgrJobDiscoveryRun(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	var err error
+
+	// ------------- Path parameter "runUUID" -------------
+	var runUUID openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithLocation("simple", false, "runUUID", runtime.ParamLocationPath, chi.URLParam(r, "runUUID"), &runUUID)
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "runUUID", Err: err})
+		return
+	}
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params V1GetBridgrJobDiscoveryRunParams
+
+	headers := r.Header
+
+	// ------------- Required header parameter "X-API-KEY" -------------
+	if valueList, found := headers[http.CanonicalHeaderKey("X-API-KEY")]; found {
+		var XAPIKEY string
+		n := len(valueList)
+		if n != 1 {
+			siw.ErrorHandlerFunc(w, r, &TooManyValuesForParamError{ParamName: "X-API-KEY", Count: n})
+			return
+		}
+
+		err = runtime.BindStyledParameterWithLocation("simple", false, "X-API-KEY", runtime.ParamLocationHeader, valueList[0], &XAPIKEY)
+		if err != nil {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "X-API-KEY", Err: err})
+			return
+		}
+
+		params.XAPIKEY = XAPIKEY
+
+	} else {
+		err := fmt.Errorf("Header parameter X-API-KEY is required, but not found")
+		siw.ErrorHandlerFunc(w, r, &RequiredHeaderError{ParamName: "X-API-KEY", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.V1GetBridgrJobDiscoveryRun(w, r, runUUID, params)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r.WithContext(ctx))
+}
+
+// V1PatchBridgrJobNotification operation middleware
+func (siw *ServerInterfaceWrapper) V1PatchBridgrJobNotification(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	var err error
+
+	// ------------- Path parameter "notificationUUID" -------------
+	var notificationUUID openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithLocation("simple", false, "notificationUUID", runtime.ParamLocationPath, chi.URLParam(r, "notificationUUID"), &notificationUUID)
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "notificationUUID", Err: err})
+		return
+	}
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params V1PatchBridgrJobNotificationParams
+
+	headers := r.Header
+
+	// ------------- Required header parameter "X-API-KEY" -------------
+	if valueList, found := headers[http.CanonicalHeaderKey("X-API-KEY")]; found {
+		var XAPIKEY string
+		n := len(valueList)
+		if n != 1 {
+			siw.ErrorHandlerFunc(w, r, &TooManyValuesForParamError{ParamName: "X-API-KEY", Count: n})
+			return
+		}
+
+		err = runtime.BindStyledParameterWithLocation("simple", false, "X-API-KEY", runtime.ParamLocationHeader, valueList[0], &XAPIKEY)
+		if err != nil {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "X-API-KEY", Err: err})
+			return
+		}
+
+		params.XAPIKEY = XAPIKEY
+
+	} else {
+		err := fmt.Errorf("Header parameter X-API-KEY is required, but not found")
+		siw.ErrorHandlerFunc(w, r, &RequiredHeaderError{ParamName: "X-API-KEY", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.V1PatchBridgrJobNotification(w, r, notificationUUID, params)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r.WithContext(ctx))
+}
+
 // V1GetBridgrPathSteps operation middleware
 func (siw *ServerInterfaceWrapper) V1GetBridgrPathSteps(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
@@ -1535,6 +1913,481 @@ func (siw *ServerInterfaceWrapper) V1GetBridgrUserCoverage(w http.ResponseWriter
 	handler.ServeHTTP(w, r.WithContext(ctx))
 }
 
+// V1GetBridgrUserJobCandidates operation middleware
+func (siw *ServerInterfaceWrapper) V1GetBridgrUserJobCandidates(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	var err error
+
+	// ------------- Path parameter "userID" -------------
+	var userID int32
+
+	err = runtime.BindStyledParameterWithLocation("simple", false, "userID", runtime.ParamLocationPath, chi.URLParam(r, "userID"), &userID)
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "userID", Err: err})
+		return
+	}
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params V1GetBridgrUserJobCandidatesParams
+
+	// ------------- Optional query parameter "limit" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "limit", r.URL.Query(), &params.Limit)
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "limit", Err: err})
+		return
+	}
+
+	// ------------- Optional query parameter "offset" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "offset", r.URL.Query(), &params.Offset)
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "offset", Err: err})
+		return
+	}
+
+	// ------------- Optional query parameter "discovery_run_uuid" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "discovery_run_uuid", r.URL.Query(), &params.DiscoveryRunUuid)
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "discovery_run_uuid", Err: err})
+		return
+	}
+
+	// ------------- Optional query parameter "ingestion_status" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "ingestion_status", r.URL.Query(), &params.IngestionStatus)
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "ingestion_status", Err: err})
+		return
+	}
+
+	// ------------- Optional query parameter "source_board" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "source_board", r.URL.Query(), &params.SourceBoard)
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "source_board", Err: err})
+		return
+	}
+
+	headers := r.Header
+
+	// ------------- Required header parameter "X-API-KEY" -------------
+	if valueList, found := headers[http.CanonicalHeaderKey("X-API-KEY")]; found {
+		var XAPIKEY string
+		n := len(valueList)
+		if n != 1 {
+			siw.ErrorHandlerFunc(w, r, &TooManyValuesForParamError{ParamName: "X-API-KEY", Count: n})
+			return
+		}
+
+		err = runtime.BindStyledParameterWithLocation("simple", false, "X-API-KEY", runtime.ParamLocationHeader, valueList[0], &XAPIKEY)
+		if err != nil {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "X-API-KEY", Err: err})
+			return
+		}
+
+		params.XAPIKEY = XAPIKEY
+
+	} else {
+		err := fmt.Errorf("Header parameter X-API-KEY is required, but not found")
+		siw.ErrorHandlerFunc(w, r, &RequiredHeaderError{ParamName: "X-API-KEY", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.V1GetBridgrUserJobCandidates(w, r, userID, params)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r.WithContext(ctx))
+}
+
+// V1GetBridgrUserJobDiscoveryRuns operation middleware
+func (siw *ServerInterfaceWrapper) V1GetBridgrUserJobDiscoveryRuns(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	var err error
+
+	// ------------- Path parameter "userID" -------------
+	var userID int32
+
+	err = runtime.BindStyledParameterWithLocation("simple", false, "userID", runtime.ParamLocationPath, chi.URLParam(r, "userID"), &userID)
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "userID", Err: err})
+		return
+	}
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params V1GetBridgrUserJobDiscoveryRunsParams
+
+	// ------------- Optional query parameter "limit" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "limit", r.URL.Query(), &params.Limit)
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "limit", Err: err})
+		return
+	}
+
+	// ------------- Optional query parameter "offset" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "offset", r.URL.Query(), &params.Offset)
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "offset", Err: err})
+		return
+	}
+
+	headers := r.Header
+
+	// ------------- Required header parameter "X-API-KEY" -------------
+	if valueList, found := headers[http.CanonicalHeaderKey("X-API-KEY")]; found {
+		var XAPIKEY string
+		n := len(valueList)
+		if n != 1 {
+			siw.ErrorHandlerFunc(w, r, &TooManyValuesForParamError{ParamName: "X-API-KEY", Count: n})
+			return
+		}
+
+		err = runtime.BindStyledParameterWithLocation("simple", false, "X-API-KEY", runtime.ParamLocationHeader, valueList[0], &XAPIKEY)
+		if err != nil {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "X-API-KEY", Err: err})
+			return
+		}
+
+		params.XAPIKEY = XAPIKEY
+
+	} else {
+		err := fmt.Errorf("Header parameter X-API-KEY is required, but not found")
+		siw.ErrorHandlerFunc(w, r, &RequiredHeaderError{ParamName: "X-API-KEY", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.V1GetBridgrUserJobDiscoveryRuns(w, r, userID, params)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r.WithContext(ctx))
+}
+
+// V1PostBridgrUserJobDiscoveryRuns operation middleware
+func (siw *ServerInterfaceWrapper) V1PostBridgrUserJobDiscoveryRuns(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	var err error
+
+	// ------------- Path parameter "userID" -------------
+	var userID int32
+
+	err = runtime.BindStyledParameterWithLocation("simple", false, "userID", runtime.ParamLocationPath, chi.URLParam(r, "userID"), &userID)
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "userID", Err: err})
+		return
+	}
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params V1PostBridgrUserJobDiscoveryRunsParams
+
+	headers := r.Header
+
+	// ------------- Required header parameter "X-API-KEY" -------------
+	if valueList, found := headers[http.CanonicalHeaderKey("X-API-KEY")]; found {
+		var XAPIKEY string
+		n := len(valueList)
+		if n != 1 {
+			siw.ErrorHandlerFunc(w, r, &TooManyValuesForParamError{ParamName: "X-API-KEY", Count: n})
+			return
+		}
+
+		err = runtime.BindStyledParameterWithLocation("simple", false, "X-API-KEY", runtime.ParamLocationHeader, valueList[0], &XAPIKEY)
+		if err != nil {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "X-API-KEY", Err: err})
+			return
+		}
+
+		params.XAPIKEY = XAPIKEY
+
+	} else {
+		err := fmt.Errorf("Header parameter X-API-KEY is required, but not found")
+		siw.ErrorHandlerFunc(w, r, &RequiredHeaderError{ParamName: "X-API-KEY", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.V1PostBridgrUserJobDiscoveryRuns(w, r, userID, params)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r.WithContext(ctx))
+}
+
+// V1PostBridgrUserJobDiscoveryRunCancel operation middleware
+func (siw *ServerInterfaceWrapper) V1PostBridgrUserJobDiscoveryRunCancel(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	var err error
+
+	// ------------- Path parameter "userID" -------------
+	var userID int32
+
+	err = runtime.BindStyledParameterWithLocation("simple", false, "userID", runtime.ParamLocationPath, chi.URLParam(r, "userID"), &userID)
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "userID", Err: err})
+		return
+	}
+
+	// ------------- Path parameter "runUUID" -------------
+	var runUUID openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithLocation("simple", false, "runUUID", runtime.ParamLocationPath, chi.URLParam(r, "runUUID"), &runUUID)
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "runUUID", Err: err})
+		return
+	}
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params V1PostBridgrUserJobDiscoveryRunCancelParams
+
+	headers := r.Header
+
+	// ------------- Required header parameter "X-API-KEY" -------------
+	if valueList, found := headers[http.CanonicalHeaderKey("X-API-KEY")]; found {
+		var XAPIKEY string
+		n := len(valueList)
+		if n != 1 {
+			siw.ErrorHandlerFunc(w, r, &TooManyValuesForParamError{ParamName: "X-API-KEY", Count: n})
+			return
+		}
+
+		err = runtime.BindStyledParameterWithLocation("simple", false, "X-API-KEY", runtime.ParamLocationHeader, valueList[0], &XAPIKEY)
+		if err != nil {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "X-API-KEY", Err: err})
+			return
+		}
+
+		params.XAPIKEY = XAPIKEY
+
+	} else {
+		err := fmt.Errorf("Header parameter X-API-KEY is required, but not found")
+		siw.ErrorHandlerFunc(w, r, &RequiredHeaderError{ParamName: "X-API-KEY", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.V1PostBridgrUserJobDiscoveryRunCancel(w, r, userID, runUUID, params)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r.WithContext(ctx))
+}
+
+// V1GetBridgrUserJobNotifications operation middleware
+func (siw *ServerInterfaceWrapper) V1GetBridgrUserJobNotifications(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	var err error
+
+	// ------------- Path parameter "userID" -------------
+	var userID int32
+
+	err = runtime.BindStyledParameterWithLocation("simple", false, "userID", runtime.ParamLocationPath, chi.URLParam(r, "userID"), &userID)
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "userID", Err: err})
+		return
+	}
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params V1GetBridgrUserJobNotificationsParams
+
+	// ------------- Optional query parameter "limit" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "limit", r.URL.Query(), &params.Limit)
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "limit", Err: err})
+		return
+	}
+
+	// ------------- Optional query parameter "offset" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "offset", r.URL.Query(), &params.Offset)
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "offset", Err: err})
+		return
+	}
+
+	// ------------- Optional query parameter "since" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "since", r.URL.Query(), &params.Since)
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "since", Err: err})
+		return
+	}
+
+	// ------------- Optional query parameter "status" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "status", r.URL.Query(), &params.Status)
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "status", Err: err})
+		return
+	}
+
+	headers := r.Header
+
+	// ------------- Required header parameter "X-API-KEY" -------------
+	if valueList, found := headers[http.CanonicalHeaderKey("X-API-KEY")]; found {
+		var XAPIKEY string
+		n := len(valueList)
+		if n != 1 {
+			siw.ErrorHandlerFunc(w, r, &TooManyValuesForParamError{ParamName: "X-API-KEY", Count: n})
+			return
+		}
+
+		err = runtime.BindStyledParameterWithLocation("simple", false, "X-API-KEY", runtime.ParamLocationHeader, valueList[0], &XAPIKEY)
+		if err != nil {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "X-API-KEY", Err: err})
+			return
+		}
+
+		params.XAPIKEY = XAPIKEY
+
+	} else {
+		err := fmt.Errorf("Header parameter X-API-KEY is required, but not found")
+		siw.ErrorHandlerFunc(w, r, &RequiredHeaderError{ParamName: "X-API-KEY", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.V1GetBridgrUserJobNotifications(w, r, userID, params)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r.WithContext(ctx))
+}
+
+// V1GetBridgrUserJobSearchProfile operation middleware
+func (siw *ServerInterfaceWrapper) V1GetBridgrUserJobSearchProfile(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	var err error
+
+	// ------------- Path parameter "userID" -------------
+	var userID int32
+
+	err = runtime.BindStyledParameterWithLocation("simple", false, "userID", runtime.ParamLocationPath, chi.URLParam(r, "userID"), &userID)
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "userID", Err: err})
+		return
+	}
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params V1GetBridgrUserJobSearchProfileParams
+
+	headers := r.Header
+
+	// ------------- Required header parameter "X-API-KEY" -------------
+	if valueList, found := headers[http.CanonicalHeaderKey("X-API-KEY")]; found {
+		var XAPIKEY string
+		n := len(valueList)
+		if n != 1 {
+			siw.ErrorHandlerFunc(w, r, &TooManyValuesForParamError{ParamName: "X-API-KEY", Count: n})
+			return
+		}
+
+		err = runtime.BindStyledParameterWithLocation("simple", false, "X-API-KEY", runtime.ParamLocationHeader, valueList[0], &XAPIKEY)
+		if err != nil {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "X-API-KEY", Err: err})
+			return
+		}
+
+		params.XAPIKEY = XAPIKEY
+
+	} else {
+		err := fmt.Errorf("Header parameter X-API-KEY is required, but not found")
+		siw.ErrorHandlerFunc(w, r, &RequiredHeaderError{ParamName: "X-API-KEY", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.V1GetBridgrUserJobSearchProfile(w, r, userID, params)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r.WithContext(ctx))
+}
+
+// V1PutBridgrUserJobSearchProfile operation middleware
+func (siw *ServerInterfaceWrapper) V1PutBridgrUserJobSearchProfile(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	var err error
+
+	// ------------- Path parameter "userID" -------------
+	var userID int32
+
+	err = runtime.BindStyledParameterWithLocation("simple", false, "userID", runtime.ParamLocationPath, chi.URLParam(r, "userID"), &userID)
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "userID", Err: err})
+		return
+	}
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params V1PutBridgrUserJobSearchProfileParams
+
+	headers := r.Header
+
+	// ------------- Required header parameter "X-API-KEY" -------------
+	if valueList, found := headers[http.CanonicalHeaderKey("X-API-KEY")]; found {
+		var XAPIKEY string
+		n := len(valueList)
+		if n != 1 {
+			siw.ErrorHandlerFunc(w, r, &TooManyValuesForParamError{ParamName: "X-API-KEY", Count: n})
+			return
+		}
+
+		err = runtime.BindStyledParameterWithLocation("simple", false, "X-API-KEY", runtime.ParamLocationHeader, valueList[0], &XAPIKEY)
+		if err != nil {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "X-API-KEY", Err: err})
+			return
+		}
+
+		params.XAPIKEY = XAPIKEY
+
+	} else {
+		err := fmt.Errorf("Header parameter X-API-KEY is required, but not found")
+		siw.ErrorHandlerFunc(w, r, &RequiredHeaderError{ParamName: "X-API-KEY", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.V1PutBridgrUserJobSearchProfile(w, r, userID, params)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r.WithContext(ctx))
+}
+
 type UnescapedCookieParamError struct {
 	ParamName string
 	Err       error
@@ -1661,6 +2514,12 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 		r.Get(options.BaseURL+"/v1/bridgr/analyses/{analysisUUID}", wrapper.V1GetBridgrAnalysis)
 	})
 	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/v1/bridgr/analyses/{analysisUUID}/assets/cv/read-url", wrapper.V1GetBridgrAnalysisCvAssetReadUrl)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/v1/bridgr/analyses/{analysisUUID}/assets/jd/read-url", wrapper.V1GetBridgrAnalysisJdAssetReadUrl)
+	})
+	r.Group(func(r chi.Router) {
 		r.Get(options.BaseURL+"/v1/bridgr/analyses/{analysisUUID}/coverage", wrapper.V1GetBridgrAnalysisCoverage)
 	})
 	r.Group(func(r chi.Router) {
@@ -1709,6 +2568,15 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 		r.Get(options.BaseURL+"/v1/bridgr/graphs/{graphUUID}/nodes/by-key/{nodeKey}", wrapper.V1GetBridgrGraphNodeByKey)
 	})
 	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/v1/bridgr/job-candidates/{candidateUUID}", wrapper.V1GetBridgrJobCandidate)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/v1/bridgr/job-discovery/runs/{runUUID}", wrapper.V1GetBridgrJobDiscoveryRun)
+	})
+	r.Group(func(r chi.Router) {
+		r.Patch(options.BaseURL+"/v1/bridgr/job-notifications/{notificationUUID}", wrapper.V1PatchBridgrJobNotification)
+	})
+	r.Group(func(r chi.Router) {
 		r.Get(options.BaseURL+"/v1/bridgr/paths/{pathUUID}/steps", wrapper.V1GetBridgrPathSteps)
 	})
 	r.Group(func(r chi.Router) {
@@ -1719,6 +2587,27 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 	})
 	r.Group(func(r chi.Router) {
 		r.Get(options.BaseURL+"/v1/bridgr/users/{userID}/coverage", wrapper.V1GetBridgrUserCoverage)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/v1/bridgr/users/{userID}/job-candidates", wrapper.V1GetBridgrUserJobCandidates)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/v1/bridgr/users/{userID}/job-discovery/runs", wrapper.V1GetBridgrUserJobDiscoveryRuns)
+	})
+	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/v1/bridgr/users/{userID}/job-discovery/runs", wrapper.V1PostBridgrUserJobDiscoveryRuns)
+	})
+	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/v1/bridgr/users/{userID}/job-discovery/runs/{runUUID}/cancel", wrapper.V1PostBridgrUserJobDiscoveryRunCancel)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/v1/bridgr/users/{userID}/job-notifications", wrapper.V1GetBridgrUserJobNotifications)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/v1/bridgr/users/{userID}/job-search-profile", wrapper.V1GetBridgrUserJobSearchProfile)
+	})
+	r.Group(func(r chi.Router) {
+		r.Put(options.BaseURL+"/v1/bridgr/users/{userID}/job-search-profile", wrapper.V1PutBridgrUserJobSearchProfile)
 	})
 
 	return r

@@ -1,0 +1,20 @@
+syntax = "proto3";
+
+package radar.services.job_search.v1;
+
+option go_package = "github.com/Kanishkmittal55/bridgr-api/internal/gen/radar/services/job_search/v1;jobsearchv1";
+
+message ApplyToJobRequest {
+  string job_url = 1;
+  string user_info_json = 2;
+  oneof resume {
+    string resume_base64 = 3;
+    string resume_path = 4;
+  }
+}
+
+message ApplyToJobResponse {
+  bool success = 1;
+  string result = 2;
+  string error = 3;
+}

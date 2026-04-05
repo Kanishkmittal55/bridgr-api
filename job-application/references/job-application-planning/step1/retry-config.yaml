@@ -1,0 +1,107 @@
+# Step 1 (Intake) — Retry & Human Interaction Config
+
+step: intake
+max_retries: 3
+# Retries apply per case; total prompts to user capped at 3 per session for this step
+
+cases:
+  # --- Required inputs ---
+  - id: resume_missing
+    condition: resume_path empty AND no resume paste
+    required: true
+    retries: 3
+    prompts:
+      1: "Resume is required. Provide path (e.g. .claude/skills/job-application/resources/Resume-plain-text.md) or paste your resume."
+      2: "Resume still missing. Path or paste required to continue."
+      3: "Cannot proceed without resume. Please provide path or paste. Will abort intake."
+    on_exhausted: abort
+
+  - id: resume_path_invalid
+    condition: resume_path given BUT file not found
+    required: true
+    retries: 2
+    prompts:
+      1: "Resume file not found at {{resume_path}}. Check path or paste resume instead."
+      2: "File still not found. Paste resume or provide valid path."
+    on_exhausted: ask_paste
+
+  - id: performance_review_missing
+    condition: performance_review_path empty AND no PR paste
+    required: true
+    retries: 3
+    prompts:
+      1: "Performance review is required. Provide path or paste content."
+      2: "Performance review still missing. Path or paste required."
+      3: "Cannot proceed without performance review. Provide path or paste. Will abort."
+    on_exhausted: abort
+
+  - id: performance_review_path_invalid
+    condition: performance_review_path given BUT file not found
+    required: true
+    retries: 2
+    prompts:
+      1: "Performance review file not found at {{performance_review_path}}. Check path or paste."
+      2: "File still not found. Paste content or provide valid path."
+    on_exhausted: ask_paste
+
+  # --- Optional but needed for search ---
+  - id: preferences_missing
+    condition: preferences file missing OR empty
+    required: false
+    retries: 2
+    prompts:
+      1: "Preferences not found. Need target_roles and location for job search. Provide them now (e.g. 'Target: Backend Engineer, Location: Remote UK') or say 'infer'."
+      2: "Preferences still empty. Provide target_roles and location, or say 'infer' to proceed with defaults."
+    on_exhausted: infer
+
+  - id: target_roles_empty
+    condition: preferences loaded BUT target_roles empty or null
+    required: false
+    retries: 2
+    prompts:
+      1: "target_roles is empty. What roles are you targeting? (e.g. Senior Backend Engineer, Staff Platform Engineer)"
+      2: "target_roles still empty. Provide roles or say 'skip' to infer from resume."
+    on_exhausted: infer_from_resume
+
+  - id: location_empty
+    condition: preferences loaded BUT location empty or null
+    required: false
+    retries: 2
+    prompts:
+      1: "location is empty. Where do you want to work? (e.g. Remote UK, Hybrid London)"
+      2: "location still empty. Provide location or say 'skip' to leave open."
+    on_exhausted: leave_open
+
+  # --- Content validity ---
+  - id: resume_empty
+    condition: resume file/paste loaded BUT content empty or trivial
+    required: true
+    retries: 1
+    prompts:
+      1: "Resume appears empty or unreadable. Please provide valid resume content."
+    on_exhausted: abort
+
+  - id: performance_review_empty
+    condition: PR file/paste loaded BUT content empty or trivial
+    required: true
+    retries: 1
+    prompts:
+      1: "Performance review appears empty or unreadable. Please provide valid content."
+    on_exhausted: abort
+
+  # --- Output / confirmation ---
+  - id: intake_output_path_conflict
+    condition: 01-intake-output.md exists AND differs from current run
+    required: false
+    retries: 1
+    prompts:
+      1: "Intake output already exists. Overwrite? (yes / no / new_path)"
+    on_exhausted: keep_existing
+
+  - id: application_form_readiness_ambiguous
+    condition: resume/PR have multiple strong stories, unclear which to lead with
+    required: false
+    retries: 1
+    prompts:
+      1: "Several strong stories found (e.g. courier RCA, Schema Registry migration). Which should lead in cover letters and 'interesting project' forms? (1, 2, 3, or 'first')"
+    on_exhausted: use_first

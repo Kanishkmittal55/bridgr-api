@@ -28,9 +28,9 @@ type CreateSkillGapGraphParams struct {
 // BRIDGR SKILL GAP — GRAPHS
 // Candidate vs role_requirement graphs per analysis. analysis_uuid app-enforced.
 // =============================================================================
-func (q *Queries) CreateSkillGapGraph(ctx context.Context, arg CreateSkillGapGraphParams) (HskipUsersBridgrSkillGapGraph, error) {
+func (q *Queries) CreateSkillGapGraph(ctx context.Context, arg CreateSkillGapGraphParams) (BridgrSkillGapGraph, error) {
 	row := q.db.QueryRow(ctx, createSkillGapGraph, arg.AnalysisUuid, arg.Kind, arg.Metadata)
-	var i HskipUsersBridgrSkillGapGraph
+	var i BridgrSkillGapGraph
 	err := row.Scan(
 		&i.Uuid,
 		&i.ID,
@@ -58,9 +58,9 @@ SELECT uuid, id, analysis_uuid, kind, metadata, created_at, updated_at FROM brid
 WHERE id = $1
 `
 
-func (q *Queries) GetSkillGapGraph(ctx context.Context, id int64) (HskipUsersBridgrSkillGapGraph, error) {
+func (q *Queries) GetSkillGapGraph(ctx context.Context, id int64) (BridgrSkillGapGraph, error) {
 	row := q.db.QueryRow(ctx, getSkillGapGraph, id)
-	var i HskipUsersBridgrSkillGapGraph
+	var i BridgrSkillGapGraph
 	err := row.Scan(
 		&i.Uuid,
 		&i.ID,
@@ -83,9 +83,9 @@ type GetSkillGapGraphByKindParams struct {
 	Kind         string      `db:"kind"`
 }
 
-func (q *Queries) GetSkillGapGraphByKind(ctx context.Context, arg GetSkillGapGraphByKindParams) (HskipUsersBridgrSkillGapGraph, error) {
+func (q *Queries) GetSkillGapGraphByKind(ctx context.Context, arg GetSkillGapGraphByKindParams) (BridgrSkillGapGraph, error) {
 	row := q.db.QueryRow(ctx, getSkillGapGraphByKind, arg.AnalysisUuid, arg.Kind)
-	var i HskipUsersBridgrSkillGapGraph
+	var i BridgrSkillGapGraph
 	err := row.Scan(
 		&i.Uuid,
 		&i.ID,
@@ -103,9 +103,9 @@ SELECT uuid, id, analysis_uuid, kind, metadata, created_at, updated_at FROM brid
 WHERE uuid = $1
 `
 
-func (q *Queries) GetSkillGapGraphByUUID(ctx context.Context, uuid pgtype.UUID) (HskipUsersBridgrSkillGapGraph, error) {
+func (q *Queries) GetSkillGapGraphByUUID(ctx context.Context, uuid pgtype.UUID) (BridgrSkillGapGraph, error) {
 	row := q.db.QueryRow(ctx, getSkillGapGraphByUUID, uuid)
-	var i HskipUsersBridgrSkillGapGraph
+	var i BridgrSkillGapGraph
 	err := row.Scan(
 		&i.Uuid,
 		&i.ID,
@@ -124,15 +124,15 @@ WHERE analysis_uuid = $1
 ORDER BY kind ASC
 `
 
-func (q *Queries) GetSkillGapGraphsByAnalysis(ctx context.Context, analysisUuid pgtype.UUID) ([]HskipUsersBridgrSkillGapGraph, error) {
+func (q *Queries) GetSkillGapGraphsByAnalysis(ctx context.Context, analysisUuid pgtype.UUID) ([]BridgrSkillGapGraph, error) {
 	rows, err := q.db.Query(ctx, getSkillGapGraphsByAnalysis, analysisUuid)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []HskipUsersBridgrSkillGapGraph
+	var items []BridgrSkillGapGraph
 	for rows.Next() {
-		var i HskipUsersBridgrSkillGapGraph
+		var i BridgrSkillGapGraph
 		if err := rows.Scan(
 			&i.Uuid,
 			&i.ID,

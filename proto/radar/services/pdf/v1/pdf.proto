@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+package radar.services.pdf.v1;
+
+option go_package = "github.com/Kanishkmittal55/bridgr-api/internal/gen/radar/services/pdf/v1;pdfv1";
+
+service PdfExtractionService {
+  rpc ExtractText(ExtractTextRequest) returns (ExtractTextResponse);
+}
+
+message ExtractTextRequest {
+  bytes pdf_content = 1;
+  string filename = 2; // optional, for extension hint
+}
+
+message ExtractTextResponse {
+  string extracted_text = 1;
+  bool success = 2;
+}

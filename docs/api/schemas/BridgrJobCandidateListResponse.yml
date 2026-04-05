@@ -1,0 +1,8 @@
+type: object
+required:
+  - candidates
+properties:
+  candidates:
+    type: array
+    items:
+      $ref: './BridgrJobCandidate.yml'

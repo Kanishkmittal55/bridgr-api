@@ -1,0 +1,109 @@
+# Step 7 (Execution) — Retry & Human Interaction Config
+
+step: execution
+max_retries: 3
+# Execution combines Phase A (discover + report) and Phase B (resume + cover letter).
+# Human input needed for missing prerequisites, empty results, and tool failures.
+
+cases:
+  # --- Pre-execution ---
+  - id: intake_missing
+    condition: step 1 intake output not found
+    required: true
+    retries: 2
+    prompts:
+      1: "Intake required before execution. Complete step 1 (intake) first, or provide path to intake output."
+      2: "Intake still missing. Run step 1 before execution. Will abort."
+    on_exhausted: abort
+
+  - id: search_strategy_missing
+    condition: Phase A run AND step 2 search strategy not found
+    required: true
+    retries: 2
+    prompts:
+      1: "Search strategy (step 2) required for Phase A. Define search queries first, or provide path to strategy file."
+      2: "Search strategy still missing. Complete step 2 before Phase A. Will abort Phase A."
+    on_exhausted: abort_phase_a
+
+  - id: preferences_missing
+    condition: preferences file missing or empty
+    required: false
+    retries: 1
+    prompts:
+      1: "Preferences not found. Need target_roles and location. Provide now or say 'infer'."
+    on_exhausted: infer
+
+  # --- Phase A: Discover ---
+  - id: websearch_no_urls
+    condition: WebSearch returns zero job URLs
+    required: false
+    retries: 2
+    prompts:
+      1: "WebSearch returned no job URLs. Try different queries? Or paste URLs to process (one per line)."
+      2: "Still no URLs. Paste job URLs directly, or say 'skip' to skip Phase A."
+    on_exhausted: ask_paste_urls
+
+  - id: memory_not_init
+    condition: Memory DB not initialized AND visited-urls.txt fallback missing
+    required: false
+    retries: 1
+    prompts:
+      1: "Memory not initialized. Run 'npx @claude-flow/cli memory init' for URL dedup, or say 'continue' to use visited-urls.txt only."
+    on_exhausted: use_visited_urls_only
+
+  - id: browser_auth_required
+    condition: Browser method selected BUT LinkedIn/Workday requires login
+    required: false
+    retries: 1
+    prompts:
+      1: "Browser session requires login (LinkedIn/Workday). Log in manually, then say 'continue'. Or say 'websearch' to switch to WebSearch."
+    on_exhausted: fallback_websearch
+
+  - id: all_urls_deduplicated
+    condition: All candidate URLs already in Memory or visited-urls
+    required: false
+    retries: 0
+    comment: "No human needed; proceed to summary with zero new reports."
+
+  # --- Phase B: Application materials ---
+  - id: execute_empty
+    condition: Phase B run AND execute/ has no jobs (symlinks)
+    required: true
+    retries: 2
+    prompts:
+      1: "No jobs in execute/. Run Phase A first to get 'Ready to Apply' jobs, or provide job URL for application-only mode."
+      2: "execute/ still empty. Provide job URL, or say 'abort' to stop."
+    on_exhausted: abort
+
+  - id: application_only_job_url_invalid
+    condition: mode application_only AND job URL not in any discover/*.md
+    required: true
+    retries: 2
+    prompts:
+      1: "Job URL not found in discover reports. Fetch job page and create report first, or provide path to existing job report."
+      2: "Still no matching report. Provide valid job URL or report path. Will abort."
+    on_exhausted: abort
+
+  - id: job_report_not_found
+    condition: grep for job URL finds no matching discover/*.md file
+    required: true
+    retries: 1
+    prompts:
+      1: "No job report for this URL. Run Phase A to fetch and report this job first, or provide correct URL."
+    on_exhausted: abort
+
+  - id: resume_or_pr_missing
+    condition: Phase B AND resume or performance_review file not found
+    required: true
+    retries: 2
+    prompts:
+      1: "Resume or performance review missing. Provide paths (from preferences) or ensure files exist."
+      2: "Files still missing. Cannot generate application materials without resume and performance review. Will skip this job."
+    on_exhausted: skip_job
+
+  # --- Output overwrite (user edited) ---
+  - id: user_edited_outputs
+    condition: Both resume and cover letter exist AND user wants to regenerate
+    required: false
+    retries: 0
+    comment: "Re-run skips by default. User must explicitly delete files or use application-only with force. No prompt."

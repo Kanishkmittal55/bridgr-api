@@ -1,0 +1,15 @@
+# Visited job URLs (one per line)
+# Used for deduplication when Memory is unavailable
+# Append normalized URLs after processing
+
+https://job-boards.greenhouse.io/monzo/jobs/6635595
+https://job-boards.greenhouse.io/gitlab/jobs/7916259002
+https://cuvva.pinpointhq.com/en/jobs/11929
+https://job-boards.greenhouse.io/doitintl/jobs/6552993003
+https://www.golangprojects.com/golang-remote-job-evl-remote-europe-senior-software-engineer-go-remote-uk-eu-canada-argentina-sponsorship-form3-remotejobs.html
+https://checkout.wd3.myworkdayjobs.com/CheckoutCareers/job/London/Golang-Software-Engineer_R8109
+https://apply.workable.com/deblock/j/897AFB6980/
+https://www.juxt.pro/careers/go-engineer/
+https://www.golangprojects.com/golang-go-job-gwx-Remote-Senior-Backend-Engineer-Remote-UK-Remote-within-UK-Vistas-Recruitment-remotework.html
+https://job-boards.eu.greenhouse.io/internationalcopyrightenterpriseservices/jobs/4777369101
+https://job-boards.greenhouse.io/gitlab/jobs/8481922002

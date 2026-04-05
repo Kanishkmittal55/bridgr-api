@@ -1,0 +1,9 @@
+# Step 3 (URL Deduplication) — Retry & Human Interaction Config
+
+step: url_deduplication
+max_retries: 0
+# Pure specification step: Memory DB namespace, visited-urls.txt fallback, normalization rules.
+# No human input required during planning or execution; dedup runs automatically on URL list.
+comment: "No human interaction cases; config/logic only."
+
+cases: []

@@ -1,4 +1,26 @@
+# Local development. Use BuildKit for cache mounts and clearer builds:
+#   export DOCKER_BUILDKIT=1 COMPOSE_DOCKER_CLI_BUILD=1
+#
+# Compose spec version (ignored by Compose V2 but kept for parity with monolith compose files).
+version: "3.8"
+
 name: bridgr-api
+
+# Shared defaults (same idea as users repo x-hassleSkip-svc — avoid repetition).
+x-bridgr-env: &bridgr-env
+  env_file:
+    - ./config/docker.development.env
+  networks:
+    - bridgrApi
+
+x-bridgr-go-service: &bridgr-go-service
+  <<: *bridgr-env
+  image: bridgr-api:${VERSION:-latest}
+  build:
+    context: .
+    dockerfile: Dockerfile
+  environment:
+    ENV: development
 
 services:
   postgres:
@@ -28,14 +50,11 @@ services:
       retries: 10
 
   migrate:
+    <<: *bridgr-env
     image: hassle-skip-migrate-local:latest
     build:
       context: .
       dockerfile: docker/migration/Dockerfile
-    networks:
-      - bridgrApi
-    env_file:
-      - ./config/docker.development.env
     command: ["-verbose", "up"]
     volumes:
       - ./db/migrations:/migrations
@@ -80,18 +99,60 @@ services:
       timeout: 5s
       retries: 15
 
-  api:
+  # ============================================================================
+  # RADAR (Python gRPC: same ergonomic as users monolith — mount repo, optional GitHub token for builds)
+  # Default command runs the server; override with RADAR_DOCKER_CMD + shell if you add watch (uv).
+  # ============================================================================
+  radar:
+    <<: *bridgr-env
+    image: bridgr-radar:${VERSION:-latest}
+    container_name: bridgr-radar
     build:
       context: .
-      dockerfile: Dockerfile
-    networks:
-      - bridgrApi
-    env_file:
-      - ./config/docker.development.env
-    command: ["/usr/local/bin/bridgr-api"]
+      dockerfile: docker/radar/Dockerfile
+      secrets:
+        - GITHUB_TOKEN
+    command: ["python", "-m", "radar_service.grpc_server"]
+    environment:
+      SMARTEXTRACT_HEADLESS_ONLY: "true"
+      UV_NO_PROGRESS: "1"
+      UV_QUIET: "1"
+    ports:
+      - "50051:50051"
+    volumes:
+      # Mount repo like users/${PWD}:/hassleSkipApi — keeps radar/ + proto/ in sync on host
+      - ${PWD:-.}:/app
+      # Linux .venv inside container (optional; avoids macOS .venv on Linux mount)
+      - radar-venv:/app/radar/.venv
+    tty: true
+    stdin_open: true
+    stop_grace_period: 1s
+    restart: on-failure
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import socket; s=socket.socket(); s.settimeout(2); s.connect(('127.0.0.1',50051)); s.close()",
+        ]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 45s
+
+  # HTTP API — Air live-reload on .go changes (repo mounted at /src).
+  api:
+    <<: *bridgr-env
+    image: bridgr-api-air:${VERSION:-latest}
+    build:
+      context: .
+      dockerfile: docker/api/Dockerfile.air
     environment:
       ENV: development
-      PORT: "8080"
+    volumes:
+      - ${PWD:-.}:/src
+    command: ["air", "-c", ".air.toml"]
     ports:
       - "8080:8080"
     depends_on:
@@ -103,18 +164,13 @@ services:
         condition: service_healthy
       localstack:
         condition: service_healthy
+      radar:
+        condition: service_healthy
 
   worker:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    networks:
-      - bridgrApi
-    env_file:
-      - ./config/docker.development.env
-    command: ["/usr/local/bin/bridgr-worker"]
-    environment:
-      ENV: development
+    <<: *bridgr-go-service
+    # Image ENTRYPOINT is bridgr-api; `command` alone becomes extra argv to the API. Run worker binary explicitly.
+    entrypoint: ["/usr/local/bin/bridgr-worker"]
     depends_on:
       postgres:
         condition: service_healthy
@@ -122,6 +178,15 @@ services:
         condition: service_completed_successfully
       localstack:
         condition: service_healthy
+      radar:
+        condition: service_healthy
+
+volumes:
+  radar-venv:
+
+secrets:
+  GITHUB_TOKEN:
+    environment: GITHUB_TOKEN
 
 networks:
   bridgrApi:

@@ -5,10 +5,10 @@ import (
 
 	"github.com/go-chi/chi/v5"
 
-	"github.com/Kanishkmittal55/bridgr-api/internal/auth"
 	"github.com/Kanishkmittal55/bridgr-api/internal/api/bridgr"
 	"github.com/Kanishkmittal55/bridgr-api/internal/api/deps"
 	"github.com/Kanishkmittal55/bridgr-api/internal/api/response"
+	"github.com/Kanishkmittal55/bridgr-api/internal/auth"
 )
 
 // Routes is the route tree for bridgr-api (health, /v1); global middleware is applied in ApplyDefaultMiddleware.
@@ -47,6 +47,8 @@ func mountBridgr(w *bridgr.ServerInterfaceWrapper, d *deps.Deps) func(chi.Router
 			r.Use(auth.ApiKeyAuthenticatorWithOptions(d.AccessToApiKeys[auth.AccessRead], &auth.Options{ErrorHandler: response.DefaultUnauthorizedHandler}))
 			r.Get("/analyses/{analysisUUID}", w.V1GetBridgrAnalysis)
 			r.Get("/analyses/{analysisUUID}/coverage", w.V1GetBridgrAnalysisCoverage)
+			r.Get("/analyses/{analysisUUID}/assets/cv/read-url", w.V1GetBridgrAnalysisCvAssetReadUrl)
+			r.Get("/analyses/{analysisUUID}/assets/jd/read-url", w.V1GetBridgrAnalysisJdAssetReadUrl)
 			r.Get("/analyses/{analysisUUID}/graphs", w.V1GetBridgrAnalysisGraphs)
 			r.Get("/analyses/{analysisUUID}/graphs/{kind}", w.V1GetBridgrAnalysisGraphByKind)
 			r.Get("/analyses/{analysisUUID}/learning-path", w.V1GetBridgrAnalysisLearningPath)
@@ -58,6 +60,12 @@ func mountBridgr(w *bridgr.ServerInterfaceWrapper, d *deps.Deps) func(chi.Router
 			r.Get("/paths/{pathUUID}/steps", w.V1GetBridgrPathSteps)
 			r.Get("/users/{userID}/analyses", w.V1GetBridgrUserAnalyses)
 			r.Get("/users/{userID}/coverage", w.V1GetBridgrUserCoverage)
+			r.Get("/users/{userID}/job-search-profile", w.V1GetBridgrUserJobSearchProfile)
+			r.Get("/users/{userID}/job-discovery/runs", w.V1GetBridgrUserJobDiscoveryRuns)
+			r.Get("/job-discovery/runs/{runUUID}", w.V1GetBridgrJobDiscoveryRun)
+			r.Get("/users/{userID}/job-candidates", w.V1GetBridgrUserJobCandidates)
+			r.Get("/job-candidates/{candidateUUID}", w.V1GetBridgrJobCandidate)
+			r.Get("/users/{userID}/job-notifications", w.V1GetBridgrUserJobNotifications)
 		})
 		r.Group(func(r chi.Router) {
 			r.Use(auth.ApiKeyAuthenticatorWithOptions(d.AccessToApiKeys[auth.AccessWrite], &auth.Options{ErrorHandler: response.DefaultUnauthorizedHandler}))
@@ -70,6 +78,10 @@ func mountBridgr(w *bridgr.ServerInterfaceWrapper, d *deps.Deps) func(chi.Router
 			r.Delete("/analyses/{analysisUUID}/learning-path", w.V1DeleteBridgrAnalysisLearningPath)
 			r.Post("/graphs/{graphUUID}/nodes", w.V1PostBridgrGraphNodes)
 			r.Post("/graphs/{graphUUID}/edges", w.V1PostBridgrGraphEdges)
+			r.Put("/users/{userID}/job-search-profile", w.V1PutBridgrUserJobSearchProfile)
+			r.Post("/users/{userID}/job-discovery/runs", w.V1PostBridgrUserJobDiscoveryRuns)
+			r.Post("/users/{userID}/job-discovery/runs/{runUUID}/cancel", w.V1PostBridgrUserJobDiscoveryRunCancel)
+			r.Patch("/job-notifications/{notificationUUID}", w.V1PatchBridgrJobNotification)
 		})
 	}
 }

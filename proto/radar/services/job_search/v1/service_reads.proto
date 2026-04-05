@@ -1,0 +1,35 @@
+syntax = "proto3";
+
+package radar.services.job_search.v1;
+
+import "radar/services/job_search/v1/models.proto";
+
+option go_package = "github.com/Kanishkmittal55/bridgr-api/internal/gen/radar/services/job_search/v1;jobsearchv1";
+
+message FindJobsRequest {
+  string resume_text = 1;
+  repeated string target_roles = 2;
+  string search_query = 3; // e.g. "software engineer remote"
+  string location = 4; // optional
+  int32 max_results = 5; // default 10
+  // When set, Register with Discovery CancelCrawl so clients can stop this crawl mid-flight.
+  string run_uuid = 6;
+}
+
+message FindJobsResponse {
+  repeated JobInfo jobs = 1;
+}
+
+message AnalyzeJobRequest {
+  string job_url = 1;
+  string resume_text = 2;
+  repeated string target_roles = 3;
+  repeated string skill_gaps = 4;
+}
+
+message AnalyzeJobResponse {
+  float fit_score = 1;
+  string summary = 2;
+  repeated string extracted_requirements = 3;
+  string recommendation = 4;
+}

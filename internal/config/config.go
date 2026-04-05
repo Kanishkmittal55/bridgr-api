@@ -43,6 +43,13 @@ type Config struct {
 	ReadAPIKey      string
 	WriteAPIKey     string
 	AllAccessAPIKey string
+
+	// Job discovery API / worker
+	JobDiscoveryMaxRunsPerHour int
+	JobDiscoverySyncInDev      bool
+
+	// RadarAddr gRPC address for the Python radar service (e.g. radar:50051 in Docker).
+	RadarAddr string
 }
 
 var (
@@ -61,25 +68,26 @@ func Load() *Config {
 
 func loadFromEnv() *Config {
 	c := &Config{
-		Env:                     env.ResolveEnvOrDie(),
-		LogLevel:                ctxlog.InfoLevel,
-		Port:                    8080,
-		PostgresHost:            "localhost",
-		PostgresPort:            "5432",
-		PostgresUser:            "bridgr",
-		PostgresPassword:        "bridgr",
-		PostgresDb:              "bridgr",
-		PostgresSslModeDisabled: true,
-		PostgresMinIdleConn:     2,
-		PostgresMaxOpenConn:     10,
-		PostgresMaxConnLifetime: time.Hour,
-		PostgresMaxConnIdleTime: 30 * time.Minute,
-		S3ExternalUrl:           "http://localhost:9000",
-		S3User:                  "minioadmin",
-		S3Password:              "minioadmin",
-		HassleSkipS3Bucket:      "bridgr",
-		AWSRegion:               "us-east-1",
-		AllAccessAPIKey:         "test-all-access-key",
+		Env:                        env.ResolveEnvOrDie(),
+		LogLevel:                   ctxlog.InfoLevel,
+		Port:                       8080,
+		PostgresHost:               "localhost",
+		PostgresPort:               "5432",
+		PostgresUser:               "bridgr",
+		PostgresPassword:           "bridgr",
+		PostgresDb:                 "bridgr",
+		PostgresSslModeDisabled:    true,
+		PostgresMinIdleConn:        2,
+		PostgresMaxOpenConn:        10,
+		PostgresMaxConnLifetime:    time.Hour,
+		PostgresMaxConnIdleTime:    30 * time.Minute,
+		S3ExternalUrl:              "http://localhost:9000",
+		S3User:                     "minioadmin",
+		S3Password:                 "minioadmin",
+		HassleSkipS3Bucket:         "bridgr",
+		AWSRegion:                  "us-east-1",
+		AllAccessAPIKey:            "test-all-access-key",
+		JobDiscoveryMaxRunsPerHour: 20,
 	}
 
 	switch strings.ToLower(os.Getenv("LOG_LEVEL")) {
@@ -138,6 +146,15 @@ func loadFromEnv() *Config {
 	if c.WriteAPIKey == "" && c.AllAccessAPIKey != "" {
 		c.WriteAPIKey = c.AllAccessAPIKey
 	}
+
+	if v := os.Getenv("BRIDGR_JOB_DISCOVERY_MAX_RUNS_PER_HOUR"); v != "" {
+		if n, err := strconv.Atoi(v); err == nil && n >= 0 {
+			c.JobDiscoveryMaxRunsPerHour = n
+		}
+	}
+	c.JobDiscoverySyncInDev = os.Getenv("BRIDGR_JOB_DISCOVERY_SYNC_IN_DEV") == "true"
+
+	setStr(&c.RadarAddr, "RADAR_ADDR")
 
 	return c
 }

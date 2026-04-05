@@ -1,0 +1,8 @@
+type: object
+required:
+  - notifications
+properties:
+  notifications:
+    type: array
+    items:
+      $ref: './BridgrJobNotification.yml'

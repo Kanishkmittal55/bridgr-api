@@ -1,0 +1,25 @@
+# Step 2 (Search Strategy) — Retry & Human Interaction Config
+
+step: search_strategy
+max_retries: 2
+# Depends on step 1 intake; human input needed when intake incomplete or target roles missing
+
+cases:
+  - id: intake_missing
+    condition: step 1 output (intake) not found
+    required: true
+    retries: 2
+    prompts:
+      1: "Intake (step 1) required for search strategy. Run step 1 first, or provide path to 01-intake-output.md."
+      2: "Intake still missing. Complete step 1 (intake) before defining search strategy. Will abort."
+    on_exhausted: abort
+
+  - id: target_roles_empty
+    condition: intake loaded BUT target_roles empty (needed for queries)
+    required: true
+    retries: 2
+    prompts:
+      1: "target_roles is empty. Need at least one target role to generate search queries. Provide roles (e.g. Senior Backend Engineer) or say 'infer from resume'."
+      2: "target_roles still empty. Provide roles to continue, or say 'infer'."
+    on_exhausted: infer_from_resume
+

@@ -46,7 +46,7 @@ type CreateSkillGapEdgeParams struct {
 // BRIDGR SKILL GAP — EDGES
 // Directed edges between nodes in one graph. All uuids app-enforced FKs.
 // =============================================================================
-func (q *Queries) CreateSkillGapEdge(ctx context.Context, arg CreateSkillGapEdgeParams) (HskipUsersBridgrSkillGapEdge, error) {
+func (q *Queries) CreateSkillGapEdge(ctx context.Context, arg CreateSkillGapEdgeParams) (BridgrSkillGapEdge, error) {
 	row := q.db.QueryRow(ctx, createSkillGapEdge,
 		arg.GraphUuid,
 		arg.FromNodeUuid,
@@ -55,7 +55,7 @@ func (q *Queries) CreateSkillGapEdge(ctx context.Context, arg CreateSkillGapEdge
 		arg.Weight,
 		arg.Metadata,
 	)
-	var i HskipUsersBridgrSkillGapEdge
+	var i BridgrSkillGapEdge
 	err := row.Scan(
 		&i.Uuid,
 		&i.ID,
@@ -87,15 +87,15 @@ WHERE graph_uuid = $1
 ORDER BY id ASC
 `
 
-func (q *Queries) ListSkillGapEdgesByGraph(ctx context.Context, graphUuid pgtype.UUID) ([]HskipUsersBridgrSkillGapEdge, error) {
+func (q *Queries) ListSkillGapEdgesByGraph(ctx context.Context, graphUuid pgtype.UUID) ([]BridgrSkillGapEdge, error) {
 	rows, err := q.db.Query(ctx, listSkillGapEdgesByGraph, graphUuid)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []HskipUsersBridgrSkillGapEdge
+	var items []BridgrSkillGapEdge
 	for rows.Next() {
-		var i HskipUsersBridgrSkillGapEdge
+		var i BridgrSkillGapEdge
 		if err := rows.Scan(
 			&i.Uuid,
 			&i.ID,
@@ -130,15 +130,15 @@ type ListSkillGapEdgesByNodeParams struct {
 	FromNodeUuid pgtype.UUID `db:"from_node_uuid"`
 }
 
-func (q *Queries) ListSkillGapEdgesByNode(ctx context.Context, arg ListSkillGapEdgesByNodeParams) ([]HskipUsersBridgrSkillGapEdge, error) {
+func (q *Queries) ListSkillGapEdgesByNode(ctx context.Context, arg ListSkillGapEdgesByNodeParams) ([]BridgrSkillGapEdge, error) {
 	rows, err := q.db.Query(ctx, listSkillGapEdgesByNode, arg.GraphUuid, arg.FromNodeUuid)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []HskipUsersBridgrSkillGapEdge
+	var items []BridgrSkillGapEdge
 	for rows.Next() {
-		var i HskipUsersBridgrSkillGapEdge
+		var i BridgrSkillGapEdge
 		if err := rows.Scan(
 			&i.Uuid,
 			&i.ID,

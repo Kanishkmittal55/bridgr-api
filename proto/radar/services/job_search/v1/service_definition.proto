@@ -1,0 +1,21 @@
+syntax = "proto3";
+
+package radar.services.job_search.v1;
+
+import "radar/services/job_search/v1/service_reads.proto";
+import "radar/services/job_search/v1/service_writes.proto";
+
+option go_package = "github.com/Kanishkmittal55/bridgr-api/internal/gen/radar/services/job_search/v1;jobsearchv1";
+
+service JobSearchService {
+  rpc Health(HealthRequest) returns (HealthResponse);
+  rpc FindJobs(FindJobsRequest) returns (FindJobsResponse);
+  rpc AnalyzeJob(AnalyzeJobRequest) returns (AnalyzeJobResponse);
+  rpc ApplyToJob(ApplyToJobRequest) returns (ApplyToJobResponse);
+}
+
+message HealthRequest {}
+
+message HealthResponse {
+  string status = 1;
+}

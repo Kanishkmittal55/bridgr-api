@@ -6,10 +6,6 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
-	awsconfig "github.com/aws/aws-sdk-go-v2/config"
-	"github.com/aws/aws-sdk-go-v2/credentials"
-	"github.com/aws/aws-sdk-go-v2/service/sqs"
 	"github.com/Kanishkmittal55/bridgr-api/internal/api/deps"
 	"github.com/Kanishkmittal55/bridgr-api/internal/auth"
 	"github.com/Kanishkmittal55/bridgr-api/internal/cloud"
@@ -19,6 +15,10 @@ import (
 	"github.com/Kanishkmittal55/bridgr-api/internal/rdbms"
 	"github.com/Kanishkmittal55/bridgr-api/internal/repository"
 	"github.com/Kanishkmittal55/bridgr-api/internal/repository/sqlc"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	awsconfig "github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/credentials"
+	"github.com/aws/aws-sdk-go-v2/service/sqs"
 )
 
 // Run boots the HTTP server and blocks until ctx is cancelled, then shuts down gracefully

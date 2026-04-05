@@ -1,0 +1,9 @@
+# Step 6 (Resume and Cover Letter Templates) — Retry & Human Interaction Config
+
+step: resume_cover_letter_templates
+max_retries: 0
+# Template definition step: output structure for resume, cover letter, application-answers.
+# No human input required; agent applies templates during Phase B (step 7).
+comment: "No human interaction cases; reference templates only."
+
+cases: []

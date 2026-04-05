@@ -13,7 +13,7 @@ import (
 	openapi_types "github.com/oapi-codegen/runtime/types"
 )
 
-func (s *server) loadAnalysis(ctx context.Context, analysisUUID openapi_types.UUID) (pgtype.UUID, *sqlc.HskipUsersBridgrSkillGapAnalysis, error) {
+func (s *server) loadAnalysis(ctx context.Context, analysisUUID openapi_types.UUID) (pgtype.UUID, *sqlc.BridgrSkillGapAnalysis, error) {
 	if err := s.requireStore(); err != nil {
 		return pgtype.UUID{}, nil, err
 	}
@@ -38,7 +38,7 @@ func (s *server) requireStore() error {
 	return nil
 }
 
-func (s *server) loadGraph(ctx context.Context, graphUUID openapi_types.UUID) (pgtype.UUID, *sqlc.HskipUsersBridgrSkillGapGraph, error) {
+func (s *server) loadGraph(ctx context.Context, graphUUID openapi_types.UUID) (pgtype.UUID, *sqlc.BridgrSkillGapGraph, error) {
 	if err := s.requireStore(); err != nil {
 		return pgtype.UUID{}, nil, err
 	}
@@ -56,7 +56,7 @@ func (s *server) loadGraph(ctx context.Context, graphUUID openapi_types.UUID) (p
 	return pgid, row, nil
 }
 
-func (s *server) loadPath(ctx context.Context, pathUUID openapi_types.UUID) (pgtype.UUID, *sqlc.HskipUsersBridgrSkillGapLearningPath, error) {
+func (s *server) loadPath(ctx context.Context, pathUUID openapi_types.UUID) (pgtype.UUID, *sqlc.BridgrSkillGapLearningPath, error) {
 	if err := s.requireStore(); err != nil {
 		return pgtype.UUID{}, nil, err
 	}

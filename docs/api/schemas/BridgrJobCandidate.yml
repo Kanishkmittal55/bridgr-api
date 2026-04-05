@@ -1,0 +1,70 @@
+type: object
+required:
+  - uuid
+  - id
+  - user_id
+  - job_url
+  - url_hash
+  - ingestion_status
+  - created_at
+  - updated_at
+properties:
+  uuid:
+    type: string
+    format: uuid
+  id:
+    type: integer
+    format: int64
+  user_id:
+    type: integer
+    format: int32
+  discovery_run_uuid:
+    type: string
+    format: uuid
+    nullable: true
+  source_board:
+    type: string
+  source_job_id:
+    type: string
+    nullable: true
+  job_url:
+    type: string
+  url_hash:
+    type: string
+  content_hash:
+    type: string
+    nullable: true
+  title:
+    type: string
+    nullable: true
+  company:
+    type: string
+    nullable: true
+  location:
+    type: string
+    nullable: true
+  jd_text:
+    type: string
+    nullable: true
+  jd_s3_uri:
+    type: string
+    nullable: true
+  fetched_at:
+    type: string
+    format: date-time
+    nullable: true
+  ingestion_status:
+    type: string
+  radar_payload:
+    type: object
+    additionalProperties: true
+    nullable: true
+  application_url:
+    type: string
+    nullable: true
+  created_at:
+    type: string
+    format: date-time
+  updated_at:
+    type: string
+    format: date-time

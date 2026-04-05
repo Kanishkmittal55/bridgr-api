@@ -1,0 +1,60 @@
+syntax = "proto3";
+
+package radar.services.discovery.v1;
+
+option go_package = "github.com/Kanishkmittal55/bridgr-api/internal/gen/radar/services/discovery/v1;discoveryv1";
+
+service DiscoveryService {
+  rpc CrawlSource(CrawlSourceRequest) returns (stream CrawlSourceResponse);
+  rpc CancelCrawl(CancelCrawlRequest) returns (CancelCrawlResponse);
+}
+
+message CrawlSourceRequest {
+  int32 user_id = 1;
+  string pursuit_uuid = 2;
+  string source_site = 3;
+  string discovery_type = 4;
+  CrawlParams params = 5;
+  optional string run_uuid = 6; // Optional; for logging and cancellation correlation
+}
+
+message CrawlParams {
+  string query = 1;
+  string location = 2;
+  int32 max_results = 3;
+  string region = 4;
+  repeated string urls = 5; // Explicit URLs to fetch (for generic_url / idea_source spiders)
+}
+
+message DiscoveryItem {
+  string source_site = 1;
+  string discovery_type = 2;
+  string source_url = 3;
+  string source_id = 4;
+  string title = 5;
+  string summary = 6;
+  double match_score = 7;
+}
+
+message RawPayload {
+  bytes payload = 1;
+  string crawl_tool = 2;
+  int64 crawled_at_unix_sec = 3; // Unix timestamp
+}
+
+message DiscoveryWithPayload {
+  DiscoveryItem item = 1;
+  RawPayload raw = 2;
+}
+
+message CrawlSourceResponse {
+  repeated DiscoveryWithPayload discoveries = 1;
+}
+
+message CancelCrawlRequest {
+  string run_uuid = 1;
+}
+
+message CancelCrawlResponse {
+  bool cancelled = 1; // true if a crawl was found and cancelled
+}

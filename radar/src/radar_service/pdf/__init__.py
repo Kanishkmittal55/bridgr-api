@@ -1,0 +1,1 @@
+"""PDF extraction gRPC servicer."""

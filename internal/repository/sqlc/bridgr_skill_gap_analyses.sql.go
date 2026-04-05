@@ -59,7 +59,7 @@ type CreateSkillGapAnalysisParams struct {
 // BRIDGR SKILL GAP — ANALYSES
 // One CV+JD skill-gap analysis run. user_id / persona / pursuit are app-enforced FKs.
 // =============================================================================
-func (q *Queries) CreateSkillGapAnalysis(ctx context.Context, arg CreateSkillGapAnalysisParams) (HskipUsersBridgrSkillGapAnalysis, error) {
+func (q *Queries) CreateSkillGapAnalysis(ctx context.Context, arg CreateSkillGapAnalysisParams) (BridgrSkillGapAnalysis, error) {
 	row := q.db.QueryRow(ctx, createSkillGapAnalysis,
 		arg.UserID,
 		arg.FounderPersonaUuid,
@@ -78,7 +78,7 @@ func (q *Queries) CreateSkillGapAnalysis(ctx context.Context, arg CreateSkillGap
 		arg.ErrorCode,
 		arg.ErrorDetail,
 	)
-	var i HskipUsersBridgrSkillGapAnalysis
+	var i BridgrSkillGapAnalysis
 	err := row.Scan(
 		&i.Uuid,
 		&i.ID,
@@ -130,9 +130,9 @@ SELECT uuid, id, user_id, founder_persona_uuid, pursuit_uuid, title, status, cv_
 WHERE id = $1
 `
 
-func (q *Queries) GetSkillGapAnalysis(ctx context.Context, id int64) (HskipUsersBridgrSkillGapAnalysis, error) {
+func (q *Queries) GetSkillGapAnalysis(ctx context.Context, id int64) (BridgrSkillGapAnalysis, error) {
 	row := q.db.QueryRow(ctx, getSkillGapAnalysis, id)
-	var i HskipUsersBridgrSkillGapAnalysis
+	var i BridgrSkillGapAnalysis
 	err := row.Scan(
 		&i.Uuid,
 		&i.ID,
@@ -174,9 +174,9 @@ type GetSkillGapAnalysisByFingerprintParams struct {
 	JdFingerprint pgtype.Text `db:"jd_fingerprint"`
 }
 
-func (q *Queries) GetSkillGapAnalysisByFingerprint(ctx context.Context, arg GetSkillGapAnalysisByFingerprintParams) (HskipUsersBridgrSkillGapAnalysis, error) {
+func (q *Queries) GetSkillGapAnalysisByFingerprint(ctx context.Context, arg GetSkillGapAnalysisByFingerprintParams) (BridgrSkillGapAnalysis, error) {
 	row := q.db.QueryRow(ctx, getSkillGapAnalysisByFingerprint, arg.UserID, arg.CvFingerprint, arg.JdFingerprint)
-	var i HskipUsersBridgrSkillGapAnalysis
+	var i BridgrSkillGapAnalysis
 	err := row.Scan(
 		&i.Uuid,
 		&i.ID,
@@ -208,9 +208,9 @@ SELECT uuid, id, user_id, founder_persona_uuid, pursuit_uuid, title, status, cv_
 WHERE uuid = $1
 `
 
-func (q *Queries) GetSkillGapAnalysisByUUID(ctx context.Context, uuid pgtype.UUID) (HskipUsersBridgrSkillGapAnalysis, error) {
+func (q *Queries) GetSkillGapAnalysisByUUID(ctx context.Context, uuid pgtype.UUID) (BridgrSkillGapAnalysis, error) {
 	row := q.db.QueryRow(ctx, getSkillGapAnalysisByUUID, uuid)
-	var i HskipUsersBridgrSkillGapAnalysis
+	var i BridgrSkillGapAnalysis
 	err := row.Scan(
 		&i.Uuid,
 		&i.ID,
@@ -249,15 +249,15 @@ type GetSkillGapAnalysisByUserParams struct {
 	Limit  int32 `db:"limit"`
 }
 
-func (q *Queries) GetSkillGapAnalysisByUser(ctx context.Context, arg GetSkillGapAnalysisByUserParams) ([]HskipUsersBridgrSkillGapAnalysis, error) {
+func (q *Queries) GetSkillGapAnalysisByUser(ctx context.Context, arg GetSkillGapAnalysisByUserParams) ([]BridgrSkillGapAnalysis, error) {
 	rows, err := q.db.Query(ctx, getSkillGapAnalysisByUser, arg.UserID, arg.Limit)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []HskipUsersBridgrSkillGapAnalysis
+	var items []BridgrSkillGapAnalysis
 	for rows.Next() {
-		var i HskipUsersBridgrSkillGapAnalysis
+		var i BridgrSkillGapAnalysis
 		if err := rows.Scan(
 			&i.Uuid,
 			&i.ID,
@@ -304,15 +304,15 @@ type ListSkillGapAnalysesByUserParams struct {
 	Offset int32 `db:"offset"`
 }
 
-func (q *Queries) ListSkillGapAnalysesByUser(ctx context.Context, arg ListSkillGapAnalysesByUserParams) ([]HskipUsersBridgrSkillGapAnalysis, error) {
+func (q *Queries) ListSkillGapAnalysesByUser(ctx context.Context, arg ListSkillGapAnalysesByUserParams) ([]BridgrSkillGapAnalysis, error) {
 	rows, err := q.db.Query(ctx, listSkillGapAnalysesByUser, arg.UserID, arg.Limit, arg.Offset)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []HskipUsersBridgrSkillGapAnalysis
+	var items []BridgrSkillGapAnalysis
 	for rows.Next() {
-		var i HskipUsersBridgrSkillGapAnalysis
+		var i BridgrSkillGapAnalysis
 		if err := rows.Scan(
 			&i.Uuid,
 			&i.ID,
@@ -361,9 +361,9 @@ type UpdateSkillGapAnalysisErrorParams struct {
 	ErrorDetail pgtype.Text `db:"error_detail"`
 }
 
-func (q *Queries) UpdateSkillGapAnalysisError(ctx context.Context, arg UpdateSkillGapAnalysisErrorParams) (HskipUsersBridgrSkillGapAnalysis, error) {
+func (q *Queries) UpdateSkillGapAnalysisError(ctx context.Context, arg UpdateSkillGapAnalysisErrorParams) (BridgrSkillGapAnalysis, error) {
 	row := q.db.QueryRow(ctx, updateSkillGapAnalysisError, arg.ID, arg.ErrorCode, arg.ErrorDetail)
-	var i HskipUsersBridgrSkillGapAnalysis
+	var i BridgrSkillGapAnalysis
 	err := row.Scan(
 		&i.Uuid,
 		&i.ID,
@@ -402,9 +402,9 @@ type UpdateSkillGapAnalysisStatusParams struct {
 	Status string `db:"status"`
 }
 
-func (q *Queries) UpdateSkillGapAnalysisStatus(ctx context.Context, arg UpdateSkillGapAnalysisStatusParams) (HskipUsersBridgrSkillGapAnalysis, error) {
+func (q *Queries) UpdateSkillGapAnalysisStatus(ctx context.Context, arg UpdateSkillGapAnalysisStatusParams) (BridgrSkillGapAnalysis, error) {
 	row := q.db.QueryRow(ctx, updateSkillGapAnalysisStatus, arg.ID, arg.Status)
-	var i HskipUsersBridgrSkillGapAnalysis
+	var i BridgrSkillGapAnalysis
 	err := row.Scan(
 		&i.Uuid,
 		&i.ID,
@@ -445,9 +445,9 @@ type UpdateSkillGapAnalysisSummaryParams struct {
 	MermaidDiagram pgtype.Text `db:"mermaid_diagram"`
 }
 
-func (q *Queries) UpdateSkillGapAnalysisSummary(ctx context.Context, arg UpdateSkillGapAnalysisSummaryParams) (HskipUsersBridgrSkillGapAnalysis, error) {
+func (q *Queries) UpdateSkillGapAnalysisSummary(ctx context.Context, arg UpdateSkillGapAnalysisSummaryParams) (BridgrSkillGapAnalysis, error) {
 	row := q.db.QueryRow(ctx, updateSkillGapAnalysisSummary, arg.ID, arg.GapSummary, arg.MermaidDiagram)
-	var i HskipUsersBridgrSkillGapAnalysis
+	var i BridgrSkillGapAnalysis
 	err := row.Scan(
 		&i.Uuid,
 		&i.ID,

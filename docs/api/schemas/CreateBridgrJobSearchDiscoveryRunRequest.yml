@@ -1,0 +1,7 @@
+type: object
+description: Optional overrides merged into request_params snapshot for this run
+properties:
+  request_params:
+    type: object
+    additionalProperties: true
+    nullable: true

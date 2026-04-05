@@ -35,7 +35,7 @@ type CreateSkillGapLearningPathParams struct {
 // BRIDGR SKILL GAP — LEARNING PATHS
 // Paths per analysis (v1 often one active path; rows versioned by path_version).
 // =============================================================================
-func (q *Queries) CreateSkillGapLearningPath(ctx context.Context, arg CreateSkillGapLearningPathParams) (HskipUsersBridgrSkillGapLearningPath, error) {
+func (q *Queries) CreateSkillGapLearningPath(ctx context.Context, arg CreateSkillGapLearningPathParams) (BridgrSkillGapLearningPath, error) {
 	row := q.db.QueryRow(ctx, createSkillGapLearningPath,
 		arg.AnalysisUuid,
 		arg.PathVersion,
@@ -43,7 +43,7 @@ func (q *Queries) CreateSkillGapLearningPath(ctx context.Context, arg CreateSkil
 		arg.Title,
 		arg.PathMetadata,
 	)
-	var i HskipUsersBridgrSkillGapLearningPath
+	var i BridgrSkillGapLearningPath
 	err := row.Scan(
 		&i.Uuid,
 		&i.ID,
@@ -73,9 +73,9 @@ SELECT uuid, id, analysis_uuid, path_version, algorithm, title, path_metadata, c
 WHERE id = $1
 `
 
-func (q *Queries) GetSkillGapLearningPath(ctx context.Context, id int64) (HskipUsersBridgrSkillGapLearningPath, error) {
+func (q *Queries) GetSkillGapLearningPath(ctx context.Context, id int64) (BridgrSkillGapLearningPath, error) {
 	row := q.db.QueryRow(ctx, getSkillGapLearningPath, id)
-	var i HskipUsersBridgrSkillGapLearningPath
+	var i BridgrSkillGapLearningPath
 	err := row.Scan(
 		&i.Uuid,
 		&i.ID,
@@ -97,9 +97,9 @@ ORDER BY path_version DESC
 LIMIT 1
 `
 
-func (q *Queries) GetSkillGapLearningPathByAnalysis(ctx context.Context, analysisUuid pgtype.UUID) (HskipUsersBridgrSkillGapLearningPath, error) {
+func (q *Queries) GetSkillGapLearningPathByAnalysis(ctx context.Context, analysisUuid pgtype.UUID) (BridgrSkillGapLearningPath, error) {
 	row := q.db.QueryRow(ctx, getSkillGapLearningPathByAnalysis, analysisUuid)
-	var i HskipUsersBridgrSkillGapLearningPath
+	var i BridgrSkillGapLearningPath
 	err := row.Scan(
 		&i.Uuid,
 		&i.ID,
@@ -119,9 +119,9 @@ SELECT uuid, id, analysis_uuid, path_version, algorithm, title, path_metadata, c
 WHERE uuid = $1
 `
 
-func (q *Queries) GetSkillGapLearningPathByUUID(ctx context.Context, uuid pgtype.UUID) (HskipUsersBridgrSkillGapLearningPath, error) {
+func (q *Queries) GetSkillGapLearningPathByUUID(ctx context.Context, uuid pgtype.UUID) (BridgrSkillGapLearningPath, error) {
 	row := q.db.QueryRow(ctx, getSkillGapLearningPathByUUID, uuid)
-	var i HskipUsersBridgrSkillGapLearningPath
+	var i BridgrSkillGapLearningPath
 	err := row.Scan(
 		&i.Uuid,
 		&i.ID,
@@ -148,9 +148,9 @@ type UpdateSkillGapLearningPathMetadataParams struct {
 	PathMetadata []byte `db:"path_metadata"`
 }
 
-func (q *Queries) UpdateSkillGapLearningPathMetadata(ctx context.Context, arg UpdateSkillGapLearningPathMetadataParams) (HskipUsersBridgrSkillGapLearningPath, error) {
+func (q *Queries) UpdateSkillGapLearningPathMetadata(ctx context.Context, arg UpdateSkillGapLearningPathMetadataParams) (BridgrSkillGapLearningPath, error) {
 	row := q.db.QueryRow(ctx, updateSkillGapLearningPathMetadata, arg.ID, arg.PathMetadata)
-	var i HskipUsersBridgrSkillGapLearningPath
+	var i BridgrSkillGapLearningPath
 	err := row.Scan(
 		&i.Uuid,
 		&i.ID,

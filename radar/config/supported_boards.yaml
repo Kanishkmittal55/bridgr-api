@@ -1,0 +1,27 @@
+# Curated job boards — universe of discourse
+# Add new boards here; expansion can be automated later
+# source_site = board_id when invoking crawler
+
+boards:
+  - board_id: linkedin
+    display_name: LinkedIn
+    engine: jobspy
+    site_type: search
+    region: global
+    is_active: true
+    config:
+      # LinkedIn-specific: fetch full descriptions (JobSpy linkedin_fetch_description)
+      fetch_description: true
+      # Optional: proxy for rate-limit bypass (set via env RADAR_PROXY)
+      # proxy: "host:port:user:pass"
+
+  # Future boards (commented until implemented):
+  # - board_id: indeed
+  #   display_name: Indeed
+  #   engine: jobspy
+  #   site_type: search
+  #   region: global
+  # - board_id: remoteok
+  #   display_name: RemoteOK
+  #   engine: smartextract
+  #   site_type: static

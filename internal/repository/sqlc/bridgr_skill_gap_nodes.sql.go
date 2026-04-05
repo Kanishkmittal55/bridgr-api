@@ -58,7 +58,7 @@ type CreateSkillGapNodeParams struct {
 // BRIDGR SKILL GAP — NODES
 // Skill/concept nodes per graph. graph_uuid app-enforced FK.
 // =============================================================================
-func (q *Queries) CreateSkillGapNode(ctx context.Context, arg CreateSkillGapNodeParams) (HskipUsersBridgrSkillGapNode, error) {
+func (q *Queries) CreateSkillGapNode(ctx context.Context, arg CreateSkillGapNodeParams) (BridgrSkillGapNode, error) {
 	row := q.db.QueryRow(ctx, createSkillGapNode,
 		arg.GraphUuid,
 		arg.NodeKey,
@@ -71,7 +71,7 @@ func (q *Queries) CreateSkillGapNode(ctx context.Context, arg CreateSkillGapNode
 		arg.PositionX,
 		arg.PositionY,
 	)
-	var i HskipUsersBridgrSkillGapNode
+	var i BridgrSkillGapNode
 	err := row.Scan(
 		&i.Uuid,
 		&i.ID,
@@ -106,9 +106,9 @@ SELECT uuid, id, graph_uuid, node_key, display_name, description, proficiency_hi
 WHERE id = $1
 `
 
-func (q *Queries) GetSkillGapNode(ctx context.Context, id int64) (HskipUsersBridgrSkillGapNode, error) {
+func (q *Queries) GetSkillGapNode(ctx context.Context, id int64) (BridgrSkillGapNode, error) {
 	row := q.db.QueryRow(ctx, getSkillGapNode, id)
-	var i HskipUsersBridgrSkillGapNode
+	var i BridgrSkillGapNode
 	err := row.Scan(
 		&i.Uuid,
 		&i.ID,
@@ -138,9 +138,9 @@ type GetSkillGapNodeByKeyParams struct {
 	NodeKey   string      `db:"node_key"`
 }
 
-func (q *Queries) GetSkillGapNodeByKey(ctx context.Context, arg GetSkillGapNodeByKeyParams) (HskipUsersBridgrSkillGapNode, error) {
+func (q *Queries) GetSkillGapNodeByKey(ctx context.Context, arg GetSkillGapNodeByKeyParams) (BridgrSkillGapNode, error) {
 	row := q.db.QueryRow(ctx, getSkillGapNodeByKey, arg.GraphUuid, arg.NodeKey)
-	var i HskipUsersBridgrSkillGapNode
+	var i BridgrSkillGapNode
 	err := row.Scan(
 		&i.Uuid,
 		&i.ID,
@@ -173,15 +173,15 @@ ORDER BY rn.node_key ASC
 `
 
 // Role-requirement nodes whose node_key also exists on the candidate graph for the same analysis.
-func (q *Queries) ListMatchedNodes(ctx context.Context, analysisUuid pgtype.UUID) ([]HskipUsersBridgrSkillGapNode, error) {
+func (q *Queries) ListMatchedNodes(ctx context.Context, analysisUuid pgtype.UUID) ([]BridgrSkillGapNode, error) {
 	rows, err := q.db.Query(ctx, listMatchedNodes, analysisUuid)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []HskipUsersBridgrSkillGapNode
+	var items []BridgrSkillGapNode
 	for rows.Next() {
-		var i HskipUsersBridgrSkillGapNode
+		var i BridgrSkillGapNode
 		if err := rows.Scan(
 			&i.Uuid,
 			&i.ID,
@@ -214,15 +214,15 @@ WHERE graph_uuid = $1
 ORDER BY node_key ASC
 `
 
-func (q *Queries) ListSkillGapNodesByGraph(ctx context.Context, graphUuid pgtype.UUID) ([]HskipUsersBridgrSkillGapNode, error) {
+func (q *Queries) ListSkillGapNodesByGraph(ctx context.Context, graphUuid pgtype.UUID) ([]BridgrSkillGapNode, error) {
 	rows, err := q.db.Query(ctx, listSkillGapNodesByGraph, graphUuid)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []HskipUsersBridgrSkillGapNode
+	var items []BridgrSkillGapNode
 	for rows.Next() {
-		var i HskipUsersBridgrSkillGapNode
+		var i BridgrSkillGapNode
 		if err := rows.Scan(
 			&i.Uuid,
 			&i.ID,
@@ -265,15 +265,15 @@ ORDER BY rn.node_key ASC
 `
 
 // Role-requirement nodes with no candidate node sharing the same node_key (skill gaps).
-func (q *Queries) ListUnmatchedNodes(ctx context.Context, analysisUuid pgtype.UUID) ([]HskipUsersBridgrSkillGapNode, error) {
+func (q *Queries) ListUnmatchedNodes(ctx context.Context, analysisUuid pgtype.UUID) ([]BridgrSkillGapNode, error) {
 	rows, err := q.db.Query(ctx, listUnmatchedNodes, analysisUuid)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []HskipUsersBridgrSkillGapNode
+	var items []BridgrSkillGapNode
 	for rows.Next() {
-		var i HskipUsersBridgrSkillGapNode
+		var i BridgrSkillGapNode
 		if err := rows.Scan(
 			&i.Uuid,
 			&i.ID,

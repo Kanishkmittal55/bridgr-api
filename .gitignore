@@ -2,3 +2,7 @@
 *.exe
 .DS_Store
 docs/api/dist/
+
+# Air (live reload)
+tmp/
+air_errors.log

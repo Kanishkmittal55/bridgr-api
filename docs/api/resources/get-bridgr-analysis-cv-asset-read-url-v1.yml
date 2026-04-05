@@ -1,0 +1,60 @@
+get:
+  summary: Get browser-readable URL for the analysis CV asset
+  description: |
+    Returns a short-lived presigned GET URL when `cv_asset_uri` is `s3://...`, or the same HTTPS URL
+    when the CV was stored as a direct link. Use the URL in an iframe or PDF viewer (left pane in the console).
+  operationId: V1GetBridgrAnalysisCvAssetReadUrl
+  tags:
+    - bridgr
+  parameters:
+    - name: X-API-KEY
+      in: header
+      description: API Key of the service making the request
+      required: true
+      style: simple
+      explode: false
+      schema:
+        type: string
+    - name: analysisUUID
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+  responses:
+    "200":
+      description: Read URL for the CV
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/BridgrAnalysisAssetReadUrlResponse.yml'
+    "400":
+      description: Invalid or unsupported asset URI
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/ErrorResponse.yml'
+    "401":
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/ErrorResponse.yml'
+    "404":
+      description: Analysis or CV asset not found
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/NotFoundErrorResponse.yml'
+    "503":
+      description: S3 not configured (for s3:// assets)
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/ErrorResponse.yml'
+    "500":
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/ErrorResponse.yml'

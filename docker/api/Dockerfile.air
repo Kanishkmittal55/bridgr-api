@@ -1,0 +1,10 @@
+# syntax=docker/dockerfile:1
+# Dev-only: run `air` with repo bind-mounted to /src (see docker-compose.air.yaml).
+FROM golang:1.24-alpine
+RUN apk add --no-cache git ca-certificates
+ENV CGO_ENABLED=0
+ARG AIR_VERSION=v1.61.7
+RUN go install github.com/air-verse/air@${AIR_VERSION}
+WORKDIR /src
+ENV PATH="${PATH}:/go/bin"
+CMD ["air", "-c", ".air.toml"]

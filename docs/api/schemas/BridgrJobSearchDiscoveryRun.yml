@@ -1,0 +1,60 @@
+type: object
+required:
+  - uuid
+  - id
+  - user_id
+  - status
+  - raw_candidate_count
+  - new_candidate_count
+  - created_at
+  - updated_at
+properties:
+  uuid:
+    type: string
+    format: uuid
+  id:
+    type: integer
+    format: int64
+  user_id:
+    type: integer
+    format: int32
+  status:
+    type: string
+    description: pending, queued, running, completed, failed, cancelled
+  request_params:
+    type: object
+    additionalProperties: true
+    nullable: true
+  radar_meta:
+    type: object
+    additionalProperties: true
+    nullable: true
+  raw_candidate_count:
+    type: integer
+    format: int32
+  new_candidate_count:
+    type: integer
+    format: int32
+  started_at:
+    type: string
+    format: date-time
+    nullable: true
+  completed_at:
+    type: string
+    format: date-time
+    nullable: true
+  error_code:
+    type: string
+    nullable: true
+  error_detail:
+    type: string
+    nullable: true
+  sqs_message_id:
+    type: string
+    nullable: true
+  created_at:
+    type: string
+    format: date-time
+  updated_at:
+    type: string
+    format: date-time

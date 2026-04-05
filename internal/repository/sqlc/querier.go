@@ -15,41 +15,72 @@ type Querier interface {
 	BulkCreateSkillGapNodes(ctx context.Context, arg []BulkCreateSkillGapNodesParams) (int64, error)
 	BulkCreateSkillGapPathStepDeps(ctx context.Context, arg []BulkCreateSkillGapPathStepDepsParams) (int64, error)
 	BulkCreateSkillGapPathSteps(ctx context.Context, arg []BulkCreateSkillGapPathStepsParams) (int64, error)
+	CountJobSearchDiscoveryRunsByUserSince(ctx context.Context, arg CountJobSearchDiscoveryRunsByUserSinceParams) (int64, error)
+	// =============================================================================
+	// BRIDGR JOB DISCOVERY — ANALYSIS JOB LINK
+	// Junction: skill_gap_analyses.uuid ↔ job_candidates.uuid. App-enforced FKs.
+	// =============================================================================
+	CreateAnalysisJobLink(ctx context.Context, arg CreateAnalysisJobLinkParams) (BridgrAnalysisJobLink, error)
+	// =============================================================================
+	// BRIDGR JOB DISCOVERY — NOTIFICATIONS
+	// Outbox for in-app / email / push. user_id and job_candidate_uuid app-enforced.
+	// =============================================================================
+	CreateJobNotification(ctx context.Context, arg CreateJobNotificationParams) (BridgrJobNotification, error)
+	// =============================================================================
+	// BRIDGR JOB DISCOVERY — DISCOVERY RUNS
+	// One Radar sweep audit row per execution. user_id app-enforced FK to users.id.
+	// =============================================================================
+	CreateJobSearchDiscoveryRun(ctx context.Context, arg CreateJobSearchDiscoveryRunParams) (BridgrJobSearchDiscoveryRun, error)
+	// =============================================================================
+	// BRIDGR JOB DISCOVERY — JOB SEARCH PROFILES
+	// Per-user Radar/search preferences. user_id app-enforced FK to users.id.
+	// =============================================================================
+	CreateJobSearchProfile(ctx context.Context, arg CreateJobSearchProfileParams) (BridgrJobSearchProfile, error)
 	// =============================================================================
 	// BRIDGR SKILL GAP — ANALYSES
 	// One CV+JD skill-gap analysis run. user_id / persona / pursuit are app-enforced FKs.
 	// =============================================================================
-	CreateSkillGapAnalysis(ctx context.Context, arg CreateSkillGapAnalysisParams) (HskipUsersBridgrSkillGapAnalysis, error)
+	CreateSkillGapAnalysis(ctx context.Context, arg CreateSkillGapAnalysisParams) (BridgrSkillGapAnalysis, error)
 	// =============================================================================
 	// BRIDGR SKILL GAP — EDGES
 	// Directed edges between nodes in one graph. All uuids app-enforced FKs.
 	// =============================================================================
-	CreateSkillGapEdge(ctx context.Context, arg CreateSkillGapEdgeParams) (HskipUsersBridgrSkillGapEdge, error)
+	CreateSkillGapEdge(ctx context.Context, arg CreateSkillGapEdgeParams) (BridgrSkillGapEdge, error)
 	// =============================================================================
 	// BRIDGR SKILL GAP — GRAPHS
 	// Candidate vs role_requirement graphs per analysis. analysis_uuid app-enforced.
 	// =============================================================================
-	CreateSkillGapGraph(ctx context.Context, arg CreateSkillGapGraphParams) (HskipUsersBridgrSkillGapGraph, error)
+	CreateSkillGapGraph(ctx context.Context, arg CreateSkillGapGraphParams) (BridgrSkillGapGraph, error)
 	// =============================================================================
 	// BRIDGR SKILL GAP — LEARNING PATHS
 	// Paths per analysis (v1 often one active path; rows versioned by path_version).
 	// =============================================================================
-	CreateSkillGapLearningPath(ctx context.Context, arg CreateSkillGapLearningPathParams) (HskipUsersBridgrSkillGapLearningPath, error)
+	CreateSkillGapLearningPath(ctx context.Context, arg CreateSkillGapLearningPathParams) (BridgrSkillGapLearningPath, error)
 	// =============================================================================
 	// BRIDGR SKILL GAP — NODES
 	// Skill/concept nodes per graph. graph_uuid app-enforced FK.
 	// =============================================================================
-	CreateSkillGapNode(ctx context.Context, arg CreateSkillGapNodeParams) (HskipUsersBridgrSkillGapNode, error)
+	CreateSkillGapNode(ctx context.Context, arg CreateSkillGapNodeParams) (BridgrSkillGapNode, error)
 	// =============================================================================
 	// BRIDGR SKILL GAP — PATH STEPS
 	// Ordered steps inside a learning path.
 	// =============================================================================
-	CreateSkillGapPathStep(ctx context.Context, arg CreateSkillGapPathStepParams) (HskipUsersBridgrSkillGapPathStep, error)
+	CreateSkillGapPathStep(ctx context.Context, arg CreateSkillGapPathStepParams) (BridgrSkillGapPathStep, error)
 	// =============================================================================
 	// BRIDGR SKILL GAP — PATH STEP DEPENDENCIES
 	// DAG edges between path steps (prerequisites).
 	// =============================================================================
-	CreateSkillGapPathStepDep(ctx context.Context, arg CreateSkillGapPathStepDepParams) (HskipUsersBridgrSkillGapPathStepDep, error)
+	CreateSkillGapPathStepDep(ctx context.Context, arg CreateSkillGapPathStepDepParams) (BridgrSkillGapPathStepDep, error)
+	DeleteAnalysisJobLinkByID(ctx context.Context, id int64) error
+	DeleteAnalysisJobLinkByPair(ctx context.Context, arg DeleteAnalysisJobLinkByPairParams) error
+	DeleteAnalysisJobLinkByUUID(ctx context.Context, uuid pgtype.UUID) error
+	DeleteJobCandidateByID(ctx context.Context, id int64) error
+	DeleteJobCandidateByUUID(ctx context.Context, uuid pgtype.UUID) error
+	DeleteJobNotificationByID(ctx context.Context, id int64) error
+	DeleteJobNotificationByUUID(ctx context.Context, uuid pgtype.UUID) error
+	DeleteJobSearchDiscoveryRunByID(ctx context.Context, id int64) error
+	DeleteJobSearchProfileByID(ctx context.Context, id int64) error
+	DeleteJobSearchProfileByUserID(ctx context.Context, userID int32) error
 	DeleteSkillGapAnalysis(ctx context.Context, id int64) error
 	DeleteSkillGapAnalysisByUUID(ctx context.Context, uuid pgtype.UUID) error
 	DeleteSkillGapEdgesByGraph(ctx context.Context, graphUuid pgtype.UUID) error
@@ -58,45 +89,86 @@ type Querier interface {
 	DeleteSkillGapNodesByGraph(ctx context.Context, graphUuid pgtype.UUID) error
 	DeleteSkillGapPathStepDepsByPath(ctx context.Context, pathUuid pgtype.UUID) error
 	DeleteSkillGapPathStepsByPath(ctx context.Context, pathUuid pgtype.UUID) error
-	GetSkillGapAnalysis(ctx context.Context, id int64) (HskipUsersBridgrSkillGapAnalysis, error)
-	GetSkillGapAnalysisByFingerprint(ctx context.Context, arg GetSkillGapAnalysisByFingerprintParams) (HskipUsersBridgrSkillGapAnalysis, error)
-	GetSkillGapAnalysisByUUID(ctx context.Context, uuid pgtype.UUID) (HskipUsersBridgrSkillGapAnalysis, error)
-	GetSkillGapAnalysisByUser(ctx context.Context, arg GetSkillGapAnalysisByUserParams) ([]HskipUsersBridgrSkillGapAnalysis, error)
+	GetAnalysisJobLinkByID(ctx context.Context, id int64) (BridgrAnalysisJobLink, error)
+	GetAnalysisJobLinkByPair(ctx context.Context, arg GetAnalysisJobLinkByPairParams) (BridgrAnalysisJobLink, error)
+	GetAnalysisJobLinkByUUID(ctx context.Context, uuid pgtype.UUID) (BridgrAnalysisJobLink, error)
+	GetJobCandidateByID(ctx context.Context, id int64) (BridgrJobCandidate, error)
+	GetJobCandidateByUUID(ctx context.Context, uuid pgtype.UUID) (BridgrJobCandidate, error)
+	GetJobCandidateByUserAndURLHash(ctx context.Context, arg GetJobCandidateByUserAndURLHashParams) (BridgrJobCandidate, error)
+	GetJobNotificationByID(ctx context.Context, id int64) (BridgrJobNotification, error)
+	GetJobNotificationByUUID(ctx context.Context, uuid pgtype.UUID) (BridgrJobNotification, error)
+	GetJobSearchDiscoveryRunByID(ctx context.Context, id int64) (BridgrJobSearchDiscoveryRun, error)
+	GetJobSearchDiscoveryRunByUUID(ctx context.Context, uuid pgtype.UUID) (BridgrJobSearchDiscoveryRun, error)
+	GetJobSearchProfileByID(ctx context.Context, id int64) (BridgrJobSearchProfile, error)
+	GetJobSearchProfileByUUID(ctx context.Context, uuid pgtype.UUID) (BridgrJobSearchProfile, error)
+	GetJobSearchProfileByUserID(ctx context.Context, userID int32) (BridgrJobSearchProfile, error)
+	GetSkillGapAnalysis(ctx context.Context, id int64) (BridgrSkillGapAnalysis, error)
+	GetSkillGapAnalysisByFingerprint(ctx context.Context, arg GetSkillGapAnalysisByFingerprintParams) (BridgrSkillGapAnalysis, error)
+	GetSkillGapAnalysisByUUID(ctx context.Context, uuid pgtype.UUID) (BridgrSkillGapAnalysis, error)
+	GetSkillGapAnalysisByUser(ctx context.Context, arg GetSkillGapAnalysisByUserParams) ([]BridgrSkillGapAnalysis, error)
 	// =============================================================================
 	// BRIDGR SKILL GAP — COVERAGE (aggregated reads)
 	// Metrics derived from graphs + node overlap (not only skill_gap_coverage rows).
 	// =============================================================================
 	GetSkillGapCoverage(ctx context.Context, analysisUuid pgtype.UUID) (GetSkillGapCoverageRow, error)
 	GetSkillGapCoverageByUser(ctx context.Context, arg GetSkillGapCoverageByUserParams) ([]GetSkillGapCoverageByUserRow, error)
-	GetSkillGapGraph(ctx context.Context, id int64) (HskipUsersBridgrSkillGapGraph, error)
-	GetSkillGapGraphByKind(ctx context.Context, arg GetSkillGapGraphByKindParams) (HskipUsersBridgrSkillGapGraph, error)
-	GetSkillGapGraphByUUID(ctx context.Context, uuid pgtype.UUID) (HskipUsersBridgrSkillGapGraph, error)
-	GetSkillGapGraphsByAnalysis(ctx context.Context, analysisUuid pgtype.UUID) ([]HskipUsersBridgrSkillGapGraph, error)
-	GetSkillGapLearningPath(ctx context.Context, id int64) (HskipUsersBridgrSkillGapLearningPath, error)
-	GetSkillGapLearningPathByAnalysis(ctx context.Context, analysisUuid pgtype.UUID) (HskipUsersBridgrSkillGapLearningPath, error)
-	GetSkillGapLearningPathByUUID(ctx context.Context, uuid pgtype.UUID) (HskipUsersBridgrSkillGapLearningPath, error)
-	GetSkillGapNode(ctx context.Context, id int64) (HskipUsersBridgrSkillGapNode, error)
-	GetSkillGapNodeByKey(ctx context.Context, arg GetSkillGapNodeByKeyParams) (HskipUsersBridgrSkillGapNode, error)
-	GetSkillGapPathStep(ctx context.Context, id int64) (HskipUsersBridgrSkillGapPathStep, error)
-	ListAllDepsByPath(ctx context.Context, pathUuid pgtype.UUID) ([]HskipUsersBridgrSkillGapPathStepDep, error)
+	GetSkillGapGraph(ctx context.Context, id int64) (BridgrSkillGapGraph, error)
+	GetSkillGapGraphByKind(ctx context.Context, arg GetSkillGapGraphByKindParams) (BridgrSkillGapGraph, error)
+	GetSkillGapGraphByUUID(ctx context.Context, uuid pgtype.UUID) (BridgrSkillGapGraph, error)
+	GetSkillGapGraphsByAnalysis(ctx context.Context, analysisUuid pgtype.UUID) ([]BridgrSkillGapGraph, error)
+	GetSkillGapLearningPath(ctx context.Context, id int64) (BridgrSkillGapLearningPath, error)
+	GetSkillGapLearningPathByAnalysis(ctx context.Context, analysisUuid pgtype.UUID) (BridgrSkillGapLearningPath, error)
+	GetSkillGapLearningPathByUUID(ctx context.Context, uuid pgtype.UUID) (BridgrSkillGapLearningPath, error)
+	GetSkillGapNode(ctx context.Context, id int64) (BridgrSkillGapNode, error)
+	GetSkillGapNodeByKey(ctx context.Context, arg GetSkillGapNodeByKeyParams) (BridgrSkillGapNode, error)
+	GetSkillGapPathStep(ctx context.Context, id int64) (BridgrSkillGapPathStep, error)
+	// =============================================================================
+	// BRIDGR JOB DISCOVERY — JOB CANDIDATES
+	// Deduped postings per user. (user_id, url_hash) unique.
+	// =============================================================================
+	InsertJobCandidate(ctx context.Context, arg InsertJobCandidateParams) (BridgrJobCandidate, error)
+	ListAllDepsByPath(ctx context.Context, pathUuid pgtype.UUID) ([]BridgrSkillGapPathStepDep, error)
+	ListAnalysisJobLinksByAnalysisUUID(ctx context.Context, analysisUuid pgtype.UUID) ([]BridgrAnalysisJobLink, error)
+	ListAnalysisJobLinksByCandidateUUID(ctx context.Context, jobCandidateUuid pgtype.UUID) ([]BridgrAnalysisJobLink, error)
+	ListAnalysisJobLinksByUser(ctx context.Context, arg ListAnalysisJobLinksByUserParams) ([]BridgrAnalysisJobLink, error)
 	// Prerequisite steps that step_uuid depends on within this path.
-	ListDependenciesByStep(ctx context.Context, arg ListDependenciesByStepParams) ([]HskipUsersBridgrSkillGapPathStepDep, error)
+	ListDependenciesByStep(ctx context.Context, arg ListDependenciesByStepParams) ([]BridgrSkillGapPathStepDep, error)
 	// Steps in this path that depend on depends_on_step_uuid.
-	ListDependentsByStep(ctx context.Context, arg ListDependentsByStepParams) ([]HskipUsersBridgrSkillGapPathStepDep, error)
+	ListDependentsByStep(ctx context.Context, arg ListDependentsByStepParams) ([]BridgrSkillGapPathStepDep, error)
+	ListJobCandidatesByDiscoveryRunUUID(ctx context.Context, discoveryRunUuid pgtype.UUID) ([]BridgrJobCandidate, error)
+	ListJobCandidatesByUser(ctx context.Context, arg ListJobCandidatesByUserParams) ([]BridgrJobCandidate, error)
+	ListJobCandidatesByUserFiltered(ctx context.Context, arg ListJobCandidatesByUserFilteredParams) ([]BridgrJobCandidate, error)
+	ListJobNotificationsByUser(ctx context.Context, arg ListJobNotificationsByUserParams) ([]BridgrJobNotification, error)
+	ListJobNotificationsByUserAndStatus(ctx context.Context, arg ListJobNotificationsByUserAndStatusParams) ([]BridgrJobNotification, error)
+	ListJobNotificationsByUserFiltered(ctx context.Context, arg ListJobNotificationsByUserFilteredParams) ([]BridgrJobNotification, error)
+	ListJobSearchDiscoveryRunsByUser(ctx context.Context, arg ListJobSearchDiscoveryRunsByUserParams) ([]BridgrJobSearchDiscoveryRun, error)
 	// Role-requirement nodes whose node_key also exists on the candidate graph for the same analysis.
-	ListMatchedNodes(ctx context.Context, analysisUuid pgtype.UUID) ([]HskipUsersBridgrSkillGapNode, error)
-	ListSkillGapAnalysesByUser(ctx context.Context, arg ListSkillGapAnalysesByUserParams) ([]HskipUsersBridgrSkillGapAnalysis, error)
-	ListSkillGapEdgesByGraph(ctx context.Context, graphUuid pgtype.UUID) ([]HskipUsersBridgrSkillGapEdge, error)
-	ListSkillGapEdgesByNode(ctx context.Context, arg ListSkillGapEdgesByNodeParams) ([]HskipUsersBridgrSkillGapEdge, error)
-	ListSkillGapNodesByGraph(ctx context.Context, graphUuid pgtype.UUID) ([]HskipUsersBridgrSkillGapNode, error)
-	ListSkillGapPathStepsByPath(ctx context.Context, pathUuid pgtype.UUID) ([]HskipUsersBridgrSkillGapPathStep, error)
+	ListMatchedNodes(ctx context.Context, analysisUuid pgtype.UUID) ([]BridgrSkillGapNode, error)
+	ListPendingJobNotificationsByUser(ctx context.Context, arg ListPendingJobNotificationsByUserParams) ([]BridgrJobNotification, error)
+	ListSkillGapAnalysesByUser(ctx context.Context, arg ListSkillGapAnalysesByUserParams) ([]BridgrSkillGapAnalysis, error)
+	ListSkillGapEdgesByGraph(ctx context.Context, graphUuid pgtype.UUID) ([]BridgrSkillGapEdge, error)
+	ListSkillGapEdgesByNode(ctx context.Context, arg ListSkillGapEdgesByNodeParams) ([]BridgrSkillGapEdge, error)
+	ListSkillGapNodesByGraph(ctx context.Context, graphUuid pgtype.UUID) ([]BridgrSkillGapNode, error)
+	ListSkillGapPathStepsByPath(ctx context.Context, pathUuid pgtype.UUID) ([]BridgrSkillGapPathStep, error)
 	// Role-requirement nodes with no candidate node sharing the same node_key (skill gaps).
-	ListUnmatchedNodes(ctx context.Context, analysisUuid pgtype.UUID) ([]HskipUsersBridgrSkillGapNode, error)
-	UpdateSkillGapAnalysisError(ctx context.Context, arg UpdateSkillGapAnalysisErrorParams) (HskipUsersBridgrSkillGapAnalysis, error)
-	UpdateSkillGapAnalysisStatus(ctx context.Context, arg UpdateSkillGapAnalysisStatusParams) (HskipUsersBridgrSkillGapAnalysis, error)
-	UpdateSkillGapAnalysisSummary(ctx context.Context, arg UpdateSkillGapAnalysisSummaryParams) (HskipUsersBridgrSkillGapAnalysis, error)
-	UpdateSkillGapLearningPathMetadata(ctx context.Context, arg UpdateSkillGapLearningPathMetadataParams) (HskipUsersBridgrSkillGapLearningPath, error)
-	UpdateSkillGapPathStep(ctx context.Context, arg UpdateSkillGapPathStepParams) (HskipUsersBridgrSkillGapPathStep, error)
+	ListUnmatchedNodes(ctx context.Context, analysisUuid pgtype.UUID) ([]BridgrSkillGapNode, error)
+	UpdateAnalysisJobLinkKind(ctx context.Context, arg UpdateAnalysisJobLinkKindParams) (BridgrAnalysisJobLink, error)
+	UpdateJobCandidateByID(ctx context.Context, arg UpdateJobCandidateByIDParams) (BridgrJobCandidate, error)
+	UpdateJobCandidateIngestion(ctx context.Context, arg UpdateJobCandidateIngestionParams) (BridgrJobCandidate, error)
+	UpdateJobNotificationSeen(ctx context.Context, arg UpdateJobNotificationSeenParams) (BridgrJobNotification, error)
+	UpdateJobNotificationStatus(ctx context.Context, arg UpdateJobNotificationStatusParams) (BridgrJobNotification, error)
+	UpdateJobSearchDiscoveryRunFinished(ctx context.Context, arg UpdateJobSearchDiscoveryRunFinishedParams) (BridgrJobSearchDiscoveryRun, error)
+	UpdateJobSearchDiscoveryRunProgress(ctx context.Context, arg UpdateJobSearchDiscoveryRunProgressParams) (BridgrJobSearchDiscoveryRun, error)
+	UpdateJobSearchDiscoveryRunStarted(ctx context.Context, arg UpdateJobSearchDiscoveryRunStartedParams) (BridgrJobSearchDiscoveryRun, error)
+	UpdateJobSearchDiscoveryRunStatus(ctx context.Context, arg UpdateJobSearchDiscoveryRunStatusParams) (BridgrJobSearchDiscoveryRun, error)
+	UpdateJobSearchProfile(ctx context.Context, arg UpdateJobSearchProfileParams) (BridgrJobSearchProfile, error)
+	UpdateJobSearchProfileByUserID(ctx context.Context, arg UpdateJobSearchProfileByUserIDParams) (BridgrJobSearchProfile, error)
+	UpdateSkillGapAnalysisError(ctx context.Context, arg UpdateSkillGapAnalysisErrorParams) (BridgrSkillGapAnalysis, error)
+	UpdateSkillGapAnalysisStatus(ctx context.Context, arg UpdateSkillGapAnalysisStatusParams) (BridgrSkillGapAnalysis, error)
+	UpdateSkillGapAnalysisSummary(ctx context.Context, arg UpdateSkillGapAnalysisSummaryParams) (BridgrSkillGapAnalysis, error)
+	UpdateSkillGapLearningPathMetadata(ctx context.Context, arg UpdateSkillGapLearningPathMetadataParams) (BridgrSkillGapLearningPath, error)
+	UpdateSkillGapPathStep(ctx context.Context, arg UpdateSkillGapPathStepParams) (BridgrSkillGapPathStep, error)
+	UpsertJobCandidate(ctx context.Context, arg UpsertJobCandidateParams) (BridgrJobCandidate, error)
 }
 
 var _ Querier = (*Queries)(nil)

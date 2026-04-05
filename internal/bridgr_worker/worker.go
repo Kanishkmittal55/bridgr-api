@@ -2,12 +2,15 @@ package bridgr_worker
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/Kanishkmittal55/bridgr-api/internal/logger"
 	"github.com/Kanishkmittal55/bridgr-api/internal/repository"
 	"github.com/Kanishkmittal55/bridgr-api/internal/repository/sqlc"
 	awssqs "github.com/aws/aws-sdk-go-v2/service/sqs"
+
+	"github.com/Kanishkmittal55/bridgr-api/internal/radar"
 )
 
 // Worker polls the Bridgr skill-gap SQS queue.
@@ -17,12 +20,12 @@ type Worker struct {
 	proc      *Processor
 }
 
-// NewWorker constructs a worker.
-func NewWorker(sqsClient *awssqs.Client, repo *repository.Repo, q sqlc.Querier, opts WorkerOpts) *Worker {
+// NewWorker constructs a worker. jobSearch may be nil if RADAR_ADDR is unset (discovery stub only).
+func NewWorker(sqsClient *awssqs.Client, repo *repository.Repo, q sqlc.Querier, opts WorkerOpts, jobSearch *radar.JobSearchClient) *Worker {
 	return &Worker{
 		sqsClient: sqsClient,
 		opts:      opts,
-		proc:      NewProcessor(repo, q),
+		proc:      NewProcessor(repo, q, jobSearch),
 	}
 }
 
@@ -112,6 +115,10 @@ func (m *Message) Ack() error {
 	if m.acked {
 		return nil
 	}
+	if m.sqsClient == nil {
+		m.acked = true
+		return nil
+	}
 	_, err := m.sqsClient.DeleteMessage(context.Background(), &awssqs.DeleteMessageInput{
 		QueueUrl:      &m.queueURL,
 		ReceiptHandle: &m.ReceiptHandle,
@@ -124,3 +131,11 @@ func (m *Message) Ack() error {
 
 // Nack leaves the message to retry after visibility timeout.
 func (m *Message) Nack() {}
+
+// ProcessLocalJSON runs one queue payload in-process (no SQS). For dev when BRIDGR_JOB_DISCOVERY_SYNC_IN_DEV is enabled.
+func ProcessLocalJSON(ctx context.Context, repo *repository.Repo, q sqlc.Querier, jobSearch *radar.JobSearchClient, body []byte) error {
+	if repo == nil || q == nil {
+		return fmt.Errorf("nil repo or querier")
+	}
+	return NewProcessor(repo, q, jobSearch).Process(ctx, &Message{Body: body})
+}

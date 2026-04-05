@@ -1,0 +1,31 @@
+type: object
+description: Fields to upsert; omitted keys leave existing DB values unchanged on update. On create, defaults apply for missing columns.
+properties:
+  target_roles:
+    type: array
+    items:
+      type: string
+    nullable: true
+  locations:
+    type: array
+    items:
+      type: object
+      additionalProperties: true
+    nullable: true
+  boards_enabled:
+    type: array
+    items:
+      type: string
+    nullable: true
+  matching:
+    type: object
+    additionalProperties: true
+    nullable: true
+  canonical_cv_analysis_uuid:
+    type: string
+    format: uuid
+    nullable: true
+  max_surfaced_jobs:
+    type: integer
+    format: int32
+    nullable: true

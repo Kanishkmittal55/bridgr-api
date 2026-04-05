@@ -8,13 +8,13 @@ import (
 	"log"
 	"time"
 
+	"github.com/Kanishkmittal55/bridgr-api/internal/config"
+	"github.com/Kanishkmittal55/bridgr-api/internal/env"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awsconfig "github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/credentials"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
-	"github.com/Kanishkmittal55/bridgr-api/internal/config"
-	"github.com/Kanishkmittal55/bridgr-api/internal/env"
 )
 
 // Interface is the S3 surface Bridgr needs (presigned uploads, reads).
@@ -24,6 +24,7 @@ type Interface interface {
 	Delete(ctx context.Context, bucket string, key string) error
 	CopyS3Folder(ctx context.Context, sourceBucket, sourcePrefix, destinationBucket, destinationPrefix string) error
 	GetPresignedUploadURL(ctx context.Context, bucket, key, contentType string, expiry time.Duration) (string, error)
+	GetPresignedDownloadURL(ctx context.Context, bucket, key string, expiry time.Duration, responseContentType string) (string, error)
 }
 
 type client struct {
@@ -165,6 +166,23 @@ func (c *client) GetPresignedUploadURL(ctx context.Context, bucket, key, content
 	})
 	if err != nil {
 		return "", fmt.Errorf("presign put: %w", err)
+	}
+	return presignedReq.URL, nil
+}
+
+func (c *client) GetPresignedDownloadURL(ctx context.Context, bucket, key string, expiry time.Duration, responseContentType string) (string, error) {
+	input := &s3.GetObjectInput{
+		Bucket: aws.String(bucket),
+		Key:    aws.String(key),
+	}
+	if responseContentType != "" {
+		input.ResponseContentType = aws.String(responseContentType)
+	}
+	presignedReq, err := c.presigner.PresignGetObject(ctx, input, func(opts *s3.PresignOptions) {
+		opts.Expires = expiry
+	})
+	if err != nil {
+		return "", fmt.Errorf("presign get: %w", err)
 	}
 	return presignedReq.URL, nil
 }

@@ -84,6 +84,464 @@ SET default_tablespace = '';
 SET default_table_access_method = heap;
 
 --
+-- Name: analysis_job_link; Type: TABLE; Schema: bridgr; Owner: bridgr
+--
+
+CREATE TABLE bridgr.analysis_job_link (
+    uuid uuid DEFAULT gen_random_uuid() NOT NULL,
+    id bigint NOT NULL,
+    user_id integer NOT NULL,
+    analysis_uuid uuid NOT NULL,
+    job_candidate_uuid uuid NOT NULL,
+    link_kind character varying(32) DEFAULT 'from_job_feed'::character varying NOT NULL,
+    created_at timestamp without time zone DEFAULT now() NOT NULL,
+    updated_at timestamp without time zone DEFAULT now() NOT NULL,
+    CONSTRAINT chk_analysis_job_link_kind CHECK (((link_kind)::text = ANY ((ARRAY['from_job_feed'::character varying, 'manual'::character varying, 'import'::character varying])::text[])))
+);
+
+
+ALTER TABLE bridgr.analysis_job_link OWNER TO bridgr;
+
+--
+-- Name: TABLE analysis_job_link; Type: COMMENT; Schema: bridgr; Owner: bridgr
+--
+
+COMMENT ON TABLE bridgr.analysis_job_link IS 'Bridgr: associates a skill_gap_analysis with a discovered job_candidates row.';
+
+
+--
+-- Name: COLUMN analysis_job_link.user_id; Type: COMMENT; Schema: bridgr; Owner: bridgr
+--
+
+COMMENT ON COLUMN bridgr.analysis_job_link.user_id IS 'App-enforced FK to users.id; denormalized for listing';
+
+
+--
+-- Name: COLUMN analysis_job_link.analysis_uuid; Type: COMMENT; Schema: bridgr; Owner: bridgr
+--
+
+COMMENT ON COLUMN bridgr.analysis_job_link.analysis_uuid IS 'App-enforced FK to skill_gap_analyses.uuid';
+
+
+--
+-- Name: COLUMN analysis_job_link.job_candidate_uuid; Type: COMMENT; Schema: bridgr; Owner: bridgr
+--
+
+COMMENT ON COLUMN bridgr.analysis_job_link.job_candidate_uuid IS 'App-enforced FK to job_candidates.uuid';
+
+
+--
+-- Name: COLUMN analysis_job_link.link_kind; Type: COMMENT; Schema: bridgr; Owner: bridgr
+--
+
+COMMENT ON COLUMN bridgr.analysis_job_link.link_kind IS 'from_job_feed, manual, import';
+
+
+--
+-- Name: analysis_job_link_id_seq; Type: SEQUENCE; Schema: bridgr; Owner: bridgr
+--
+
+CREATE SEQUENCE bridgr.analysis_job_link_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER SEQUENCE bridgr.analysis_job_link_id_seq OWNER TO bridgr;
+
+--
+-- Name: analysis_job_link_id_seq; Type: SEQUENCE OWNED BY; Schema: bridgr; Owner: bridgr
+--
+
+ALTER SEQUENCE bridgr.analysis_job_link_id_seq OWNED BY bridgr.analysis_job_link.id;
+
+
+--
+-- Name: job_candidates; Type: TABLE; Schema: bridgr; Owner: bridgr
+--
+
+CREATE TABLE bridgr.job_candidates (
+    uuid uuid DEFAULT gen_random_uuid() NOT NULL,
+    id bigint NOT NULL,
+    user_id integer NOT NULL,
+    discovery_run_uuid uuid,
+    source_board character varying(80) DEFAULT ''::character varying NOT NULL,
+    source_job_id text,
+    job_url text NOT NULL,
+    url_hash character varying(128) NOT NULL,
+    content_hash character varying(128),
+    title text,
+    company text,
+    location text,
+    jd_text text,
+    jd_s3_uri text,
+    fetched_at timestamp without time zone,
+    ingestion_status character varying(30) DEFAULT 'pending'::character varying NOT NULL,
+    radar_payload jsonb DEFAULT '{}'::jsonb NOT NULL,
+    application_url text,
+    created_at timestamp without time zone DEFAULT now() NOT NULL,
+    updated_at timestamp without time zone DEFAULT now() NOT NULL,
+    CONSTRAINT chk_job_candidates_ingestion_status CHECK (((ingestion_status)::text = ANY ((ARRAY['pending'::character varying, 'fetched'::character varying, 'fetch_failed'::character varying, 'partial'::character varying])::text[])))
+);
+
+
+ALTER TABLE bridgr.job_candidates OWNER TO bridgr;
+
+--
+-- Name: TABLE job_candidates; Type: COMMENT; Schema: bridgr; Owner: bridgr
+--
+
+COMMENT ON TABLE bridgr.job_candidates IS 'Bridgr job discovery: one row per unique posting per user (dedupe by url_hash).';
+
+
+--
+-- Name: COLUMN job_candidates.user_id; Type: COMMENT; Schema: bridgr; Owner: bridgr
+--
+
+COMMENT ON COLUMN bridgr.job_candidates.user_id IS 'App-enforced FK to users.id';
+
+
+--
+-- Name: COLUMN job_candidates.discovery_run_uuid; Type: COMMENT; Schema: bridgr; Owner: bridgr
+--
+
+COMMENT ON COLUMN bridgr.job_candidates.discovery_run_uuid IS 'App-enforced FK to job_search_discovery_runs.uuid';
+
+
+--
+-- Name: COLUMN job_candidates.url_hash; Type: COMMENT; Schema: bridgr; Owner: bridgr
+--
+
+COMMENT ON COLUMN bridgr.job_candidates.url_hash IS 'Stable hash of normalized URL for deduplication';
+
+
+--
+-- Name: COLUMN job_candidates.content_hash; Type: COMMENT; Schema: bridgr; Owner: bridgr
+--
+
+COMMENT ON COLUMN bridgr.job_candidates.content_hash IS 'Optional hash of JD body for refresh/dedup';
+
+
+--
+-- Name: COLUMN job_candidates.jd_text; Type: COMMENT; Schema: bridgr; Owner: bridgr
+--
+
+COMMENT ON COLUMN bridgr.job_candidates.jd_text IS 'Inline job description text when small enough';
+
+
+--
+-- Name: COLUMN job_candidates.jd_s3_uri; Type: COMMENT; Schema: bridgr; Owner: bridgr
+--
+
+COMMENT ON COLUMN bridgr.job_candidates.jd_s3_uri IS 'Pointer to stored JD blob when large';
+
+
+--
+-- Name: COLUMN job_candidates.radar_payload; Type: COMMENT; Schema: bridgr; Owner: bridgr
+--
+
+COMMENT ON COLUMN bridgr.job_candidates.radar_payload IS 'Raw or normalized Radar response slice';
+
+
+--
+-- Name: COLUMN job_candidates.application_url; Type: COMMENT; Schema: bridgr; Owner: bridgr
+--
+
+COMMENT ON COLUMN bridgr.job_candidates.application_url IS 'Direct apply URL when distinct from job_url';
+
+
+--
+-- Name: job_candidates_id_seq; Type: SEQUENCE; Schema: bridgr; Owner: bridgr
+--
+
+CREATE SEQUENCE bridgr.job_candidates_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER SEQUENCE bridgr.job_candidates_id_seq OWNER TO bridgr;
+
+--
+-- Name: job_candidates_id_seq; Type: SEQUENCE OWNED BY; Schema: bridgr; Owner: bridgr
+--
+
+ALTER SEQUENCE bridgr.job_candidates_id_seq OWNED BY bridgr.job_candidates.id;
+
+
+--
+-- Name: job_notifications; Type: TABLE; Schema: bridgr; Owner: bridgr
+--
+
+CREATE TABLE bridgr.job_notifications (
+    uuid uuid DEFAULT gen_random_uuid() NOT NULL,
+    id bigint NOT NULL,
+    user_id integer NOT NULL,
+    job_candidate_uuid uuid NOT NULL,
+    channel character varying(32) DEFAULT 'in_app'::character varying NOT NULL,
+    status character varying(30) DEFAULT 'pending'::character varying NOT NULL,
+    payload jsonb DEFAULT '{}'::jsonb NOT NULL,
+    sent_at timestamp without time zone,
+    seen_at timestamp without time zone,
+    error_detail text,
+    created_at timestamp without time zone DEFAULT now() NOT NULL,
+    updated_at timestamp without time zone DEFAULT now() NOT NULL,
+    CONSTRAINT chk_job_notifications_channel CHECK (((channel)::text = ANY ((ARRAY['in_app'::character varying, 'email'::character varying, 'push'::character varying])::text[]))),
+    CONSTRAINT chk_job_notifications_status CHECK (((status)::text = ANY ((ARRAY['pending'::character varying, 'sent'::character varying, 'failed'::character varying, 'seen'::character varying, 'skipped'::character varying])::text[])))
+);
+
+
+ALTER TABLE bridgr.job_notifications OWNER TO bridgr;
+
+--
+-- Name: TABLE job_notifications; Type: COMMENT; Schema: bridgr; Owner: bridgr
+--
+
+COMMENT ON TABLE bridgr.job_notifications IS 'Bridgr job discovery: notification rows for new surfaced or relevant jobs.';
+
+
+--
+-- Name: COLUMN job_notifications.user_id; Type: COMMENT; Schema: bridgr; Owner: bridgr
+--
+
+COMMENT ON COLUMN bridgr.job_notifications.user_id IS 'App-enforced FK to users.id';
+
+
+--
+-- Name: COLUMN job_notifications.job_candidate_uuid; Type: COMMENT; Schema: bridgr; Owner: bridgr
+--
+
+COMMENT ON COLUMN bridgr.job_notifications.job_candidate_uuid IS 'App-enforced FK to job_candidates.uuid';
+
+
+--
+-- Name: COLUMN job_notifications.channel; Type: COMMENT; Schema: bridgr; Owner: bridgr
+--
+
+COMMENT ON COLUMN bridgr.job_notifications.channel IS 'in_app, email, push';
+
+
+--
+-- Name: COLUMN job_notifications.status; Type: COMMENT; Schema: bridgr; Owner: bridgr
+--
+
+COMMENT ON COLUMN bridgr.job_notifications.status IS 'pending, sent, failed, seen, skipped';
+
+
+--
+-- Name: COLUMN job_notifications.payload; Type: COMMENT; Schema: bridgr; Owner: bridgr
+--
+
+COMMENT ON COLUMN bridgr.job_notifications.payload IS 'Title snippet, deep link hints, template vars';
+
+
+--
+-- Name: job_notifications_id_seq; Type: SEQUENCE; Schema: bridgr; Owner: bridgr
+--
+
+CREATE SEQUENCE bridgr.job_notifications_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER SEQUENCE bridgr.job_notifications_id_seq OWNER TO bridgr;
+
+--
+-- Name: job_notifications_id_seq; Type: SEQUENCE OWNED BY; Schema: bridgr; Owner: bridgr
+--
+
+ALTER SEQUENCE bridgr.job_notifications_id_seq OWNED BY bridgr.job_notifications.id;
+
+
+--
+-- Name: job_search_discovery_runs; Type: TABLE; Schema: bridgr; Owner: bridgr
+--
+
+CREATE TABLE bridgr.job_search_discovery_runs (
+    uuid uuid DEFAULT gen_random_uuid() NOT NULL,
+    id bigint NOT NULL,
+    user_id integer NOT NULL,
+    status character varying(30) DEFAULT 'pending'::character varying NOT NULL,
+    request_params jsonb DEFAULT '{}'::jsonb NOT NULL,
+    radar_meta jsonb DEFAULT '{}'::jsonb NOT NULL,
+    raw_candidate_count integer DEFAULT 0 NOT NULL,
+    new_candidate_count integer DEFAULT 0 NOT NULL,
+    started_at timestamp without time zone,
+    completed_at timestamp without time zone,
+    error_code character varying(80),
+    error_detail text,
+    sqs_message_id character varying(200),
+    created_at timestamp without time zone DEFAULT now() NOT NULL,
+    updated_at timestamp without time zone DEFAULT now() NOT NULL,
+    CONSTRAINT chk_job_search_discovery_runs_status CHECK (((status)::text = ANY ((ARRAY['pending'::character varying, 'queued'::character varying, 'running'::character varying, 'completed'::character varying, 'failed'::character varying, 'cancelled'::character varying])::text[])))
+);
+
+
+ALTER TABLE bridgr.job_search_discovery_runs OWNER TO bridgr;
+
+--
+-- Name: TABLE job_search_discovery_runs; Type: COMMENT; Schema: bridgr; Owner: bridgr
+--
+
+COMMENT ON TABLE bridgr.job_search_discovery_runs IS 'Bridgr job discovery: audit trail for one Radar-backed discovery execution.';
+
+
+--
+-- Name: COLUMN job_search_discovery_runs.user_id; Type: COMMENT; Schema: bridgr; Owner: bridgr
+--
+
+COMMENT ON COLUMN bridgr.job_search_discovery_runs.user_id IS 'App-enforced FK to users.id';
+
+
+--
+-- Name: COLUMN job_search_discovery_runs.status; Type: COMMENT; Schema: bridgr; Owner: bridgr
+--
+
+COMMENT ON COLUMN bridgr.job_search_discovery_runs.status IS 'pending, queued, running, completed, failed, cancelled';
+
+
+--
+-- Name: COLUMN job_search_discovery_runs.request_params; Type: COMMENT; Schema: bridgr; Owner: bridgr
+--
+
+COMMENT ON COLUMN bridgr.job_search_discovery_runs.request_params IS 'Resolved query/location/boards caps sent to worker/Radar';
+
+
+--
+-- Name: COLUMN job_search_discovery_runs.radar_meta; Type: COMMENT; Schema: bridgr; Owner: bridgr
+--
+
+COMMENT ON COLUMN bridgr.job_search_discovery_runs.radar_meta IS 'Timings, per-board errors, debug payload';
+
+
+--
+-- Name: COLUMN job_search_discovery_runs.sqs_message_id; Type: COMMENT; Schema: bridgr; Owner: bridgr
+--
+
+COMMENT ON COLUMN bridgr.job_search_discovery_runs.sqs_message_id IS 'Optional queue id for async job discovery';
+
+
+--
+-- Name: job_search_discovery_runs_id_seq; Type: SEQUENCE; Schema: bridgr; Owner: bridgr
+--
+
+CREATE SEQUENCE bridgr.job_search_discovery_runs_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER SEQUENCE bridgr.job_search_discovery_runs_id_seq OWNER TO bridgr;
+
+--
+-- Name: job_search_discovery_runs_id_seq; Type: SEQUENCE OWNED BY; Schema: bridgr; Owner: bridgr
+--
+
+ALTER SEQUENCE bridgr.job_search_discovery_runs_id_seq OWNED BY bridgr.job_search_discovery_runs.id;
+
+
+--
+-- Name: job_search_profiles; Type: TABLE; Schema: bridgr; Owner: bridgr
+--
+
+CREATE TABLE bridgr.job_search_profiles (
+    uuid uuid DEFAULT gen_random_uuid() NOT NULL,
+    id bigint NOT NULL,
+    user_id integer NOT NULL,
+    target_roles jsonb DEFAULT '[]'::jsonb NOT NULL,
+    locations jsonb DEFAULT '[]'::jsonb NOT NULL,
+    boards_enabled jsonb DEFAULT '[]'::jsonb NOT NULL,
+    matching jsonb DEFAULT '{}'::jsonb NOT NULL,
+    canonical_cv_analysis_uuid uuid,
+    max_surfaced_jobs integer DEFAULT 3 NOT NULL,
+    created_at timestamp without time zone DEFAULT now() NOT NULL,
+    updated_at timestamp without time zone DEFAULT now() NOT NULL,
+    CONSTRAINT chk_job_search_profiles_max_surfaced CHECK (((max_surfaced_jobs > 0) AND (max_surfaced_jobs <= 20)))
+);
+
+
+ALTER TABLE bridgr.job_search_profiles OWNER TO bridgr;
+
+--
+-- Name: TABLE job_search_profiles; Type: COMMENT; Schema: bridgr; Owner: bridgr
+--
+
+COMMENT ON TABLE bridgr.job_search_profiles IS 'Bridgr job discovery: user preferences for Radar search and surfacing.';
+
+
+--
+-- Name: COLUMN job_search_profiles.user_id; Type: COMMENT; Schema: bridgr; Owner: bridgr
+--
+
+COMMENT ON COLUMN bridgr.job_search_profiles.user_id IS 'App-enforced FK to users.id';
+
+
+--
+-- Name: COLUMN job_search_profiles.target_roles; Type: COMMENT; Schema: bridgr; Owner: bridgr
+--
+
+COMMENT ON COLUMN bridgr.job_search_profiles.target_roles IS 'JSON array of role strings or objects';
+
+
+--
+-- Name: COLUMN job_search_profiles.locations; Type: COMMENT; Schema: bridgr; Owner: bridgr
+--
+
+COMMENT ON COLUMN bridgr.job_search_profiles.locations IS 'JSON array of location descriptors (city, remote flags, etc.)';
+
+
+--
+-- Name: COLUMN job_search_profiles.boards_enabled; Type: COMMENT; Schema: bridgr; Owner: bridgr
+--
+
+COMMENT ON COLUMN bridgr.job_search_profiles.boards_enabled IS 'JSON array of board ids (e.g. linkedin, indeed)';
+
+
+--
+-- Name: COLUMN job_search_profiles.matching; Type: COMMENT; Schema: bridgr; Owner: bridgr
+--
+
+COMMENT ON COLUMN bridgr.job_search_profiles.matching IS 'Policy blob: strict_no_skill_gaps, tiers, etc.';
+
+
+--
+-- Name: COLUMN job_search_profiles.canonical_cv_analysis_uuid; Type: COMMENT; Schema: bridgr; Owner: bridgr
+--
+
+COMMENT ON COLUMN bridgr.job_search_profiles.canonical_cv_analysis_uuid IS 'Optional app-enforced FK to skill_gap_analyses.uuid for CV fingerprint context';
+
+
+--
+-- Name: job_search_profiles_id_seq; Type: SEQUENCE; Schema: bridgr; Owner: bridgr
+--
+
+CREATE SEQUENCE bridgr.job_search_profiles_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER SEQUENCE bridgr.job_search_profiles_id_seq OWNER TO bridgr;
+
+--
+-- Name: job_search_profiles_id_seq; Type: SEQUENCE OWNED BY; Schema: bridgr; Owner: bridgr
+--
+
+ALTER SEQUENCE bridgr.job_search_profiles_id_seq OWNED BY bridgr.job_search_profiles.id;
+
+
+--
 -- Name: schema_migrations; Type: TABLE; Schema: bridgr; Owner: bridgr
 --
 
@@ -736,6 +1194,41 @@ ALTER SEQUENCE bridgr.skill_gap_path_steps_id_seq OWNED BY bridgr.skill_gap_path
 
 
 --
+-- Name: analysis_job_link id; Type: DEFAULT; Schema: bridgr; Owner: bridgr
+--
+
+ALTER TABLE ONLY bridgr.analysis_job_link ALTER COLUMN id SET DEFAULT nextval('bridgr.analysis_job_link_id_seq'::regclass);
+
+
+--
+-- Name: job_candidates id; Type: DEFAULT; Schema: bridgr; Owner: bridgr
+--
+
+ALTER TABLE ONLY bridgr.job_candidates ALTER COLUMN id SET DEFAULT nextval('bridgr.job_candidates_id_seq'::regclass);
+
+
+--
+-- Name: job_notifications id; Type: DEFAULT; Schema: bridgr; Owner: bridgr
+--
+
+ALTER TABLE ONLY bridgr.job_notifications ALTER COLUMN id SET DEFAULT nextval('bridgr.job_notifications_id_seq'::regclass);
+
+
+--
+-- Name: job_search_discovery_runs id; Type: DEFAULT; Schema: bridgr; Owner: bridgr
+--
+
+ALTER TABLE ONLY bridgr.job_search_discovery_runs ALTER COLUMN id SET DEFAULT nextval('bridgr.job_search_discovery_runs_id_seq'::regclass);
+
+
+--
+-- Name: job_search_profiles id; Type: DEFAULT; Schema: bridgr; Owner: bridgr
+--
+
+ALTER TABLE ONLY bridgr.job_search_profiles ALTER COLUMN id SET DEFAULT nextval('bridgr.job_search_profiles_id_seq'::regclass);
+
+
+--
 -- Name: skill_gap_analyses id; Type: DEFAULT; Schema: bridgr; Owner: bridgr
 --
 
@@ -789,6 +1282,86 @@ ALTER TABLE ONLY bridgr.skill_gap_path_step_deps ALTER COLUMN id SET DEFAULT nex
 --
 
 ALTER TABLE ONLY bridgr.skill_gap_path_steps ALTER COLUMN id SET DEFAULT nextval('bridgr.skill_gap_path_steps_id_seq'::regclass);
+
+
+--
+-- Name: analysis_job_link analysis_job_link_id_key; Type: CONSTRAINT; Schema: bridgr; Owner: bridgr
+--
+
+ALTER TABLE ONLY bridgr.analysis_job_link
+    ADD CONSTRAINT analysis_job_link_id_key UNIQUE (id);
+
+
+--
+-- Name: analysis_job_link analysis_job_link_pkey; Type: CONSTRAINT; Schema: bridgr; Owner: bridgr
+--
+
+ALTER TABLE ONLY bridgr.analysis_job_link
+    ADD CONSTRAINT analysis_job_link_pkey PRIMARY KEY (uuid);
+
+
+--
+-- Name: job_candidates job_candidates_id_key; Type: CONSTRAINT; Schema: bridgr; Owner: bridgr
+--
+
+ALTER TABLE ONLY bridgr.job_candidates
+    ADD CONSTRAINT job_candidates_id_key UNIQUE (id);
+
+
+--
+-- Name: job_candidates job_candidates_pkey; Type: CONSTRAINT; Schema: bridgr; Owner: bridgr
+--
+
+ALTER TABLE ONLY bridgr.job_candidates
+    ADD CONSTRAINT job_candidates_pkey PRIMARY KEY (uuid);
+
+
+--
+-- Name: job_notifications job_notifications_id_key; Type: CONSTRAINT; Schema: bridgr; Owner: bridgr
+--
+
+ALTER TABLE ONLY bridgr.job_notifications
+    ADD CONSTRAINT job_notifications_id_key UNIQUE (id);
+
+
+--
+-- Name: job_notifications job_notifications_pkey; Type: CONSTRAINT; Schema: bridgr; Owner: bridgr
+--
+
+ALTER TABLE ONLY bridgr.job_notifications
+    ADD CONSTRAINT job_notifications_pkey PRIMARY KEY (uuid);
+
+
+--
+-- Name: job_search_discovery_runs job_search_discovery_runs_id_key; Type: CONSTRAINT; Schema: bridgr; Owner: bridgr
+--
+
+ALTER TABLE ONLY bridgr.job_search_discovery_runs
+    ADD CONSTRAINT job_search_discovery_runs_id_key UNIQUE (id);
+
+
+--
+-- Name: job_search_discovery_runs job_search_discovery_runs_pkey; Type: CONSTRAINT; Schema: bridgr; Owner: bridgr
+--
+
+ALTER TABLE ONLY bridgr.job_search_discovery_runs
+    ADD CONSTRAINT job_search_discovery_runs_pkey PRIMARY KEY (uuid);
+
+
+--
+-- Name: job_search_profiles job_search_profiles_id_key; Type: CONSTRAINT; Schema: bridgr; Owner: bridgr
+--
+
+ALTER TABLE ONLY bridgr.job_search_profiles
+    ADD CONSTRAINT job_search_profiles_id_key UNIQUE (id);
+
+
+--
+-- Name: job_search_profiles job_search_profiles_pkey; Type: CONSTRAINT; Schema: bridgr; Owner: bridgr
+--
+
+ALTER TABLE ONLY bridgr.job_search_profiles
+    ADD CONSTRAINT job_search_profiles_pkey PRIMARY KEY (uuid);
 
 
 --
@@ -968,11 +1541,90 @@ ALTER TABLE ONLY bridgr.skill_gap_path_steps
 
 
 --
+-- Name: analysis_job_link uq_analysis_job_link_pair; Type: CONSTRAINT; Schema: bridgr; Owner: bridgr
+--
+
+ALTER TABLE ONLY bridgr.analysis_job_link
+    ADD CONSTRAINT uq_analysis_job_link_pair UNIQUE (analysis_uuid, job_candidate_uuid);
+
+
+--
+-- Name: job_search_profiles uq_job_search_profiles_user; Type: CONSTRAINT; Schema: bridgr; Owner: bridgr
+--
+
+ALTER TABLE ONLY bridgr.job_search_profiles
+    ADD CONSTRAINT uq_job_search_profiles_user UNIQUE (user_id);
+
+
+--
 -- Name: skill_gap_graphs uq_skill_gap_graphs_analysis_kind; Type: CONSTRAINT; Schema: bridgr; Owner: bridgr
 --
 
 ALTER TABLE ONLY bridgr.skill_gap_graphs
     ADD CONSTRAINT uq_skill_gap_graphs_analysis_kind UNIQUE (analysis_uuid, kind);
+
+
+--
+-- Name: idx_analysis_job_link_analysis; Type: INDEX; Schema: bridgr; Owner: bridgr
+--
+
+CREATE INDEX idx_analysis_job_link_analysis ON bridgr.analysis_job_link USING btree (analysis_uuid);
+
+
+--
+-- Name: idx_analysis_job_link_candidate; Type: INDEX; Schema: bridgr; Owner: bridgr
+--
+
+CREATE INDEX idx_analysis_job_link_candidate ON bridgr.analysis_job_link USING btree (job_candidate_uuid);
+
+
+--
+-- Name: idx_analysis_job_link_user; Type: INDEX; Schema: bridgr; Owner: bridgr
+--
+
+CREATE INDEX idx_analysis_job_link_user ON bridgr.analysis_job_link USING btree (user_id, created_at DESC);
+
+
+--
+-- Name: idx_job_candidates_discovery_run; Type: INDEX; Schema: bridgr; Owner: bridgr
+--
+
+CREATE INDEX idx_job_candidates_discovery_run ON bridgr.job_candidates USING btree (discovery_run_uuid);
+
+
+--
+-- Name: idx_job_candidates_user_created; Type: INDEX; Schema: bridgr; Owner: bridgr
+--
+
+CREATE INDEX idx_job_candidates_user_created ON bridgr.job_candidates USING btree (user_id, created_at DESC);
+
+
+--
+-- Name: idx_job_notifications_candidate; Type: INDEX; Schema: bridgr; Owner: bridgr
+--
+
+CREATE INDEX idx_job_notifications_candidate ON bridgr.job_notifications USING btree (job_candidate_uuid);
+
+
+--
+-- Name: idx_job_notifications_user_status; Type: INDEX; Schema: bridgr; Owner: bridgr
+--
+
+CREATE INDEX idx_job_notifications_user_status ON bridgr.job_notifications USING btree (user_id, status, created_at DESC);
+
+
+--
+-- Name: idx_job_search_discovery_runs_status; Type: INDEX; Schema: bridgr; Owner: bridgr
+--
+
+CREATE INDEX idx_job_search_discovery_runs_status ON bridgr.job_search_discovery_runs USING btree (user_id, status);
+
+
+--
+-- Name: idx_job_search_discovery_runs_user_created; Type: INDEX; Schema: bridgr; Owner: bridgr
+--
+
+CREATE INDEX idx_job_search_discovery_runs_user_created ON bridgr.job_search_discovery_runs USING btree (user_id, created_at DESC);
 
 
 --
@@ -1099,6 +1751,48 @@ CREATE INDEX idx_skill_gap_path_step_deps_step ON bridgr.skill_gap_path_step_dep
 --
 
 CREATE INDEX idx_skill_gap_path_steps_path_uuid ON bridgr.skill_gap_path_steps USING btree (path_uuid);
+
+
+--
+-- Name: uq_job_candidates_user_url_hash; Type: INDEX; Schema: bridgr; Owner: bridgr
+--
+
+CREATE UNIQUE INDEX uq_job_candidates_user_url_hash ON bridgr.job_candidates USING btree (user_id, url_hash);
+
+
+--
+-- Name: analysis_job_link tr_analysis_job_link_control_time; Type: TRIGGER; Schema: bridgr; Owner: bridgr
+--
+
+CREATE TRIGGER tr_analysis_job_link_control_time BEFORE INSERT OR UPDATE ON bridgr.analysis_job_link FOR EACH ROW EXECUTE FUNCTION bridgr.tr_control_time();
+
+
+--
+-- Name: job_candidates tr_job_candidates_control_time; Type: TRIGGER; Schema: bridgr; Owner: bridgr
+--
+
+CREATE TRIGGER tr_job_candidates_control_time BEFORE INSERT OR UPDATE ON bridgr.job_candidates FOR EACH ROW EXECUTE FUNCTION bridgr.tr_control_time();
+
+
+--
+-- Name: job_notifications tr_job_notifications_control_time; Type: TRIGGER; Schema: bridgr; Owner: bridgr
+--
+
+CREATE TRIGGER tr_job_notifications_control_time BEFORE INSERT OR UPDATE ON bridgr.job_notifications FOR EACH ROW EXECUTE FUNCTION bridgr.tr_control_time();
+
+
+--
+-- Name: job_search_discovery_runs tr_job_search_discovery_runs_control_time; Type: TRIGGER; Schema: bridgr; Owner: bridgr
+--
+
+CREATE TRIGGER tr_job_search_discovery_runs_control_time BEFORE INSERT OR UPDATE ON bridgr.job_search_discovery_runs FOR EACH ROW EXECUTE FUNCTION bridgr.tr_control_time();
+
+
+--
+-- Name: job_search_profiles tr_job_search_profiles_control_time; Type: TRIGGER; Schema: bridgr; Owner: bridgr
+--
+
+CREATE TRIGGER tr_job_search_profiles_control_time BEFORE INSERT OR UPDATE ON bridgr.job_search_profiles FOR EACH ROW EXECUTE FUNCTION bridgr.tr_control_time();
 
 
 --

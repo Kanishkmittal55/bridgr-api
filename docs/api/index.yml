@@ -54,6 +54,12 @@ paths:
   /v1/bridgr/analyses/{analysisUUID}/coverage:
     get:
       $ref: "./resources/get-bridgr-analysis-coverage-v1.yml#/get"
+  /v1/bridgr/analyses/{analysisUUID}/assets/cv/read-url:
+    get:
+      $ref: "./resources/get-bridgr-analysis-cv-asset-read-url-v1.yml#/get"
+  /v1/bridgr/analyses/{analysisUUID}/assets/jd/read-url:
+    get:
+      $ref: "./resources/get-bridgr-analysis-jd-asset-read-url-v1.yml#/get"
   /v1/bridgr/graphs/{graphUUID}/nodes:
     get:
       $ref: "./resources/get-bridgr-graph-nodes-v1.yml#/get"
@@ -76,5 +82,33 @@ paths:
   /v1/bridgr/users/{userID}/coverage:
     get:
       $ref: "./resources/get-bridgr-user-coverage-v1.yml#/get"
+  /v1/bridgr/users/{userID}/job-search-profile:
+    get:
+      $ref: "./resources/get-bridgr-user-job-search-profile-v1.yml#/get"
+    put:
+      $ref: "./resources/put-bridgr-user-job-search-profile-v1.yml#/put"
+  /v1/bridgr/users/{userID}/job-discovery/runs:
+    post:
+      $ref: "./resources/post-bridgr-user-job-discovery-runs-v1.yml#/post"
+    get:
+      $ref: "./resources/get-bridgr-user-job-discovery-runs-v1.yml#/get"
+  /v1/bridgr/users/{userID}/job-discovery/runs/{runUUID}/cancel:
+    post:
+      $ref: "./resources/post-bridgr-user-job-discovery-run-cancel-v1.yml#/post"
+  /v1/bridgr/job-discovery/runs/{runUUID}:
+    get:
+      $ref: "./resources/get-bridgr-job-discovery-run-v1.yml#/get"
+  /v1/bridgr/users/{userID}/job-candidates:
+    get:
+      $ref: "./resources/get-bridgr-user-job-candidates-v1.yml#/get"
+  /v1/bridgr/job-candidates/{candidateUUID}:
+    get:
+      $ref: "./resources/get-bridgr-job-candidate-v1.yml#/get"
+  /v1/bridgr/users/{userID}/job-notifications:
+    get:
+      $ref: "./resources/get-bridgr-user-job-notifications-v1.yml#/get"
+  /v1/bridgr/job-notifications/{notificationUUID}:
+    patch:
+      $ref: "./resources/patch-bridgr-job-notification-v1.yml#/patch"
 
 # Paths reference ../schemas/*.yml via resource files; no components map required for bundling.

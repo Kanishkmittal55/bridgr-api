@@ -61,7 +61,7 @@ type CreateSkillGapPathStepParams struct {
 // BRIDGR SKILL GAP — PATH STEPS
 // Ordered steps inside a learning path.
 // =============================================================================
-func (q *Queries) CreateSkillGapPathStep(ctx context.Context, arg CreateSkillGapPathStepParams) (HskipUsersBridgrSkillGapPathStep, error) {
+func (q *Queries) CreateSkillGapPathStep(ctx context.Context, arg CreateSkillGapPathStepParams) (BridgrSkillGapPathStep, error) {
 	row := q.db.QueryRow(ctx, createSkillGapPathStep,
 		arg.PathUuid,
 		arg.StepIndex,
@@ -75,7 +75,7 @@ func (q *Queries) CreateSkillGapPathStep(ctx context.Context, arg CreateSkillGap
 		arg.LinkedNodeKeys,
 		arg.Metadata,
 	)
-	var i HskipUsersBridgrSkillGapPathStep
+	var i BridgrSkillGapPathStep
 	err := row.Scan(
 		&i.Uuid,
 		&i.ID,
@@ -111,9 +111,9 @@ SELECT uuid, id, path_uuid, step_index, title, rationale, estimated_hours, resou
 WHERE id = $1
 `
 
-func (q *Queries) GetSkillGapPathStep(ctx context.Context, id int64) (HskipUsersBridgrSkillGapPathStep, error) {
+func (q *Queries) GetSkillGapPathStep(ctx context.Context, id int64) (BridgrSkillGapPathStep, error) {
 	row := q.db.QueryRow(ctx, getSkillGapPathStep, id)
-	var i HskipUsersBridgrSkillGapPathStep
+	var i BridgrSkillGapPathStep
 	err := row.Scan(
 		&i.Uuid,
 		&i.ID,
@@ -140,15 +140,15 @@ WHERE path_uuid = $1
 ORDER BY step_index ASC
 `
 
-func (q *Queries) ListSkillGapPathStepsByPath(ctx context.Context, pathUuid pgtype.UUID) ([]HskipUsersBridgrSkillGapPathStep, error) {
+func (q *Queries) ListSkillGapPathStepsByPath(ctx context.Context, pathUuid pgtype.UUID) ([]BridgrSkillGapPathStep, error) {
 	rows, err := q.db.Query(ctx, listSkillGapPathStepsByPath, pathUuid)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []HskipUsersBridgrSkillGapPathStep
+	var items []BridgrSkillGapPathStep
 	for rows.Next() {
-		var i HskipUsersBridgrSkillGapPathStep
+		var i BridgrSkillGapPathStep
 		if err := rows.Scan(
 			&i.Uuid,
 			&i.ID,
@@ -190,9 +190,9 @@ type UpdateSkillGapPathStepParams struct {
 	ResourceKind pgtype.Text `db:"resource_kind"`
 }
 
-func (q *Queries) UpdateSkillGapPathStep(ctx context.Context, arg UpdateSkillGapPathStepParams) (HskipUsersBridgrSkillGapPathStep, error) {
+func (q *Queries) UpdateSkillGapPathStep(ctx context.Context, arg UpdateSkillGapPathStepParams) (BridgrSkillGapPathStep, error) {
 	row := q.db.QueryRow(ctx, updateSkillGapPathStep, arg.ID, arg.ResourceUri, arg.ResourceKind)
-	var i HskipUsersBridgrSkillGapPathStep
+	var i BridgrSkillGapPathStep
 	err := row.Scan(
 		&i.Uuid,
 		&i.ID,

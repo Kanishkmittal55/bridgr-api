@@ -1,0 +1,9 @@
+# Step 5 (Application Strategy) — Retry & Human Interaction Config
+
+step: application_strategy
+max_retries: 0
+# Strategy definition step: when to generate, resume/cover letter principles, application form answers.
+# Uses intake (step 1) and job report template (step 4); no human input during this planning step.
+comment: "No human interaction cases; strategy reference only."
+
+cases: []

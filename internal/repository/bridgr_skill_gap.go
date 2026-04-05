@@ -14,7 +14,7 @@ import (
 // =============================================================================
 
 // CreateSkillGapAnalysis inserts a new skill gap analysis run.
-func (r *Repo) CreateSkillGapAnalysis(ctx context.Context, querier sqlc.Querier, params sqlc.CreateSkillGapAnalysisParams) (*sqlc.HskipUsersBridgrSkillGapAnalysis, error) {
+func (r *Repo) CreateSkillGapAnalysis(ctx context.Context, querier sqlc.Querier, params sqlc.CreateSkillGapAnalysisParams) (*sqlc.BridgrSkillGapAnalysis, error) {
 	row, err := querier.CreateSkillGapAnalysis(ctx, params)
 	if err != nil {
 		return nil, fmt.Errorf("CreateSkillGapAnalysis: %w", err)
@@ -23,7 +23,7 @@ func (r *Repo) CreateSkillGapAnalysis(ctx context.Context, querier sqlc.Querier,
 }
 
 // GetSkillGapAnalysis returns an analysis by BIGSERIAL id.
-func (r *Repo) GetSkillGapAnalysis(ctx context.Context, querier sqlc.Querier, id int64) (*sqlc.HskipUsersBridgrSkillGapAnalysis, error) {
+func (r *Repo) GetSkillGapAnalysis(ctx context.Context, querier sqlc.Querier, id int64) (*sqlc.BridgrSkillGapAnalysis, error) {
 	row, err := querier.GetSkillGapAnalysis(ctx, id)
 	if err != nil {
 		return nil, fmt.Errorf("GetSkillGapAnalysis: %w", err)
@@ -32,7 +32,7 @@ func (r *Repo) GetSkillGapAnalysis(ctx context.Context, querier sqlc.Querier, id
 }
 
 // GetSkillGapAnalysisByUUID returns an analysis by primary UUID.
-func (r *Repo) GetSkillGapAnalysisByUUID(ctx context.Context, querier sqlc.Querier, uuid pgtype.UUID) (*sqlc.HskipUsersBridgrSkillGapAnalysis, error) {
+func (r *Repo) GetSkillGapAnalysisByUUID(ctx context.Context, querier sqlc.Querier, uuid pgtype.UUID) (*sqlc.BridgrSkillGapAnalysis, error) {
 	row, err := querier.GetSkillGapAnalysisByUUID(ctx, uuid)
 	if err != nil {
 		return nil, fmt.Errorf("GetSkillGapAnalysisByUUID: %w", err)
@@ -41,7 +41,7 @@ func (r *Repo) GetSkillGapAnalysisByUUID(ctx context.Context, querier sqlc.Queri
 }
 
 // GetSkillGapAnalysisByUser lists recent analyses for a user (limit only).
-func (r *Repo) GetSkillGapAnalysisByUser(ctx context.Context, querier sqlc.Querier, params sqlc.GetSkillGapAnalysisByUserParams) ([]sqlc.HskipUsersBridgrSkillGapAnalysis, error) {
+func (r *Repo) GetSkillGapAnalysisByUser(ctx context.Context, querier sqlc.Querier, params sqlc.GetSkillGapAnalysisByUserParams) ([]sqlc.BridgrSkillGapAnalysis, error) {
 	rows, err := querier.GetSkillGapAnalysisByUser(ctx, params)
 	if err != nil {
 		return nil, fmt.Errorf("GetSkillGapAnalysisByUser: %w", err)
@@ -50,7 +50,7 @@ func (r *Repo) GetSkillGapAnalysisByUser(ctx context.Context, querier sqlc.Queri
 }
 
 // GetSkillGapAnalysisByFingerprint finds a run by user + CV/JD fingerprints (idempotency).
-func (r *Repo) GetSkillGapAnalysisByFingerprint(ctx context.Context, querier sqlc.Querier, params sqlc.GetSkillGapAnalysisByFingerprintParams) (*sqlc.HskipUsersBridgrSkillGapAnalysis, error) {
+func (r *Repo) GetSkillGapAnalysisByFingerprint(ctx context.Context, querier sqlc.Querier, params sqlc.GetSkillGapAnalysisByFingerprintParams) (*sqlc.BridgrSkillGapAnalysis, error) {
 	row, err := querier.GetSkillGapAnalysisByFingerprint(ctx, params)
 	if err != nil {
 		return nil, fmt.Errorf("GetSkillGapAnalysisByFingerprint: %w", err)
@@ -59,7 +59,7 @@ func (r *Repo) GetSkillGapAnalysisByFingerprint(ctx context.Context, querier sql
 }
 
 // UpdateSkillGapAnalysisStatus updates pipeline status by analysis id.
-func (r *Repo) UpdateSkillGapAnalysisStatus(ctx context.Context, querier sqlc.Querier, params sqlc.UpdateSkillGapAnalysisStatusParams) (*sqlc.HskipUsersBridgrSkillGapAnalysis, error) {
+func (r *Repo) UpdateSkillGapAnalysisStatus(ctx context.Context, querier sqlc.Querier, params sqlc.UpdateSkillGapAnalysisStatusParams) (*sqlc.BridgrSkillGapAnalysis, error) {
 	row, err := querier.UpdateSkillGapAnalysisStatus(ctx, params)
 	if err != nil {
 		return nil, fmt.Errorf("UpdateSkillGapAnalysisStatus: %w", err)
@@ -68,7 +68,7 @@ func (r *Repo) UpdateSkillGapAnalysisStatus(ctx context.Context, querier sqlc.Qu
 }
 
 // UpdateSkillGapAnalysisSummary updates gap_summary and mermaid_diagram.
-func (r *Repo) UpdateSkillGapAnalysisSummary(ctx context.Context, querier sqlc.Querier, params sqlc.UpdateSkillGapAnalysisSummaryParams) (*sqlc.HskipUsersBridgrSkillGapAnalysis, error) {
+func (r *Repo) UpdateSkillGapAnalysisSummary(ctx context.Context, querier sqlc.Querier, params sqlc.UpdateSkillGapAnalysisSummaryParams) (*sqlc.BridgrSkillGapAnalysis, error) {
 	row, err := querier.UpdateSkillGapAnalysisSummary(ctx, params)
 	if err != nil {
 		return nil, fmt.Errorf("UpdateSkillGapAnalysisSummary: %w", err)
@@ -77,7 +77,7 @@ func (r *Repo) UpdateSkillGapAnalysisSummary(ctx context.Context, querier sqlc.Q
 }
 
 // UpdateSkillGapAnalysisError sets error fields and status failed.
-func (r *Repo) UpdateSkillGapAnalysisError(ctx context.Context, querier sqlc.Querier, params sqlc.UpdateSkillGapAnalysisErrorParams) (*sqlc.HskipUsersBridgrSkillGapAnalysis, error) {
+func (r *Repo) UpdateSkillGapAnalysisError(ctx context.Context, querier sqlc.Querier, params sqlc.UpdateSkillGapAnalysisErrorParams) (*sqlc.BridgrSkillGapAnalysis, error) {
 	row, err := querier.UpdateSkillGapAnalysisError(ctx, params)
 	if err != nil {
 		return nil, fmt.Errorf("UpdateSkillGapAnalysisError: %w", err)
@@ -102,7 +102,7 @@ func (r *Repo) DeleteSkillGapAnalysisByUUID(ctx context.Context, querier sqlc.Qu
 }
 
 // ListSkillGapAnalysesByUser paginates analyses for a user.
-func (r *Repo) ListSkillGapAnalysesByUser(ctx context.Context, querier sqlc.Querier, params sqlc.ListSkillGapAnalysesByUserParams) ([]sqlc.HskipUsersBridgrSkillGapAnalysis, error) {
+func (r *Repo) ListSkillGapAnalysesByUser(ctx context.Context, querier sqlc.Querier, params sqlc.ListSkillGapAnalysesByUserParams) ([]sqlc.BridgrSkillGapAnalysis, error) {
 	rows, err := querier.ListSkillGapAnalysesByUser(ctx, params)
 	if err != nil {
 		return nil, fmt.Errorf("ListSkillGapAnalysesByUser: %w", err)
@@ -115,7 +115,7 @@ func (r *Repo) ListSkillGapAnalysesByUser(ctx context.Context, querier sqlc.Quer
 // =============================================================================
 
 // CreateSkillGapGraph inserts a candidate or role_requirement graph row.
-func (r *Repo) CreateSkillGapGraph(ctx context.Context, querier sqlc.Querier, params sqlc.CreateSkillGapGraphParams) (*sqlc.HskipUsersBridgrSkillGapGraph, error) {
+func (r *Repo) CreateSkillGapGraph(ctx context.Context, querier sqlc.Querier, params sqlc.CreateSkillGapGraphParams) (*sqlc.BridgrSkillGapGraph, error) {
 	row, err := querier.CreateSkillGapGraph(ctx, params)
 	if err != nil {
 		return nil, fmt.Errorf("CreateSkillGapGraph: %w", err)
@@ -124,7 +124,7 @@ func (r *Repo) CreateSkillGapGraph(ctx context.Context, querier sqlc.Querier, pa
 }
 
 // GetSkillGapGraph returns a graph by BIGSERIAL id.
-func (r *Repo) GetSkillGapGraph(ctx context.Context, querier sqlc.Querier, id int64) (*sqlc.HskipUsersBridgrSkillGapGraph, error) {
+func (r *Repo) GetSkillGapGraph(ctx context.Context, querier sqlc.Querier, id int64) (*sqlc.BridgrSkillGapGraph, error) {
 	row, err := querier.GetSkillGapGraph(ctx, id)
 	if err != nil {
 		return nil, fmt.Errorf("GetSkillGapGraph: %w", err)
@@ -133,7 +133,7 @@ func (r *Repo) GetSkillGapGraph(ctx context.Context, querier sqlc.Querier, id in
 }
 
 // GetSkillGapGraphByUUID returns a graph by primary UUID.
-func (r *Repo) GetSkillGapGraphByUUID(ctx context.Context, querier sqlc.Querier, uuid pgtype.UUID) (*sqlc.HskipUsersBridgrSkillGapGraph, error) {
+func (r *Repo) GetSkillGapGraphByUUID(ctx context.Context, querier sqlc.Querier, uuid pgtype.UUID) (*sqlc.BridgrSkillGapGraph, error) {
 	row, err := querier.GetSkillGapGraphByUUID(ctx, uuid)
 	if err != nil {
 		return nil, fmt.Errorf("GetSkillGapGraphByUUID: %w", err)
@@ -142,7 +142,7 @@ func (r *Repo) GetSkillGapGraphByUUID(ctx context.Context, querier sqlc.Querier,
 }
 
 // GetSkillGapGraphsByAnalysis returns all graphs for an analysis (typically candidate + role).
-func (r *Repo) GetSkillGapGraphsByAnalysis(ctx context.Context, querier sqlc.Querier, analysisUuid pgtype.UUID) ([]sqlc.HskipUsersBridgrSkillGapGraph, error) {
+func (r *Repo) GetSkillGapGraphsByAnalysis(ctx context.Context, querier sqlc.Querier, analysisUuid pgtype.UUID) ([]sqlc.BridgrSkillGapGraph, error) {
 	rows, err := querier.GetSkillGapGraphsByAnalysis(ctx, analysisUuid)
 	if err != nil {
 		return nil, fmt.Errorf("GetSkillGapGraphsByAnalysis: %w", err)
@@ -151,7 +151,7 @@ func (r *Repo) GetSkillGapGraphsByAnalysis(ctx context.Context, querier sqlc.Que
 }
 
 // GetSkillGapGraphByKind returns the graph for an analysis and kind.
-func (r *Repo) GetSkillGapGraphByKind(ctx context.Context, querier sqlc.Querier, params sqlc.GetSkillGapGraphByKindParams) (*sqlc.HskipUsersBridgrSkillGapGraph, error) {
+func (r *Repo) GetSkillGapGraphByKind(ctx context.Context, querier sqlc.Querier, params sqlc.GetSkillGapGraphByKindParams) (*sqlc.BridgrSkillGapGraph, error) {
 	row, err := querier.GetSkillGapGraphByKind(ctx, params)
 	if err != nil {
 		return nil, fmt.Errorf("GetSkillGapGraphByKind: %w", err)
@@ -172,7 +172,7 @@ func (r *Repo) DeleteSkillGapGraphsByAnalysis(ctx context.Context, querier sqlc.
 // =============================================================================
 
 // CreateSkillGapNode inserts a single graph node.
-func (r *Repo) CreateSkillGapNode(ctx context.Context, querier sqlc.Querier, params sqlc.CreateSkillGapNodeParams) (*sqlc.HskipUsersBridgrSkillGapNode, error) {
+func (r *Repo) CreateSkillGapNode(ctx context.Context, querier sqlc.Querier, params sqlc.CreateSkillGapNodeParams) (*sqlc.BridgrSkillGapNode, error) {
 	row, err := querier.CreateSkillGapNode(ctx, params)
 	if err != nil {
 		return nil, fmt.Errorf("CreateSkillGapNode: %w", err)
@@ -190,7 +190,7 @@ func (r *Repo) BulkCreateSkillGapNodes(ctx context.Context, querier sqlc.Querier
 }
 
 // GetSkillGapNode returns a node by BIGSERIAL id.
-func (r *Repo) GetSkillGapNode(ctx context.Context, querier sqlc.Querier, id int64) (*sqlc.HskipUsersBridgrSkillGapNode, error) {
+func (r *Repo) GetSkillGapNode(ctx context.Context, querier sqlc.Querier, id int64) (*sqlc.BridgrSkillGapNode, error) {
 	row, err := querier.GetSkillGapNode(ctx, id)
 	if err != nil {
 		return nil, fmt.Errorf("GetSkillGapNode: %w", err)
@@ -199,7 +199,7 @@ func (r *Repo) GetSkillGapNode(ctx context.Context, querier sqlc.Querier, id int
 }
 
 // GetSkillGapNodeByKey returns a node by graph uuid and node_key.
-func (r *Repo) GetSkillGapNodeByKey(ctx context.Context, querier sqlc.Querier, params sqlc.GetSkillGapNodeByKeyParams) (*sqlc.HskipUsersBridgrSkillGapNode, error) {
+func (r *Repo) GetSkillGapNodeByKey(ctx context.Context, querier sqlc.Querier, params sqlc.GetSkillGapNodeByKeyParams) (*sqlc.BridgrSkillGapNode, error) {
 	row, err := querier.GetSkillGapNodeByKey(ctx, params)
 	if err != nil {
 		return nil, fmt.Errorf("GetSkillGapNodeByKey: %w", err)
@@ -208,7 +208,7 @@ func (r *Repo) GetSkillGapNodeByKey(ctx context.Context, querier sqlc.Querier, p
 }
 
 // ListSkillGapNodesByGraph lists nodes for one graph.
-func (r *Repo) ListSkillGapNodesByGraph(ctx context.Context, querier sqlc.Querier, graphUuid pgtype.UUID) ([]sqlc.HskipUsersBridgrSkillGapNode, error) {
+func (r *Repo) ListSkillGapNodesByGraph(ctx context.Context, querier sqlc.Querier, graphUuid pgtype.UUID) ([]sqlc.BridgrSkillGapNode, error) {
 	rows, err := querier.ListSkillGapNodesByGraph(ctx, graphUuid)
 	if err != nil {
 		return nil, fmt.Errorf("ListSkillGapNodesByGraph: %w", err)
@@ -217,7 +217,7 @@ func (r *Repo) ListSkillGapNodesByGraph(ctx context.Context, querier sqlc.Querie
 }
 
 // ListMatchedNodes returns role nodes whose node_key exists on the candidate graph for the analysis.
-func (r *Repo) ListMatchedNodes(ctx context.Context, querier sqlc.Querier, analysisUuid pgtype.UUID) ([]sqlc.HskipUsersBridgrSkillGapNode, error) {
+func (r *Repo) ListMatchedNodes(ctx context.Context, querier sqlc.Querier, analysisUuid pgtype.UUID) ([]sqlc.BridgrSkillGapNode, error) {
 	rows, err := querier.ListMatchedNodes(ctx, analysisUuid)
 	if err != nil {
 		return nil, fmt.Errorf("ListMatchedNodes: %w", err)
@@ -226,7 +226,7 @@ func (r *Repo) ListMatchedNodes(ctx context.Context, querier sqlc.Querier, analy
 }
 
 // ListUnmatchedNodes returns role nodes with no candidate match (gaps).
-func (r *Repo) ListUnmatchedNodes(ctx context.Context, querier sqlc.Querier, analysisUuid pgtype.UUID) ([]sqlc.HskipUsersBridgrSkillGapNode, error) {
+func (r *Repo) ListUnmatchedNodes(ctx context.Context, querier sqlc.Querier, analysisUuid pgtype.UUID) ([]sqlc.BridgrSkillGapNode, error) {
 	rows, err := querier.ListUnmatchedNodes(ctx, analysisUuid)
 	if err != nil {
 		return nil, fmt.Errorf("ListUnmatchedNodes: %w", err)
@@ -247,7 +247,7 @@ func (r *Repo) DeleteSkillGapNodesByGraph(ctx context.Context, querier sqlc.Quer
 // =============================================================================
 
 // CreateSkillGapEdge inserts a directed edge between two nodes in a graph.
-func (r *Repo) CreateSkillGapEdge(ctx context.Context, querier sqlc.Querier, params sqlc.CreateSkillGapEdgeParams) (*sqlc.HskipUsersBridgrSkillGapEdge, error) {
+func (r *Repo) CreateSkillGapEdge(ctx context.Context, querier sqlc.Querier, params sqlc.CreateSkillGapEdgeParams) (*sqlc.BridgrSkillGapEdge, error) {
 	row, err := querier.CreateSkillGapEdge(ctx, params)
 	if err != nil {
 		return nil, fmt.Errorf("CreateSkillGapEdge: %w", err)
@@ -265,7 +265,7 @@ func (r *Repo) BulkCreateSkillGapEdges(ctx context.Context, querier sqlc.Querier
 }
 
 // ListSkillGapEdgesByGraph lists edges for one graph.
-func (r *Repo) ListSkillGapEdgesByGraph(ctx context.Context, querier sqlc.Querier, graphUuid pgtype.UUID) ([]sqlc.HskipUsersBridgrSkillGapEdge, error) {
+func (r *Repo) ListSkillGapEdgesByGraph(ctx context.Context, querier sqlc.Querier, graphUuid pgtype.UUID) ([]sqlc.BridgrSkillGapEdge, error) {
 	rows, err := querier.ListSkillGapEdgesByGraph(ctx, graphUuid)
 	if err != nil {
 		return nil, fmt.Errorf("ListSkillGapEdgesByGraph: %w", err)
@@ -274,7 +274,7 @@ func (r *Repo) ListSkillGapEdgesByGraph(ctx context.Context, querier sqlc.Querie
 }
 
 // ListSkillGapEdgesByNode lists edges incident to a node (from or to) within a graph.
-func (r *Repo) ListSkillGapEdgesByNode(ctx context.Context, querier sqlc.Querier, params sqlc.ListSkillGapEdgesByNodeParams) ([]sqlc.HskipUsersBridgrSkillGapEdge, error) {
+func (r *Repo) ListSkillGapEdgesByNode(ctx context.Context, querier sqlc.Querier, params sqlc.ListSkillGapEdgesByNodeParams) ([]sqlc.BridgrSkillGapEdge, error) {
 	rows, err := querier.ListSkillGapEdgesByNode(ctx, params)
 	if err != nil {
 		return nil, fmt.Errorf("ListSkillGapEdgesByNode: %w", err)
@@ -295,7 +295,7 @@ func (r *Repo) DeleteSkillGapEdgesByGraph(ctx context.Context, querier sqlc.Quer
 // =============================================================================
 
 // CreateSkillGapLearningPath inserts a learning path row for an analysis.
-func (r *Repo) CreateSkillGapLearningPath(ctx context.Context, querier sqlc.Querier, params sqlc.CreateSkillGapLearningPathParams) (*sqlc.HskipUsersBridgrSkillGapLearningPath, error) {
+func (r *Repo) CreateSkillGapLearningPath(ctx context.Context, querier sqlc.Querier, params sqlc.CreateSkillGapLearningPathParams) (*sqlc.BridgrSkillGapLearningPath, error) {
 	row, err := querier.CreateSkillGapLearningPath(ctx, params)
 	if err != nil {
 		return nil, fmt.Errorf("CreateSkillGapLearningPath: %w", err)
@@ -304,7 +304,7 @@ func (r *Repo) CreateSkillGapLearningPath(ctx context.Context, querier sqlc.Quer
 }
 
 // GetSkillGapLearningPath returns a path by BIGSERIAL id.
-func (r *Repo) GetSkillGapLearningPath(ctx context.Context, querier sqlc.Querier, id int64) (*sqlc.HskipUsersBridgrSkillGapLearningPath, error) {
+func (r *Repo) GetSkillGapLearningPath(ctx context.Context, querier sqlc.Querier, id int64) (*sqlc.BridgrSkillGapLearningPath, error) {
 	row, err := querier.GetSkillGapLearningPath(ctx, id)
 	if err != nil {
 		return nil, fmt.Errorf("GetSkillGapLearningPath: %w", err)
@@ -313,7 +313,7 @@ func (r *Repo) GetSkillGapLearningPath(ctx context.Context, querier sqlc.Querier
 }
 
 // GetSkillGapLearningPathByUUID returns a learning path by primary UUID.
-func (r *Repo) GetSkillGapLearningPathByUUID(ctx context.Context, querier sqlc.Querier, uuid pgtype.UUID) (*sqlc.HskipUsersBridgrSkillGapLearningPath, error) {
+func (r *Repo) GetSkillGapLearningPathByUUID(ctx context.Context, querier sqlc.Querier, uuid pgtype.UUID) (*sqlc.BridgrSkillGapLearningPath, error) {
 	row, err := querier.GetSkillGapLearningPathByUUID(ctx, uuid)
 	if err != nil {
 		return nil, fmt.Errorf("GetSkillGapLearningPathByUUID: %w", err)
@@ -322,7 +322,7 @@ func (r *Repo) GetSkillGapLearningPathByUUID(ctx context.Context, querier sqlc.Q
 }
 
 // GetSkillGapLearningPathByAnalysis returns the latest path_version for an analysis.
-func (r *Repo) GetSkillGapLearningPathByAnalysis(ctx context.Context, querier sqlc.Querier, analysisUuid pgtype.UUID) (*sqlc.HskipUsersBridgrSkillGapLearningPath, error) {
+func (r *Repo) GetSkillGapLearningPathByAnalysis(ctx context.Context, querier sqlc.Querier, analysisUuid pgtype.UUID) (*sqlc.BridgrSkillGapLearningPath, error) {
 	row, err := querier.GetSkillGapLearningPathByAnalysis(ctx, analysisUuid)
 	if err != nil {
 		return nil, fmt.Errorf("GetSkillGapLearningPathByAnalysis: %w", err)
@@ -331,7 +331,7 @@ func (r *Repo) GetSkillGapLearningPathByAnalysis(ctx context.Context, querier sq
 }
 
 // UpdateSkillGapLearningPathMetadata updates path_metadata JSON.
-func (r *Repo) UpdateSkillGapLearningPathMetadata(ctx context.Context, querier sqlc.Querier, params sqlc.UpdateSkillGapLearningPathMetadataParams) (*sqlc.HskipUsersBridgrSkillGapLearningPath, error) {
+func (r *Repo) UpdateSkillGapLearningPathMetadata(ctx context.Context, querier sqlc.Querier, params sqlc.UpdateSkillGapLearningPathMetadataParams) (*sqlc.BridgrSkillGapLearningPath, error) {
 	row, err := querier.UpdateSkillGapLearningPathMetadata(ctx, params)
 	if err != nil {
 		return nil, fmt.Errorf("UpdateSkillGapLearningPathMetadata: %w", err)
@@ -352,7 +352,7 @@ func (r *Repo) DeleteSkillGapLearningPathByAnalysis(ctx context.Context, querier
 // =============================================================================
 
 // CreateSkillGapPathStep inserts one step.
-func (r *Repo) CreateSkillGapPathStep(ctx context.Context, querier sqlc.Querier, params sqlc.CreateSkillGapPathStepParams) (*sqlc.HskipUsersBridgrSkillGapPathStep, error) {
+func (r *Repo) CreateSkillGapPathStep(ctx context.Context, querier sqlc.Querier, params sqlc.CreateSkillGapPathStepParams) (*sqlc.BridgrSkillGapPathStep, error) {
 	row, err := querier.CreateSkillGapPathStep(ctx, params)
 	if err != nil {
 		return nil, fmt.Errorf("CreateSkillGapPathStep: %w", err)
@@ -370,7 +370,7 @@ func (r *Repo) BulkCreateSkillGapPathSteps(ctx context.Context, querier sqlc.Que
 }
 
 // GetSkillGapPathStep returns a step by BIGSERIAL id.
-func (r *Repo) GetSkillGapPathStep(ctx context.Context, querier sqlc.Querier, id int64) (*sqlc.HskipUsersBridgrSkillGapPathStep, error) {
+func (r *Repo) GetSkillGapPathStep(ctx context.Context, querier sqlc.Querier, id int64) (*sqlc.BridgrSkillGapPathStep, error) {
 	row, err := querier.GetSkillGapPathStep(ctx, id)
 	if err != nil {
 		return nil, fmt.Errorf("GetSkillGapPathStep: %w", err)
@@ -379,7 +379,7 @@ func (r *Repo) GetSkillGapPathStep(ctx context.Context, querier sqlc.Querier, id
 }
 
 // ListSkillGapPathStepsByPath lists steps ordered by step_index.
-func (r *Repo) ListSkillGapPathStepsByPath(ctx context.Context, querier sqlc.Querier, pathUuid pgtype.UUID) ([]sqlc.HskipUsersBridgrSkillGapPathStep, error) {
+func (r *Repo) ListSkillGapPathStepsByPath(ctx context.Context, querier sqlc.Querier, pathUuid pgtype.UUID) ([]sqlc.BridgrSkillGapPathStep, error) {
 	rows, err := querier.ListSkillGapPathStepsByPath(ctx, pathUuid)
 	if err != nil {
 		return nil, fmt.Errorf("ListSkillGapPathStepsByPath: %w", err)
@@ -388,7 +388,7 @@ func (r *Repo) ListSkillGapPathStepsByPath(ctx context.Context, querier sqlc.Que
 }
 
 // UpdateSkillGapPathStep attaches resource_uri / resource_kind to a step.
-func (r *Repo) UpdateSkillGapPathStep(ctx context.Context, querier sqlc.Querier, params sqlc.UpdateSkillGapPathStepParams) (*sqlc.HskipUsersBridgrSkillGapPathStep, error) {
+func (r *Repo) UpdateSkillGapPathStep(ctx context.Context, querier sqlc.Querier, params sqlc.UpdateSkillGapPathStepParams) (*sqlc.BridgrSkillGapPathStep, error) {
 	row, err := querier.UpdateSkillGapPathStep(ctx, params)
 	if err != nil {
 		return nil, fmt.Errorf("UpdateSkillGapPathStep: %w", err)
@@ -409,7 +409,7 @@ func (r *Repo) DeleteSkillGapPathStepsByPath(ctx context.Context, querier sqlc.Q
 // =============================================================================
 
 // CreateSkillGapPathStepDep inserts one dependency edge.
-func (r *Repo) CreateSkillGapPathStepDep(ctx context.Context, querier sqlc.Querier, params sqlc.CreateSkillGapPathStepDepParams) (*sqlc.HskipUsersBridgrSkillGapPathStepDep, error) {
+func (r *Repo) CreateSkillGapPathStepDep(ctx context.Context, querier sqlc.Querier, params sqlc.CreateSkillGapPathStepDepParams) (*sqlc.BridgrSkillGapPathStepDep, error) {
 	row, err := querier.CreateSkillGapPathStepDep(ctx, params)
 	if err != nil {
 		return nil, fmt.Errorf("CreateSkillGapPathStepDep: %w", err)
@@ -427,7 +427,7 @@ func (r *Repo) BulkCreateSkillGapPathStepDeps(ctx context.Context, querier sqlc.
 }
 
 // ListDependenciesByStep lists prerequisite steps for step_uuid.
-func (r *Repo) ListDependenciesByStep(ctx context.Context, querier sqlc.Querier, params sqlc.ListDependenciesByStepParams) ([]sqlc.HskipUsersBridgrSkillGapPathStepDep, error) {
+func (r *Repo) ListDependenciesByStep(ctx context.Context, querier sqlc.Querier, params sqlc.ListDependenciesByStepParams) ([]sqlc.BridgrSkillGapPathStepDep, error) {
 	rows, err := querier.ListDependenciesByStep(ctx, params)
 	if err != nil {
 		return nil, fmt.Errorf("ListDependenciesByStep: %w", err)
@@ -436,7 +436,7 @@ func (r *Repo) ListDependenciesByStep(ctx context.Context, querier sqlc.Querier,
 }
 
 // ListDependentsByStep lists steps that depend on depends_on_step_uuid.
-func (r *Repo) ListDependentsByStep(ctx context.Context, querier sqlc.Querier, params sqlc.ListDependentsByStepParams) ([]sqlc.HskipUsersBridgrSkillGapPathStepDep, error) {
+func (r *Repo) ListDependentsByStep(ctx context.Context, querier sqlc.Querier, params sqlc.ListDependentsByStepParams) ([]sqlc.BridgrSkillGapPathStepDep, error) {
 	rows, err := querier.ListDependentsByStep(ctx, params)
 	if err != nil {
 		return nil, fmt.Errorf("ListDependentsByStep: %w", err)
@@ -445,7 +445,7 @@ func (r *Repo) ListDependentsByStep(ctx context.Context, querier sqlc.Querier, p
 }
 
 // ListAllDepsByPath returns full DAG edge list for Mermaid / topo sort.
-func (r *Repo) ListAllDepsByPath(ctx context.Context, querier sqlc.Querier, pathUuid pgtype.UUID) ([]sqlc.HskipUsersBridgrSkillGapPathStepDep, error) {
+func (r *Repo) ListAllDepsByPath(ctx context.Context, querier sqlc.Querier, pathUuid pgtype.UUID) ([]sqlc.BridgrSkillGapPathStepDep, error) {
 	rows, err := querier.ListAllDepsByPath(ctx, pathUuid)
 	if err != nil {
 		return nil, fmt.Errorf("ListAllDepsByPath: %w", err)

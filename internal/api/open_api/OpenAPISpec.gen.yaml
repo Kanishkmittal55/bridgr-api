@@ -793,6 +793,127 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+  /v1/bridgr/analyses/{analysisUUID}/assets/cv/read-url:
+    get:
+      summary: Get browser-readable URL for the analysis CV asset
+      description: |
+        Returns a short-lived presigned GET URL when `cv_asset_uri` is `s3://...`, or the same HTTPS URL
+        when the CV was stored as a direct link. Use the URL in an iframe or PDF viewer (left pane in the console).
+      operationId: V1GetBridgrAnalysisCvAssetReadUrl
+      tags:
+        - bridgr
+      parameters:
+        - name: X-API-KEY
+          in: header
+          description: API Key of the service making the request
+          required: true
+          style: simple
+          explode: false
+          schema:
+            type: string
+        - name: analysisUUID
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Read URL for the CV
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BridgrAnalysisAssetReadUrlResponse'
+        '400':
+          description: Invalid or unsupported asset URI
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Analysis or CV asset not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '503':
+          description: S3 not configured (for s3:// assets)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /v1/bridgr/analyses/{analysisUUID}/assets/jd/read-url:
+    get:
+      summary: Get browser-readable URL for the analysis job description asset
+      description: |
+        Same semantics as the CV read-url endpoint, using `jd_asset_uri` (S3 presign or direct HTTPS).
+      operationId: V1GetBridgrAnalysisJdAssetReadUrl
+      tags:
+        - bridgr
+      parameters:
+        - name: X-API-KEY
+          in: header
+          description: API Key of the service making the request
+          required: true
+          style: simple
+          explode: false
+          schema:
+            type: string
+        - name: analysisUUID
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Read URL for the JD
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BridgrAnalysisAssetReadUrlResponse'
+        '400':
+          description: Invalid or unsupported asset URI
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Analysis or JD asset not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '503':
+          description: S3 not configured (for s3:// assets)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
   /v1/bridgr/graphs/{graphUUID}/nodes:
     get:
       summary: List nodes for graph
@@ -1236,6 +1357,565 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+  /v1/bridgr/users/{userID}/job-search-profile:
+    get:
+      summary: Get job search profile for user
+      operationId: V1GetBridgrUserJobSearchProfile
+      tags:
+        - bridgr
+      parameters:
+        - name: X-API-KEY
+          in: header
+          description: API Key of the service making the request
+          required: true
+          style: simple
+          explode: false
+          schema:
+            type: string
+        - name: userID
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int32
+      responses:
+        '200':
+          description: Profile
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BridgrJobSearchProfile'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: No profile for user
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    put:
+      summary: Create or update job search profile
+      operationId: V1PutBridgrUserJobSearchProfile
+      tags:
+        - bridgr
+      parameters:
+        - name: X-API-KEY
+          in: header
+          description: API Key of the service making the request
+          required: true
+          style: simple
+          explode: false
+          schema:
+            type: string
+        - name: userID
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int32
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpsertBridgrJobSearchProfileRequest'
+      responses:
+        '200':
+          description: Updated profile
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BridgrJobSearchProfile'
+        '201':
+          description: Created profile
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BridgrJobSearchProfile'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /v1/bridgr/users/{userID}/job-discovery/runs:
+    post:
+      summary: Start a job discovery run (async via queue when configured)
+      operationId: V1PostBridgrUserJobDiscoveryRuns
+      tags:
+        - bridgr
+      parameters:
+        - name: X-API-KEY
+          in: header
+          description: API Key of the service making the request
+          required: true
+          style: simple
+          explode: false
+          schema:
+            type: string
+        - name: userID
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int32
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateBridgrJobSearchDiscoveryRunRequest'
+      responses:
+        '201':
+          description: Run created (queued or completed in sync-dev mode)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BridgrJobSearchDiscoveryRun'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          description: Rate limited (too many runs in the window)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    get:
+      summary: List job discovery runs for user (newest first)
+      operationId: V1GetBridgrUserJobDiscoveryRuns
+      tags:
+        - bridgr
+      parameters:
+        - name: X-API-KEY
+          in: header
+          description: API Key of the service making the request
+          required: true
+          style: simple
+          explode: false
+          schema:
+            type: string
+        - name: userID
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int32
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            format: int32
+            default: 20
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            format: int32
+            default: 0
+      responses:
+        '200':
+          description: Paginated runs
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BridgrJobSearchDiscoveryRunListResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /v1/bridgr/users/{userID}/job-discovery/runs/{runUUID}/cancel:
+    post:
+      summary: Cancel an in-progress job discovery run (signals Radar CancelCrawl when configured)
+      operationId: V1PostBridgrUserJobDiscoveryRunCancel
+      tags:
+        - bridgr
+      parameters:
+        - name: X-API-KEY
+          in: header
+          description: API Key of the service making the request
+          required: true
+          style: simple
+          explode: false
+          schema:
+            type: string
+        - name: userID
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int32
+        - name: runUUID
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Run after cancel (or unchanged if already terminal)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BridgrJobSearchDiscoveryRun'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Run does not belong to this user
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Run not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /v1/bridgr/job-discovery/runs/{runUUID}:
+    get:
+      summary: Get one discovery run by UUID
+      operationId: V1GetBridgrJobDiscoveryRun
+      tags:
+        - bridgr
+      parameters:
+        - name: X-API-KEY
+          in: header
+          description: API Key of the service making the request
+          required: true
+          style: simple
+          explode: false
+          schema:
+            type: string
+        - name: runUUID
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Run
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BridgrJobSearchDiscoveryRun'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /v1/bridgr/users/{userID}/job-candidates:
+    get:
+      summary: List job candidates for user
+      operationId: V1GetBridgrUserJobCandidates
+      tags:
+        - bridgr
+      parameters:
+        - name: X-API-KEY
+          in: header
+          description: API Key of the service making the request
+          required: true
+          style: simple
+          explode: false
+          schema:
+            type: string
+        - name: userID
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int32
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            format: int32
+            default: 20
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            format: int32
+            default: 0
+        - name: discovery_run_uuid
+          in: query
+          description: Filter by discovery run
+          schema:
+            type: string
+            format: uuid
+            nullable: true
+        - name: ingestion_status
+          in: query
+          schema:
+            type: string
+            nullable: true
+        - name: source_board
+          in: query
+          schema:
+            type: string
+            nullable: true
+      responses:
+        '200':
+          description: Candidates
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BridgrJobCandidateListResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /v1/bridgr/job-candidates/{candidateUUID}:
+    get:
+      summary: Get job candidate by UUID
+      operationId: V1GetBridgrJobCandidate
+      tags:
+        - bridgr
+      parameters:
+        - name: X-API-KEY
+          in: header
+          description: API Key of the service making the request
+          required: true
+          style: simple
+          explode: false
+          schema:
+            type: string
+        - name: candidateUUID
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Candidate
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BridgrJobCandidate'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /v1/bridgr/users/{userID}/job-notifications:
+    get:
+      summary: List job notifications for user
+      operationId: V1GetBridgrUserJobNotifications
+      tags:
+        - bridgr
+      parameters:
+        - name: X-API-KEY
+          in: header
+          description: API Key of the service making the request
+          required: true
+          style: simple
+          explode: false
+          schema:
+            type: string
+        - name: userID
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int32
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            format: int32
+            default: 20
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            format: int32
+            default: 0
+        - name: since
+          in: query
+          description: Return rows with created_at strictly after this timestamp (RFC3339)
+          schema:
+            type: string
+            format: date-time
+            nullable: true
+        - name: status
+          in: query
+          schema:
+            type: string
+            nullable: true
+      responses:
+        '200':
+          description: Notifications
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BridgrJobNotificationListResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /v1/bridgr/job-notifications/{notificationUUID}:
+    patch:
+      summary: Update notification (mark seen or status)
+      operationId: V1PatchBridgrJobNotification
+      tags:
+        - bridgr
+      parameters:
+        - name: X-API-KEY
+          in: header
+          description: API Key of the service making the request
+          required: true
+          style: simple
+          explode: false
+          schema:
+            type: string
+        - name: notificationUUID
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchBridgrJobNotificationRequest'
+      responses:
+        '200':
+          description: Updated notification
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BridgrJobNotification'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 components:
   schemas:
     PresignedUploadRequest:
@@ -1337,6 +2017,11 @@ components:
         prompt_version:
           type: string
           nullable: true
+        job_candidate_uuid:
+          type: string
+          format: uuid
+          nullable: true
+          description: When set, insert bridgr.analysis_job_link after the analysis is created
     BridgrSkillGapAnalysisStatus:
       type: string
       description: Pipeline state aligned with async worker steps
@@ -1643,6 +2328,34 @@ components:
           type: number
           format: float
           nullable: true
+    BridgrAnalysisAssetReadUrlResponse:
+      type: object
+      required:
+        - access
+        - url
+      description: |
+        URL usable in the browser to display the CV or JD asset.
+        `presigned` = temporary S3/MinIO signed GET URL; `direct` = public or same-origin HTTPS URL (no signing).
+      properties:
+        access:
+          type: string
+          enum:
+            - presigned
+            - direct
+        url:
+          type: string
+          format: uri
+          description: Open in iframe/new tab or pass to a PDF viewer.
+        content_type:
+          type: string
+          description: Hint for rendering (e.g. application/pdf).
+        expires_at:
+          type: string
+          format: date-time
+          description: Set when access is presigned; omit for direct URLs.
+        asset_uri:
+          type: string
+          description: Original stored URI from the analysis row (s3:// or https://).
     CreateBridgrSkillGapNodeRequest:
       type: object
       required:
@@ -1878,3 +2591,316 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/BridgrSkillGapUserCoverageRow'
+    BridgrJobSearchProfile:
+      type: object
+      description: Per-user job search / Radar preferences
+      required:
+        - uuid
+        - id
+        - user_id
+        - max_surfaced_jobs
+        - created_at
+        - updated_at
+      properties:
+        uuid:
+          type: string
+          format: uuid
+        id:
+          type: integer
+          format: int64
+        max_surfaced_jobs:
+          type: integer
+          format: int32
+        user_id:
+          type: integer
+          format: int32
+        target_roles:
+          type: array
+          items:
+            type: string
+        locations:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+        boards_enabled:
+          type: array
+          items:
+            type: string
+        matching:
+          type: object
+          additionalProperties: true
+          nullable: true
+        canonical_cv_analysis_uuid:
+          type: string
+          format: uuid
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+    UpsertBridgrJobSearchProfileRequest:
+      type: object
+      description: Fields to upsert; omitted keys leave existing DB values unchanged on update. On create, defaults apply for missing columns.
+      properties:
+        target_roles:
+          type: array
+          items:
+            type: string
+          nullable: true
+        locations:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+          nullable: true
+        boards_enabled:
+          type: array
+          items:
+            type: string
+          nullable: true
+        matching:
+          type: object
+          additionalProperties: true
+          nullable: true
+        canonical_cv_analysis_uuid:
+          type: string
+          format: uuid
+          nullable: true
+        max_surfaced_jobs:
+          type: integer
+          format: int32
+          nullable: true
+    BridgrJobSearchDiscoveryRun:
+      type: object
+      required:
+        - uuid
+        - id
+        - user_id
+        - status
+        - raw_candidate_count
+        - new_candidate_count
+        - created_at
+        - updated_at
+      properties:
+        uuid:
+          type: string
+          format: uuid
+        id:
+          type: integer
+          format: int64
+        user_id:
+          type: integer
+          format: int32
+        status:
+          type: string
+          description: pending, queued, running, completed, failed, cancelled
+        request_params:
+          type: object
+          additionalProperties: true
+          nullable: true
+        radar_meta:
+          type: object
+          additionalProperties: true
+          nullable: true
+        raw_candidate_count:
+          type: integer
+          format: int32
+        new_candidate_count:
+          type: integer
+          format: int32
+        started_at:
+          type: string
+          format: date-time
+          nullable: true
+        completed_at:
+          type: string
+          format: date-time
+          nullable: true
+        error_code:
+          type: string
+          nullable: true
+        error_detail:
+          type: string
+          nullable: true
+        sqs_message_id:
+          type: string
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+    BridgrJobSearchDiscoveryRunListResponse:
+      type: object
+      required:
+        - runs
+      properties:
+        runs:
+          type: array
+          items:
+            $ref: '#/components/schemas/BridgrJobSearchDiscoveryRun'
+    CreateBridgrJobSearchDiscoveryRunRequest:
+      type: object
+      description: Optional overrides merged into request_params snapshot for this run
+      properties:
+        request_params:
+          type: object
+          additionalProperties: true
+          nullable: true
+    BridgrJobCandidate:
+      type: object
+      required:
+        - uuid
+        - id
+        - user_id
+        - job_url
+        - url_hash
+        - ingestion_status
+        - created_at
+        - updated_at
+      properties:
+        uuid:
+          type: string
+          format: uuid
+        id:
+          type: integer
+          format: int64
+        user_id:
+          type: integer
+          format: int32
+        discovery_run_uuid:
+          type: string
+          format: uuid
+          nullable: true
+        source_board:
+          type: string
+        source_job_id:
+          type: string
+          nullable: true
+        job_url:
+          type: string
+        url_hash:
+          type: string
+        content_hash:
+          type: string
+          nullable: true
+        title:
+          type: string
+          nullable: true
+        company:
+          type: string
+          nullable: true
+        location:
+          type: string
+          nullable: true
+        jd_text:
+          type: string
+          nullable: true
+        jd_s3_uri:
+          type: string
+          nullable: true
+        fetched_at:
+          type: string
+          format: date-time
+          nullable: true
+        ingestion_status:
+          type: string
+        radar_payload:
+          type: object
+          additionalProperties: true
+          nullable: true
+        application_url:
+          type: string
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+    BridgrJobCandidateListResponse:
+      type: object
+      required:
+        - candidates
+      properties:
+        candidates:
+          type: array
+          items:
+            $ref: '#/components/schemas/BridgrJobCandidate'
+    BridgrJobNotification:
+      type: object
+      required:
+        - uuid
+        - id
+        - user_id
+        - job_candidate_uuid
+        - channel
+        - status
+        - created_at
+        - updated_at
+      properties:
+        uuid:
+          type: string
+          format: uuid
+        id:
+          type: integer
+          format: int64
+        user_id:
+          type: integer
+          format: int32
+        job_candidate_uuid:
+          type: string
+          format: uuid
+        channel:
+          type: string
+        status:
+          type: string
+        payload:
+          type: object
+          additionalProperties: true
+          nullable: true
+        sent_at:
+          type: string
+          format: date-time
+          nullable: true
+        seen_at:
+          type: string
+          format: date-time
+          nullable: true
+        error_detail:
+          type: string
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+    BridgrJobNotificationListResponse:
+      type: object
+      required:
+        - notifications
+      properties:
+        notifications:
+          type: array
+          items:
+            $ref: '#/components/schemas/BridgrJobNotification'
+    PatchBridgrJobNotificationRequest:
+      type: object
+      description: At least one field should be set
+      properties:
+        status:
+          type: string
+          description: e.g. pending, sent, failed, seen, skipped
+          nullable: true
+        mark_seen:
+          type: boolean
+          description: When true, sets status to seen and seen_at to now
+          nullable: true
+        error_detail:
+          type: string
+          nullable: true

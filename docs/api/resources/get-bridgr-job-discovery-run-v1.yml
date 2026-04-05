@@ -1,0 +1,45 @@
+get:
+  summary: Get one discovery run by UUID
+  operationId: V1GetBridgrJobDiscoveryRun
+  tags:
+    - bridgr
+  parameters:
+    - name: X-API-KEY
+      in: header
+      description: API Key of the service making the request
+      required: true
+      style: simple
+      explode: false
+      schema:
+        type: string
+    - name: runUUID
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+  responses:
+    "200":
+      description: Run
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/BridgrJobSearchDiscoveryRun.yml'
+    "404":
+      description: Not found
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/NotFoundErrorResponse.yml'
+    "401":
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/ErrorResponse.yml'
+    "500":
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/ErrorResponse.yml'

@@ -1,0 +1,88 @@
+# Job Application Preferences
+# OAPI-style schema. required[] lists required params; others optional. User message overrides apply.
+
+x-schema:
+  type: object
+  required:
+    - target_roles
+    - location
+    - resume_path
+    - performance_review_path
+    - mode
+  properties:
+    target_roles:
+      type: array
+      items: { type: string }
+      description: Roles to search
+    location:
+      type: string
+      description: Location or remote preference
+    companies_target:
+      type: array
+      items: { type: string }
+      default: []
+      description: Companies to prioritize
+    companies_avoid:
+      type: array
+      items: { type: string }
+      default: []
+      description: Companies to skip
+    level:
+      type: string
+      description: Level filter (Senior, Staff, Principal)
+    tech_stack:
+      type: array
+      items: { type: string }
+      description: Tech preferences
+    resume_path:
+      type: string
+      format: uri-reference
+      description: Resume file path
+    performance_review_path:
+      type: string
+      format: uri-reference
+      description: Performance review file path
+    mode:
+      type: string
+      enum: [full, discover-only, outputs-only, application-only]
+      default: full
+      description: Run mode
+    job_url:
+      type: string
+      format: uri
+      nullable: true
+      description: Required when mode is application-only
+    matching:
+      type: object
+      description: How strictly job requirements must match evidenced skills
+      properties:
+        strict_no_skill_gaps:
+          type: boolean
+          default: false
+          description: If true, only roles with no Medium/High skill gaps (per job report §6) may symlink to execute/; discovery and reporting must enforce this gate
+        gap_evidence_scope:
+          type: string
+          enum: [resume_only, resume_plus_review]
+          default: resume_plus_review
+          description: Where "I have this skill" may be credited — resume lines only (strictest), or resume + substantive performance-review mentions
+
+# --- Config ---
+target_roles:
+  - Senior Backend Engineer
+  - Staff Platform Engineer
+location: Remote UK / London
+companies_target: []
+companies_avoid: []
+level: Senior
+tech_stack:
+  - Go
+  - Kubernetes
+  - PostgreSQL
+resume_path: .claude/skills/job-application/resources/Resume-plain-text.md
+performance_review_path: .claude/skills/job-application/resources/performance_review.md
+mode: full
+job_url:
+
+matching:
+  strict_no_skill_gaps: false
+  gap_evidence_scope: resume_plus_review

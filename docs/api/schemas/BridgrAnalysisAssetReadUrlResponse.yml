@@ -1,0 +1,27 @@
+type: object
+required:
+  - access
+  - url
+description: |
+  URL usable in the browser to display the CV or JD asset.
+  `presigned` = temporary S3/MinIO signed GET URL; `direct` = public or same-origin HTTPS URL (no signing).
+properties:
+  access:
+    type: string
+    enum:
+      - presigned
+      - direct
+  url:
+    type: string
+    format: uri
+    description: Open in iframe/new tab or pass to a PDF viewer.
+  content_type:
+    type: string
+    description: Hint for rendering (e.g. application/pdf).
+  expires_at:
+    type: string
+    format: date-time
+    description: Set when access is presigned; omit for direct URLs.
+  asset_uri:
+    type: string
+    description: Original stored URI from the analysis row (s3:// or https://).

@@ -3,8 +3,10 @@ package bridgr
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
+	"strings"
 
 	apierrors "github.com/Kanishkmittal55/bridgr-api/internal/apierrors"
 	"github.com/Kanishkmittal55/bridgr-api/internal/bridgr_worker"
@@ -13,6 +15,8 @@ import (
 	"github.com/Kanishkmittal55/bridgr-api/internal/uuid"
 	types "github.com/Kanishkmittal55/bridgr-api/pkg/types"
 	guuid "github.com/gofrs/uuid/v5"
+	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
@@ -39,6 +43,27 @@ func (s *server) v1PostBridgrAnalyses(ctx context.Context, payload types.CreateB
 	if payload.UserId == 0 {
 		return nil, fmt.Errorf("%w: user_id is required", apierrors.ErrBadRequest)
 	}
+
+	var candPg pgtype.UUID
+	haveCand := false
+	var jobCandRow *sqlc.BridgrJobCandidate
+	if payload.JobCandidateUuid != nil {
+		var convErr error
+		candPg, convErr = uuid.ConvertOapiUUIDToPgUUID(*payload.JobCandidateUuid)
+		if convErr != nil {
+			return nil, fmt.Errorf("%w: job_candidate_uuid: %w", apierrors.ErrBadRequest, convErr)
+		}
+		haveCand = true
+		cRow, err := s.deps.Repo.GetJobCandidateByUUID(ctx, s.querier(), candPg)
+		if err != nil {
+			if errors.Is(err, pgx.ErrNoRows) {
+				return nil, fmt.Errorf("%w: job candidate not found", apierrors.ErrNotFound)
+			}
+			return nil, fmt.Errorf("%w: load job candidate: %w", apierrors.ErrInternal, err)
+		}
+		jobCandRow = cRow
+	}
+
 	params := sqlc.CreateSkillGapAnalysisParams{
 		UserID: payload.UserId,
 		Title:  pgtype.Text{},
@@ -50,8 +75,19 @@ func (s *server) v1PostBridgrAnalyses(ctx context.Context, payload types.CreateB
 	if payload.CvAssetUri != nil {
 		params.CvAssetUri = pgtype.Text{String: *payload.CvAssetUri, Valid: true}
 	}
+
+	clientJd := ""
 	if payload.JdAssetUri != nil {
-		params.JdAssetUri = pgtype.Text{String: *payload.JdAssetUri, Valid: true}
+		clientJd = strings.TrimSpace(*payload.JdAssetUri)
+	}
+	if clientJd != "" {
+		params.JdAssetUri = pgtype.Text{String: clientJd, Valid: true}
+	} else if jobCandRow != nil {
+		jd, err := s.jdAssetURIFromJobCandidate(ctx, payload.UserId, jobCandRow)
+		if err != nil {
+			return nil, err
+		}
+		params.JdAssetUri = pgtype.Text{String: jd, Valid: true}
 	}
 	if payload.CvFingerprint != nil {
 		params.CvFingerprint = pgtype.Text{String: *payload.CvFingerprint, Valid: true}
@@ -92,6 +128,23 @@ func (s *server) v1PostBridgrAnalyses(ctx context.Context, payload types.CreateB
 		}
 		if err := bridgr_worker.EnqueueSkillGapAnalysis(ctx, s.deps.SQSClient, cfg.BridgrQueueURL, uid); err != nil {
 			return nil, fmt.Errorf("%w: enqueue skill-gap job: %w", apierrors.ErrInternal, err)
+		}
+	}
+
+	if haveCand {
+		_, err := s.deps.Repo.CreateAnalysisJobLink(ctx, s.querier(), sqlc.CreateAnalysisJobLinkParams{
+			UserID:           payload.UserId,
+			AnalysisUuid:     row.Uuid,
+			JobCandidateUuid: candPg,
+			LinkKind:         "from_job_feed",
+		})
+		if err != nil {
+			var pe *pgconn.PgError
+			if errors.As(err, &pe) && pe.Code == "23505" {
+				// duplicate pair — idempotent
+			} else {
+				return nil, fmt.Errorf("%w: analysis_job_link: %w", apierrors.ErrInternal, err)
+			}
 		}
 	}
 

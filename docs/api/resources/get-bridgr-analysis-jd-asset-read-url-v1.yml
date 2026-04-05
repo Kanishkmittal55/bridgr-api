@@ -1,0 +1,59 @@
+get:
+  summary: Get browser-readable URL for the analysis job description asset
+  description: |
+    Same semantics as the CV read-url endpoint, using `jd_asset_uri` (S3 presign or direct HTTPS).
+  operationId: V1GetBridgrAnalysisJdAssetReadUrl
+  tags:
+    - bridgr
+  parameters:
+    - name: X-API-KEY
+      in: header
+      description: API Key of the service making the request
+      required: true
+      style: simple
+      explode: false
+      schema:
+        type: string
+    - name: analysisUUID
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+  responses:
+    "200":
+      description: Read URL for the JD
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/BridgrAnalysisAssetReadUrlResponse.yml'
+    "400":
+      description: Invalid or unsupported asset URI
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/ErrorResponse.yml'
+    "401":
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/ErrorResponse.yml'
+    "404":
+      description: Analysis or JD asset not found
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/NotFoundErrorResponse.yml'
+    "503":
+      description: S3 not configured (for s3:// assets)
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/ErrorResponse.yml'
+    "500":
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/ErrorResponse.yml'

@@ -1,0 +1,49 @@
+type: object
+description: Per-user job search / Radar preferences
+required:
+  - uuid
+  - id
+  - user_id
+  - max_surfaced_jobs
+  - created_at
+  - updated_at
+properties:
+  uuid:
+    type: string
+    format: uuid
+  id:
+    type: integer
+    format: int64
+  max_surfaced_jobs:
+    type: integer
+    format: int32
+  user_id:
+    type: integer
+    format: int32
+  target_roles:
+    type: array
+    items:
+      type: string
+  locations:
+    type: array
+    items:
+      type: object
+      additionalProperties: true
+  boards_enabled:
+    type: array
+    items:
+      type: string
+  matching:
+    type: object
+    additionalProperties: true
+    nullable: true
+  canonical_cv_analysis_uuid:
+    type: string
+    format: uuid
+    nullable: true
+  created_at:
+    type: string
+    format: date-time
+  updated_at:
+    type: string
+    format: date-time

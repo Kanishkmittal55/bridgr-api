@@ -1,0 +1,14 @@
+type: object
+description: At least one field should be set
+properties:
+  status:
+    type: string
+    description: e.g. pending, sent, failed, seen, skipped
+    nullable: true
+  mark_seen:
+    type: boolean
+    description: When true, sets status to seen and seen_at to now
+    nullable: true
+  error_detail:
+    type: string
+    nullable: true

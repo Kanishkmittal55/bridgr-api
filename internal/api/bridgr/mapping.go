@@ -104,7 +104,7 @@ func int64PtrFromCountInterface(v interface{}) *int64 {
 	}
 }
 
-func analysisFromRow(row *sqlc.HskipUsersBridgrSkillGapAnalysis) (types.BridgrSkillGapAnalysis, error) {
+func analysisFromRow(row *sqlc.BridgrSkillGapAnalysis) (types.BridgrSkillGapAnalysis, error) {
 	out := types.BridgrSkillGapAnalysis{
 		Id:        row.ID,
 		UserId:    row.UserID,
@@ -141,7 +141,7 @@ func analysisFromRow(row *sqlc.HskipUsersBridgrSkillGapAnalysis) (types.BridgrSk
 	return out, nil
 }
 
-func graphFromRow(row *sqlc.HskipUsersBridgrSkillGapGraph) (types.BridgrSkillGapGraph, error) {
+func graphFromRow(row *sqlc.BridgrSkillGapGraph) (types.BridgrSkillGapGraph, error) {
 	out := types.BridgrSkillGapGraph{
 		Kind:      types.BridgrSkillGapGraphKind(row.Kind),
 		CreatedAt: pgTimestampToTime(row.CreatedAt),
@@ -161,7 +161,7 @@ func graphFromRow(row *sqlc.HskipUsersBridgrSkillGapGraph) (types.BridgrSkillGap
 	return out, nil
 }
 
-func nodeFromRow(row *sqlc.HskipUsersBridgrSkillGapNode) (types.BridgrSkillGapNode, error) {
+func nodeFromRow(row *sqlc.BridgrSkillGapNode) (types.BridgrSkillGapNode, error) {
 	out := types.BridgrSkillGapNode{
 		NodeKey:     row.NodeKey,
 		DisplayName: row.DisplayName,
@@ -192,7 +192,7 @@ func nodeFromRow(row *sqlc.HskipUsersBridgrSkillGapNode) (types.BridgrSkillGapNo
 	return out, nil
 }
 
-func edgeFromRow(row *sqlc.HskipUsersBridgrSkillGapEdge) (types.BridgrSkillGapEdge, error) {
+func edgeFromRow(row *sqlc.BridgrSkillGapEdge) (types.BridgrSkillGapEdge, error) {
 	out := types.BridgrSkillGapEdge{
 		Relation:  row.Relation,
 		CreatedAt: pgTimestampToTime(row.CreatedAt),
@@ -221,7 +221,7 @@ func edgeFromRow(row *sqlc.HskipUsersBridgrSkillGapEdge) (types.BridgrSkillGapEd
 	return out, nil
 }
 
-func learningPathFromRow(row *sqlc.HskipUsersBridgrSkillGapLearningPath) (types.BridgrSkillGapLearningPath, error) {
+func learningPathFromRow(row *sqlc.BridgrSkillGapLearningPath) (types.BridgrSkillGapLearningPath, error) {
 	out := types.BridgrSkillGapLearningPath{
 		PathVersion: row.PathVersion,
 		CreatedAt:   pgTimestampToTime(row.CreatedAt),
@@ -243,7 +243,7 @@ func learningPathFromRow(row *sqlc.HskipUsersBridgrSkillGapLearningPath) (types.
 	return out, nil
 }
 
-func pathStepFromRow(row *sqlc.HskipUsersBridgrSkillGapPathStep) (types.BridgrSkillGapPathStep, error) {
+func pathStepFromRow(row *sqlc.BridgrSkillGapPathStep) (types.BridgrSkillGapPathStep, error) {
 	out := types.BridgrSkillGapPathStep{
 		StepIndex: row.StepIndex,
 		Title:     row.Title,

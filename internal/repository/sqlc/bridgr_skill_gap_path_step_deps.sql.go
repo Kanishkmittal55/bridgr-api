@@ -37,9 +37,9 @@ type CreateSkillGapPathStepDepParams struct {
 // BRIDGR SKILL GAP — PATH STEP DEPENDENCIES
 // DAG edges between path steps (prerequisites).
 // =============================================================================
-func (q *Queries) CreateSkillGapPathStepDep(ctx context.Context, arg CreateSkillGapPathStepDepParams) (HskipUsersBridgrSkillGapPathStepDep, error) {
+func (q *Queries) CreateSkillGapPathStepDep(ctx context.Context, arg CreateSkillGapPathStepDepParams) (BridgrSkillGapPathStepDep, error) {
 	row := q.db.QueryRow(ctx, createSkillGapPathStepDep, arg.PathUuid, arg.StepUuid, arg.DependsOnStepUuid)
-	var i HskipUsersBridgrSkillGapPathStepDep
+	var i BridgrSkillGapPathStepDep
 	err := row.Scan(
 		&i.Uuid,
 		&i.ID,
@@ -68,15 +68,15 @@ WHERE path_uuid = $1
 ORDER BY id ASC
 `
 
-func (q *Queries) ListAllDepsByPath(ctx context.Context, pathUuid pgtype.UUID) ([]HskipUsersBridgrSkillGapPathStepDep, error) {
+func (q *Queries) ListAllDepsByPath(ctx context.Context, pathUuid pgtype.UUID) ([]BridgrSkillGapPathStepDep, error) {
 	rows, err := q.db.Query(ctx, listAllDepsByPath, pathUuid)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []HskipUsersBridgrSkillGapPathStepDep
+	var items []BridgrSkillGapPathStepDep
 	for rows.Next() {
-		var i HskipUsersBridgrSkillGapPathStepDep
+		var i BridgrSkillGapPathStepDep
 		if err := rows.Scan(
 			&i.Uuid,
 			&i.ID,
@@ -108,15 +108,15 @@ type ListDependenciesByStepParams struct {
 }
 
 // Prerequisite steps that step_uuid depends on within this path.
-func (q *Queries) ListDependenciesByStep(ctx context.Context, arg ListDependenciesByStepParams) ([]HskipUsersBridgrSkillGapPathStepDep, error) {
+func (q *Queries) ListDependenciesByStep(ctx context.Context, arg ListDependenciesByStepParams) ([]BridgrSkillGapPathStepDep, error) {
 	rows, err := q.db.Query(ctx, listDependenciesByStep, arg.PathUuid, arg.StepUuid)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []HskipUsersBridgrSkillGapPathStepDep
+	var items []BridgrSkillGapPathStepDep
 	for rows.Next() {
-		var i HskipUsersBridgrSkillGapPathStepDep
+		var i BridgrSkillGapPathStepDep
 		if err := rows.Scan(
 			&i.Uuid,
 			&i.ID,
@@ -148,15 +148,15 @@ type ListDependentsByStepParams struct {
 }
 
 // Steps in this path that depend on depends_on_step_uuid.
-func (q *Queries) ListDependentsByStep(ctx context.Context, arg ListDependentsByStepParams) ([]HskipUsersBridgrSkillGapPathStepDep, error) {
+func (q *Queries) ListDependentsByStep(ctx context.Context, arg ListDependentsByStepParams) ([]BridgrSkillGapPathStepDep, error) {
 	rows, err := q.db.Query(ctx, listDependentsByStep, arg.PathUuid, arg.DependsOnStepUuid)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []HskipUsersBridgrSkillGapPathStepDep
+	var items []BridgrSkillGapPathStepDep
 	for rows.Next() {
-		var i HskipUsersBridgrSkillGapPathStepDep
+		var i BridgrSkillGapPathStepDep
 		if err := rows.Scan(
 			&i.Uuid,
 			&i.ID,

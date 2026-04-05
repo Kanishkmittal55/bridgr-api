@@ -8,8 +8,127 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+// Bridgr: associates a skill_gap_analysis with a discovered job_candidates row.
+type BridgrAnalysisJobLink struct {
+	Uuid pgtype.UUID `db:"uuid"`
+	ID   int64       `db:"id"`
+	// App-enforced FK to users.id; denormalized for listing
+	UserID int32 `db:"user_id"`
+	// App-enforced FK to skill_gap_analyses.uuid
+	AnalysisUuid pgtype.UUID `db:"analysis_uuid"`
+	// App-enforced FK to job_candidates.uuid
+	JobCandidateUuid pgtype.UUID `db:"job_candidate_uuid"`
+	// from_job_feed, manual, import
+	LinkKind  string           `db:"link_kind"`
+	CreatedAt pgtype.Timestamp `db:"created_at"`
+	UpdatedAt pgtype.Timestamp `db:"updated_at"`
+}
+
+// Bridgr job discovery: one row per unique posting per user (dedupe by url_hash).
+type BridgrJobCandidate struct {
+	Uuid pgtype.UUID `db:"uuid"`
+	ID   int64       `db:"id"`
+	// App-enforced FK to users.id
+	UserID int32 `db:"user_id"`
+	// App-enforced FK to job_search_discovery_runs.uuid
+	DiscoveryRunUuid pgtype.UUID `db:"discovery_run_uuid"`
+	SourceBoard      string      `db:"source_board"`
+	SourceJobID      pgtype.Text `db:"source_job_id"`
+	JobUrl           string      `db:"job_url"`
+	// Stable hash of normalized URL for deduplication
+	UrlHash string `db:"url_hash"`
+	// Optional hash of JD body for refresh/dedup
+	ContentHash pgtype.Text `db:"content_hash"`
+	Title       pgtype.Text `db:"title"`
+	Company     pgtype.Text `db:"company"`
+	Location    pgtype.Text `db:"location"`
+	// Inline job description text when small enough
+	JdText pgtype.Text `db:"jd_text"`
+	// Pointer to stored JD blob when large
+	JdS3Uri         pgtype.Text      `db:"jd_s3_uri"`
+	FetchedAt       pgtype.Timestamp `db:"fetched_at"`
+	IngestionStatus string           `db:"ingestion_status"`
+	// Raw or normalized Radar response slice
+	RadarPayload []byte `db:"radar_payload"`
+	// Direct apply URL when distinct from job_url
+	ApplicationUrl pgtype.Text      `db:"application_url"`
+	CreatedAt      pgtype.Timestamp `db:"created_at"`
+	UpdatedAt      pgtype.Timestamp `db:"updated_at"`
+}
+
+// Bridgr job discovery: notification rows for new surfaced or relevant jobs.
+type BridgrJobNotification struct {
+	Uuid pgtype.UUID `db:"uuid"`
+	ID   int64       `db:"id"`
+	// App-enforced FK to users.id
+	UserID int32 `db:"user_id"`
+	// App-enforced FK to job_candidates.uuid
+	JobCandidateUuid pgtype.UUID `db:"job_candidate_uuid"`
+	// in_app, email, push
+	Channel string `db:"channel"`
+	// pending, sent, failed, seen, skipped
+	Status string `db:"status"`
+	// Title snippet, deep link hints, template vars
+	Payload     []byte           `db:"payload"`
+	SentAt      pgtype.Timestamp `db:"sent_at"`
+	SeenAt      pgtype.Timestamp `db:"seen_at"`
+	ErrorDetail pgtype.Text      `db:"error_detail"`
+	CreatedAt   pgtype.Timestamp `db:"created_at"`
+	UpdatedAt   pgtype.Timestamp `db:"updated_at"`
+}
+
+// Bridgr job discovery: audit trail for one Radar-backed discovery execution.
+type BridgrJobSearchDiscoveryRun struct {
+	Uuid pgtype.UUID `db:"uuid"`
+	ID   int64       `db:"id"`
+	// App-enforced FK to users.id
+	UserID int32 `db:"user_id"`
+	// pending, running, completed, failed, cancelled
+	Status string `db:"status"`
+	// Resolved query/location/boards caps sent to worker/Radar
+	RequestParams []byte `db:"request_params"`
+	// Timings, per-board errors, debug payload
+	RadarMeta         []byte           `db:"radar_meta"`
+	RawCandidateCount int32            `db:"raw_candidate_count"`
+	NewCandidateCount int32            `db:"new_candidate_count"`
+	StartedAt         pgtype.Timestamp `db:"started_at"`
+	CompletedAt       pgtype.Timestamp `db:"completed_at"`
+	ErrorCode         pgtype.Text      `db:"error_code"`
+	ErrorDetail       pgtype.Text      `db:"error_detail"`
+	// Optional queue id for async job discovery
+	SqsMessageID pgtype.Text      `db:"sqs_message_id"`
+	CreatedAt    pgtype.Timestamp `db:"created_at"`
+	UpdatedAt    pgtype.Timestamp `db:"updated_at"`
+}
+
+// Bridgr job discovery: user preferences for Radar search and surfacing.
+type BridgrJobSearchProfile struct {
+	Uuid pgtype.UUID `db:"uuid"`
+	ID   int64       `db:"id"`
+	// App-enforced FK to users.id
+	UserID int32 `db:"user_id"`
+	// JSON array of role strings or objects
+	TargetRoles []byte `db:"target_roles"`
+	// JSON array of location descriptors (city, remote flags, etc.)
+	Locations []byte `db:"locations"`
+	// JSON array of board ids (e.g. linkedin, indeed)
+	BoardsEnabled []byte `db:"boards_enabled"`
+	// Policy blob: strict_no_skill_gaps, tiers, etc.
+	Matching []byte `db:"matching"`
+	// Optional app-enforced FK to skill_gap_analyses.uuid for CV fingerprint context
+	CanonicalCvAnalysisUuid pgtype.UUID      `db:"canonical_cv_analysis_uuid"`
+	MaxSurfacedJobs         int32            `db:"max_surfaced_jobs"`
+	CreatedAt               pgtype.Timestamp `db:"created_at"`
+	UpdatedAt               pgtype.Timestamp `db:"updated_at"`
+}
+
+type BridgrSchemaMigration struct {
+	Version int64 `db:"version"`
+	Dirty   bool  `db:"dirty"`
+}
+
 // Bridgr Skill Gap Navigator: analysis run linking user (and optional founder context) to CV/JD extraction and learning-path outputs.
-type HskipUsersBridgrSkillGapAnalysis struct {
+type BridgrSkillGapAnalysis struct {
 	Uuid               pgtype.UUID `db:"uuid"`
 	ID                 int64       `db:"id"`
 	UserID             int32       `db:"user_id"`
@@ -43,7 +162,7 @@ type HskipUsersBridgrSkillGapAnalysis struct {
 }
 
 // Skill coverage / gap rows or summary metrics for an analysis.
-type HskipUsersBridgrSkillGapCoverage struct {
+type BridgrSkillGapCoverage struct {
 	Uuid pgtype.UUID `db:"uuid"`
 	ID   int64       `db:"id"`
 	// App-enforced FK to skill_gap_analyses.uuid
@@ -61,7 +180,7 @@ type HskipUsersBridgrSkillGapCoverage struct {
 }
 
 // Directed edges between skill-gap nodes in a graph.
-type HskipUsersBridgrSkillGapEdge struct {
+type BridgrSkillGapEdge struct {
 	Uuid pgtype.UUID `db:"uuid"`
 	ID   int64       `db:"id"`
 	// App-enforced FK to skill_gap_graphs.uuid
@@ -79,7 +198,7 @@ type HskipUsersBridgrSkillGapEdge struct {
 }
 
 // Skill graphs for Bridgr: typically two per analysis (candidate skills vs role requirements).
-type HskipUsersBridgrSkillGapGraph struct {
+type BridgrSkillGapGraph struct {
 	Uuid pgtype.UUID `db:"uuid"`
 	ID   int64       `db:"id"`
 	// App-enforced FK to skill_gap_analyses.uuid
@@ -93,7 +212,7 @@ type HskipUsersBridgrSkillGapGraph struct {
 }
 
 // Learning plan / path for closing skill gaps from one analysis.
-type HskipUsersBridgrSkillGapLearningPath struct {
+type BridgrSkillGapLearningPath struct {
 	Uuid pgtype.UUID `db:"uuid"`
 	ID   int64       `db:"id"`
 	// App-enforced FK to skill_gap_analyses.uuid
@@ -108,7 +227,7 @@ type HskipUsersBridgrSkillGapLearningPath struct {
 }
 
 // Skill/concept nodes in a skill-gap graph (candidate or role requirement).
-type HskipUsersBridgrSkillGapNode struct {
+type BridgrSkillGapNode struct {
 	Uuid pgtype.UUID `db:"uuid"`
 	ID   int64       `db:"id"`
 	// App-enforced FK to skill_gap_graphs.uuid
@@ -131,7 +250,7 @@ type HskipUsersBridgrSkillGapNode struct {
 }
 
 // One step in a generated learning path.
-type HskipUsersBridgrSkillGapPathStep struct {
+type BridgrSkillGapPathStep struct {
 	Uuid pgtype.UUID `db:"uuid"`
 	ID   int64       `db:"id"`
 	// App-enforced FK to skill_gap_learning_paths.uuid
@@ -155,7 +274,7 @@ type HskipUsersBridgrSkillGapPathStep struct {
 }
 
 // Prerequisite edges between steps in a learning path (DAG).
-type HskipUsersBridgrSkillGapPathStepDep struct {
+type BridgrSkillGapPathStepDep struct {
 	Uuid pgtype.UUID `db:"uuid"`
 	ID   int64       `db:"id"`
 	// App-enforced FK to skill_gap_learning_paths.uuid
@@ -166,9 +285,4 @@ type HskipUsersBridgrSkillGapPathStepDep struct {
 	DependsOnStepUuid pgtype.UUID      `db:"depends_on_step_uuid"`
 	CreatedAt         pgtype.Timestamp `db:"created_at"`
 	UpdatedAt         pgtype.Timestamp `db:"updated_at"`
-}
-
-type SchemaMigration struct {
-	Version int64 `db:"version"`
-	Dirty   bool  `db:"dirty"`
 }

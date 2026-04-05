@@ -1,0 +1,9 @@
+# Step 4 (Job Report Template) — Retry & Human Interaction Config
+
+step: job_report_template
+max_retries: 0
+# Template definition step: report structure, sections, nudge types.
+# No human input required; agent applies template when writing reports during Phase A (step 7).
+comment: "No human interaction cases; reference template only."
+
+cases: []

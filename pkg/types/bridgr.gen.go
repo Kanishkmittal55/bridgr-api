@@ -9,6 +9,12 @@ import (
 	openapi_types "github.com/oapi-codegen/runtime/types"
 )
 
+// Defines values for BridgrAnalysisAssetReadUrlResponseAccess.
+const (
+	Direct    BridgrAnalysisAssetReadUrlResponseAccess = "direct"
+	Presigned BridgrAnalysisAssetReadUrlResponseAccess = "presigned"
+)
+
 // Defines values for BridgrSkillGapAnalysisStatus.
 const (
 	BridgrSkillGapPending BridgrSkillGapAnalysisStatus = "pending"
@@ -24,6 +30,118 @@ const (
 	Candidate       BridgrSkillGapGraphKind = "candidate"
 	RoleRequirement BridgrSkillGapGraphKind = "role_requirement"
 )
+
+// BridgrAnalysisAssetReadUrlResponse URL usable in the browser to display the CV or JD asset.
+// `presigned` = temporary S3/MinIO signed GET URL; `direct` = public or same-origin HTTPS URL (no signing).
+type BridgrAnalysisAssetReadUrlResponse struct {
+	Access BridgrAnalysisAssetReadUrlResponseAccess `json:"access"`
+
+	// AssetUri Original stored URI from the analysis row (s3:// or https://).
+	AssetUri *string `json:"asset_uri,omitempty"`
+
+	// ContentType Hint for rendering (e.g. application/pdf).
+	ContentType *string `json:"content_type,omitempty"`
+
+	// ExpiresAt Set when access is presigned; omit for direct URLs.
+	ExpiresAt *time.Time `json:"expires_at,omitempty"`
+
+	// Url Open in iframe/new tab or pass to a PDF viewer.
+	Url string `json:"url"`
+}
+
+// BridgrAnalysisAssetReadUrlResponseAccess defines model for BridgrAnalysisAssetReadUrlResponse.Access.
+type BridgrAnalysisAssetReadUrlResponseAccess string
+
+// BridgrJobCandidate defines model for BridgrJobCandidate.
+type BridgrJobCandidate struct {
+	ApplicationUrl   *string                 `json:"application_url"`
+	Company          *string                 `json:"company"`
+	ContentHash      *string                 `json:"content_hash"`
+	CreatedAt        time.Time               `json:"created_at"`
+	DiscoveryRunUuid *openapi_types.UUID     `json:"discovery_run_uuid"`
+	FetchedAt        *time.Time              `json:"fetched_at"`
+	Id               int64                   `json:"id"`
+	IngestionStatus  string                  `json:"ingestion_status"`
+	JdS3Uri          *string                 `json:"jd_s3_uri"`
+	JdText           *string                 `json:"jd_text"`
+	JobUrl           string                  `json:"job_url"`
+	Location         *string                 `json:"location"`
+	RadarPayload     *map[string]interface{} `json:"radar_payload"`
+	SourceBoard      *string                 `json:"source_board,omitempty"`
+	SourceJobId      *string                 `json:"source_job_id"`
+	Title            *string                 `json:"title"`
+	UpdatedAt        time.Time               `json:"updated_at"`
+	UrlHash          string                  `json:"url_hash"`
+	UserId           int32                   `json:"user_id"`
+	Uuid             openapi_types.UUID      `json:"uuid"`
+}
+
+// BridgrJobCandidateListResponse defines model for BridgrJobCandidateListResponse.
+type BridgrJobCandidateListResponse struct {
+	Candidates []BridgrJobCandidate `json:"candidates"`
+}
+
+// BridgrJobNotification defines model for BridgrJobNotification.
+type BridgrJobNotification struct {
+	Channel          string                  `json:"channel"`
+	CreatedAt        time.Time               `json:"created_at"`
+	ErrorDetail      *string                 `json:"error_detail"`
+	Id               int64                   `json:"id"`
+	JobCandidateUuid openapi_types.UUID      `json:"job_candidate_uuid"`
+	Payload          *map[string]interface{} `json:"payload"`
+	SeenAt           *time.Time              `json:"seen_at"`
+	SentAt           *time.Time              `json:"sent_at"`
+	Status           string                  `json:"status"`
+	UpdatedAt        time.Time               `json:"updated_at"`
+	UserId           int32                   `json:"user_id"`
+	Uuid             openapi_types.UUID      `json:"uuid"`
+}
+
+// BridgrJobNotificationListResponse defines model for BridgrJobNotificationListResponse.
+type BridgrJobNotificationListResponse struct {
+	Notifications []BridgrJobNotification `json:"notifications"`
+}
+
+// BridgrJobSearchDiscoveryRun defines model for BridgrJobSearchDiscoveryRun.
+type BridgrJobSearchDiscoveryRun struct {
+	CompletedAt       *time.Time              `json:"completed_at"`
+	CreatedAt         time.Time               `json:"created_at"`
+	ErrorCode         *string                 `json:"error_code"`
+	ErrorDetail       *string                 `json:"error_detail"`
+	Id                int64                   `json:"id"`
+	NewCandidateCount int32                   `json:"new_candidate_count"`
+	RadarMeta         *map[string]interface{} `json:"radar_meta"`
+	RawCandidateCount int32                   `json:"raw_candidate_count"`
+	RequestParams     *map[string]interface{} `json:"request_params"`
+	SqsMessageId      *string                 `json:"sqs_message_id"`
+	StartedAt         *time.Time              `json:"started_at"`
+
+	// Status pending, queued, running, completed, failed, cancelled
+	Status    string             `json:"status"`
+	UpdatedAt time.Time          `json:"updated_at"`
+	UserId    int32              `json:"user_id"`
+	Uuid      openapi_types.UUID `json:"uuid"`
+}
+
+// BridgrJobSearchDiscoveryRunListResponse defines model for BridgrJobSearchDiscoveryRunListResponse.
+type BridgrJobSearchDiscoveryRunListResponse struct {
+	Runs []BridgrJobSearchDiscoveryRun `json:"runs"`
+}
+
+// BridgrJobSearchProfile Per-user job search / Radar preferences
+type BridgrJobSearchProfile struct {
+	BoardsEnabled           *[]string                 `json:"boards_enabled,omitempty"`
+	CanonicalCvAnalysisUuid *openapi_types.UUID       `json:"canonical_cv_analysis_uuid"`
+	CreatedAt               time.Time                 `json:"created_at"`
+	Id                      int64                     `json:"id"`
+	Locations               *[]map[string]interface{} `json:"locations,omitempty"`
+	Matching                *map[string]interface{}   `json:"matching"`
+	MaxSurfacedJobs         int32                     `json:"max_surfaced_jobs"`
+	TargetRoles             *[]string                 `json:"target_roles,omitempty"`
+	UpdatedAt               time.Time                 `json:"updated_at"`
+	UserId                  int32                     `json:"user_id"`
+	Uuid                    openapi_types.UUID        `json:"uuid"`
+}
 
 // BridgrPingResponse defines model for BridgrPingResponse.
 type BridgrPingResponse struct {
@@ -195,6 +313,11 @@ type BridgrSkillGapUserCoverageRow struct {
 	UserId *int32                        `json:"user_id,omitempty"`
 }
 
+// CreateBridgrJobSearchDiscoveryRunRequest Optional overrides merged into request_params snapshot for this run
+type CreateBridgrJobSearchDiscoveryRunRequest struct {
+	RequestParams *map[string]interface{} `json:"request_params"`
+}
+
 // CreateBridgrSkillGapAnalysisRequest defines model for CreateBridgrSkillGapAnalysisRequest.
 type CreateBridgrSkillGapAnalysisRequest struct {
 	CvAssetUri         *string             `json:"cv_asset_uri"`
@@ -202,11 +325,14 @@ type CreateBridgrSkillGapAnalysisRequest struct {
 	FounderPersonaUuid *openapi_types.UUID `json:"founder_persona_uuid"`
 	JdAssetUri         *string             `json:"jd_asset_uri"`
 	JdFingerprint      *string             `json:"jd_fingerprint"`
-	LlmModel           *string             `json:"llm_model"`
-	PromptVersion      *string             `json:"prompt_version"`
-	PursuitUuid        *openapi_types.UUID `json:"pursuit_uuid"`
-	Title              *string             `json:"title"`
-	UserId             int32               `json:"user_id"`
+
+	// JobCandidateUuid When set, insert bridgr.analysis_job_link after the analysis is created
+	JobCandidateUuid *openapi_types.UUID `json:"job_candidate_uuid"`
+	LlmModel         *string             `json:"llm_model"`
+	PromptVersion    *string             `json:"prompt_version"`
+	PursuitUuid      *openapi_types.UUID `json:"pursuit_uuid"`
+	Title            *string             `json:"title"`
+	UserId           int32               `json:"user_id"`
 }
 
 // CreateBridgrSkillGapEdgeRequest defines model for CreateBridgrSkillGapEdgeRequest.
@@ -246,6 +372,17 @@ type CreateBridgrSkillGapNodeRequest struct {
 	Source          *string                 `json:"source"`
 }
 
+// PatchBridgrJobNotificationRequest At least one field should be set
+type PatchBridgrJobNotificationRequest struct {
+	ErrorDetail *string `json:"error_detail"`
+
+	// MarkSeen When true, sets status to seen and seen_at to now
+	MarkSeen *bool `json:"mark_seen"`
+
+	// Status e.g. pending, sent, failed, seen, skipped
+	Status *string `json:"status"`
+}
+
 // PresignedUploadRequest defines model for PresignedUploadRequest.
 type PresignedUploadRequest struct {
 	// ContentType MIME type of the file. If not provided, will be inferred from filename extension.
@@ -279,6 +416,16 @@ type UpdateBridgrSkillGapAnalysisStatusRequest struct {
 	Status BridgrSkillGapAnalysisStatus `json:"status"`
 }
 
+// UpsertBridgrJobSearchProfileRequest Fields to upsert; omitted keys leave existing DB values unchanged on update. On create, defaults apply for missing columns.
+type UpsertBridgrJobSearchProfileRequest struct {
+	BoardsEnabled           *[]string                 `json:"boards_enabled"`
+	CanonicalCvAnalysisUuid *openapi_types.UUID       `json:"canonical_cv_analysis_uuid"`
+	Locations               *[]map[string]interface{} `json:"locations"`
+	Matching                *map[string]interface{}   `json:"matching"`
+	MaxSurfacedJobs         *int32                    `json:"max_surfaced_jobs"`
+	TargetRoles             *[]string                 `json:"target_roles"`
+}
+
 // V1PostGenerateUploadUrlParams defines parameters for V1PostGenerateUploadUrl.
 type V1PostGenerateUploadUrlParams struct {
 	// XAPIKEY API Key of the service making the request
@@ -299,6 +446,18 @@ type V1DeleteBridgrAnalysisParams struct {
 
 // V1GetBridgrAnalysisParams defines parameters for V1GetBridgrAnalysis.
 type V1GetBridgrAnalysisParams struct {
+	// XAPIKEY API Key of the service making the request
+	XAPIKEY string `json:"X-API-KEY"`
+}
+
+// V1GetBridgrAnalysisCvAssetReadUrlParams defines parameters for V1GetBridgrAnalysisCvAssetReadUrl.
+type V1GetBridgrAnalysisCvAssetReadUrlParams struct {
+	// XAPIKEY API Key of the service making the request
+	XAPIKEY string `json:"X-API-KEY"`
+}
+
+// V1GetBridgrAnalysisJdAssetReadUrlParams defines parameters for V1GetBridgrAnalysisJdAssetReadUrl.
+type V1GetBridgrAnalysisJdAssetReadUrlParams struct {
 	// XAPIKEY API Key of the service making the request
 	XAPIKEY string `json:"X-API-KEY"`
 }
@@ -399,6 +558,24 @@ type V1GetBridgrGraphNodeByKeyParams struct {
 	XAPIKEY string `json:"X-API-KEY"`
 }
 
+// V1GetBridgrJobCandidateParams defines parameters for V1GetBridgrJobCandidate.
+type V1GetBridgrJobCandidateParams struct {
+	// XAPIKEY API Key of the service making the request
+	XAPIKEY string `json:"X-API-KEY"`
+}
+
+// V1GetBridgrJobDiscoveryRunParams defines parameters for V1GetBridgrJobDiscoveryRun.
+type V1GetBridgrJobDiscoveryRunParams struct {
+	// XAPIKEY API Key of the service making the request
+	XAPIKEY string `json:"X-API-KEY"`
+}
+
+// V1PatchBridgrJobNotificationParams defines parameters for V1PatchBridgrJobNotification.
+type V1PatchBridgrJobNotificationParams struct {
+	// XAPIKEY API Key of the service making the request
+	XAPIKEY string `json:"X-API-KEY"`
+}
+
 // V1GetBridgrPathStepsParams defines parameters for V1GetBridgrPathSteps.
 type V1GetBridgrPathStepsParams struct {
 	// XAPIKEY API Key of the service making the request
@@ -423,6 +600,66 @@ type V1GetBridgrUserCoverageParams struct {
 	XAPIKEY string `json:"X-API-KEY"`
 }
 
+// V1GetBridgrUserJobCandidatesParams defines parameters for V1GetBridgrUserJobCandidates.
+type V1GetBridgrUserJobCandidatesParams struct {
+	Limit  *int32 `form:"limit,omitempty" json:"limit,omitempty"`
+	Offset *int32 `form:"offset,omitempty" json:"offset,omitempty"`
+
+	// DiscoveryRunUuid Filter by discovery run
+	DiscoveryRunUuid *openapi_types.UUID `form:"discovery_run_uuid,omitempty" json:"discovery_run_uuid,omitempty"`
+	IngestionStatus  *string             `form:"ingestion_status,omitempty" json:"ingestion_status,omitempty"`
+	SourceBoard      *string             `form:"source_board,omitempty" json:"source_board,omitempty"`
+
+	// XAPIKEY API Key of the service making the request
+	XAPIKEY string `json:"X-API-KEY"`
+}
+
+// V1GetBridgrUserJobDiscoveryRunsParams defines parameters for V1GetBridgrUserJobDiscoveryRuns.
+type V1GetBridgrUserJobDiscoveryRunsParams struct {
+	Limit  *int32 `form:"limit,omitempty" json:"limit,omitempty"`
+	Offset *int32 `form:"offset,omitempty" json:"offset,omitempty"`
+
+	// XAPIKEY API Key of the service making the request
+	XAPIKEY string `json:"X-API-KEY"`
+}
+
+// V1PostBridgrUserJobDiscoveryRunsParams defines parameters for V1PostBridgrUserJobDiscoveryRuns.
+type V1PostBridgrUserJobDiscoveryRunsParams struct {
+	// XAPIKEY API Key of the service making the request
+	XAPIKEY string `json:"X-API-KEY"`
+}
+
+// V1PostBridgrUserJobDiscoveryRunCancelParams defines parameters for V1PostBridgrUserJobDiscoveryRunCancel.
+type V1PostBridgrUserJobDiscoveryRunCancelParams struct {
+	// XAPIKEY API Key of the service making the request
+	XAPIKEY string `json:"X-API-KEY"`
+}
+
+// V1GetBridgrUserJobNotificationsParams defines parameters for V1GetBridgrUserJobNotifications.
+type V1GetBridgrUserJobNotificationsParams struct {
+	Limit  *int32 `form:"limit,omitempty" json:"limit,omitempty"`
+	Offset *int32 `form:"offset,omitempty" json:"offset,omitempty"`
+
+	// Since Return rows with created_at strictly after this timestamp (RFC3339)
+	Since  *time.Time `form:"since,omitempty" json:"since,omitempty"`
+	Status *string    `form:"status,omitempty" json:"status,omitempty"`
+
+	// XAPIKEY API Key of the service making the request
+	XAPIKEY string `json:"X-API-KEY"`
+}
+
+// V1GetBridgrUserJobSearchProfileParams defines parameters for V1GetBridgrUserJobSearchProfile.
+type V1GetBridgrUserJobSearchProfileParams struct {
+	// XAPIKEY API Key of the service making the request
+	XAPIKEY string `json:"X-API-KEY"`
+}
+
+// V1PutBridgrUserJobSearchProfileParams defines parameters for V1PutBridgrUserJobSearchProfile.
+type V1PutBridgrUserJobSearchProfileParams struct {
+	// XAPIKEY API Key of the service making the request
+	XAPIKEY string `json:"X-API-KEY"`
+}
+
 // V1PostGenerateUploadUrlJSONRequestBody defines body for V1PostGenerateUploadUrl for application/json ContentType.
 type V1PostGenerateUploadUrlJSONRequestBody = PresignedUploadRequest
 
@@ -443,3 +680,12 @@ type V1PostBridgrGraphEdgesJSONRequestBody = CreateBridgrSkillGapEdgeRequest
 
 // V1PostBridgrGraphNodesJSONRequestBody defines body for V1PostBridgrGraphNodes for application/json ContentType.
 type V1PostBridgrGraphNodesJSONRequestBody = CreateBridgrSkillGapNodeRequest
+
+// V1PatchBridgrJobNotificationJSONRequestBody defines body for V1PatchBridgrJobNotification for application/json ContentType.
+type V1PatchBridgrJobNotificationJSONRequestBody = PatchBridgrJobNotificationRequest
+
+// V1PostBridgrUserJobDiscoveryRunsJSONRequestBody defines body for V1PostBridgrUserJobDiscoveryRuns for application/json ContentType.
+type V1PostBridgrUserJobDiscoveryRunsJSONRequestBody = CreateBridgrJobSearchDiscoveryRunRequest
+
+// V1PutBridgrUserJobSearchProfileJSONRequestBody defines body for V1PutBridgrUserJobSearchProfile for application/json ContentType.
+type V1PutBridgrUserJobSearchProfileJSONRequestBody = UpsertBridgrJobSearchProfileRequest

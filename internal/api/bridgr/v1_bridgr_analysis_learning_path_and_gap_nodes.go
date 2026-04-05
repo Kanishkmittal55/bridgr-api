@@ -135,7 +135,7 @@ func (s *server) v1ListAnalysisGapNodes(ctx context.Context, analysisUUID openap
 	if err != nil {
 		return nil, err
 	}
-	var rows []sqlc.HskipUsersBridgrSkillGapNode
+	var rows []sqlc.BridgrSkillGapNode
 	if matched {
 		rows, err = s.deps.Repo.ListMatchedNodes(ctx, s.querier(), pgid)
 	} else {

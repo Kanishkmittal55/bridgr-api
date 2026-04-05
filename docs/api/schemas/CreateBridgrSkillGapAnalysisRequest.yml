@@ -34,3 +34,8 @@ properties:
   prompt_version:
     type: string
     nullable: true
+  job_candidate_uuid:
+    type: string
+    format: uuid
+    nullable: true
+    description: When set, insert bridgr.analysis_job_link after the analysis is created

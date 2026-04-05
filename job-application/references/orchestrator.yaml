@@ -1,0 +1,129 @@
+# Job Application Orchestrator
+# Control flow, transitions, retries, and retry prompts. Load preferences first; then follow this flow.
+
+# --- Control Flow ---
+transitions:
+  # Planning steps (sequential)
+  step1:
+    success: step2
+    missing_input: retry
+    retries_exhausted: step2   # proceed with inference where possible
+    abort: end
+
+  step2:
+    success: step3
+    missing_input: retry
+    retries_exhausted: abort   # cannot generate queries without intake
+    abort: end
+
+  step3:
+    success: step4
+    missing_input: step4      # no human input; spec only
+    retries_exhausted: step4
+    abort: end
+
+  step4:
+    success: step5
+    missing_input: step5
+    retries_exhausted: step5
+    abort: end
+
+  step5:
+    success: step6
+    missing_input: step6
+    retries_exhausted: step6
+    abort: end
+
+  step6:
+    success: pre_exec
+    missing_input: pre_exec
+    retries_exhausted: pre_exec
+    abort: end
+
+  # Pre-execution (check prerequisites)
+  pre_exec:
+    success: phase_a_or_b      # mode determines branch
+    missing_input: retry
+    retries_exhausted: abort
+    abort: end
+
+  # Phase A: Discover & Report (skip if mode is outputs_only or application_only)
+  phase_a:
+    success: summarize
+    websearch_no_urls: retry
+    all_urls_deduplicated: summarize
+    abort: end
+
+  summarize:
+    success: phase_b_or_end    # mode determines
+    abort: end
+
+  # Phase B: Application materials per job
+  phase_b_per_job:
+    outputs_exist: next_job
+    success: next_job
+    missing_input: retry
+    retries_exhausted: skip_job
+    abort: end
+
+  next_job:
+    more_jobs: phase_b_per_job
+    done: end
+
+# --- Retries (max prompts per step) ---
+retries:
+  step1: 3
+  step2: 2
+  step3: 0
+  step4: 0
+  step5: 0
+  step6: 0
+  pre_exec: 2
+  phase_a: 2
+  phase_b_per_job: 2
+
+# --- Retry Prompts (key cases; see step N/retry-config.yaml for full set) ---
+retry_prompts:
+  step1:
+    1: "Resume path?"
+    2: "Performance review path?"
+    3: "Target roles and location?"
+  step2:
+    1: "Intake (step 1) required. Run step 1 first or provide intake path."
+    2: "target_roles empty. Provide roles or say 'infer from resume'."
+  pre_exec:
+    1: "Intake required. Complete step 1 first."
+    2: "Search strategy required for Phase A. Complete step 2."
+  phase_a:
+    1: "WebSearch returned no URLs. Try different queries or paste URLs."
+    2: "Still no URLs. Paste job URLs or say 'skip'."
+  phase_b_per_job:
+    1: "No jobs in execute/. Run Phase A first or provide job URL."
+    2: "Job report not found. Provide valid URL or report path."
+
+# --- Run Mode Branches ---
+# discover_only: pre_exec → phase_a → summarize → end
+# full:         pre_exec → phase_a → summarize → phase_b → end
+# outputs_only: pre_exec → phase_b (skip phase_a)
+# application_only: pre_exec → phase_b (one job, skip phase_a)
+
+mode_branches:
+  discover_only:
+    - pre_exec
+    - phase_a
+    - summarize
+    - end
+  full:
+    - pre_exec
+    - phase_a
+    - summarize
+    - phase_b
+    - end
+  outputs_only:
+    - pre_exec
+    - phase_b
+    - end
+  application_only:
+    - pre_exec
+    - phase_b
+    - end
