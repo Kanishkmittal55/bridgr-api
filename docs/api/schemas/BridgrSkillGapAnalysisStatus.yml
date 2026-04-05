@@ -1,0 +1,17 @@
+type: string
+description: Pipeline state aligned with async worker steps
+enum:
+  - pending
+  - extracting
+  - graphed
+  - pathed
+  - completed
+  - failed
+# Avoid const name collision with UserBasicsStatus Pending in pkg/types/users.gen.go
+x-enum-varnames:
+  - BridgrSkillGapPending
+  - Extracting
+  - Graphed
+  - Pathed
+  - Completed
+  - Failed

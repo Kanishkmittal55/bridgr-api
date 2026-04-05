@@ -1,0 +1,56 @@
+get:
+  summary: Get node by graph and node_key
+  operationId: V1GetBridgrGraphNodeByKey
+  tags:
+    - bridgr
+  parameters:
+    - name: X-API-KEY
+      in: header
+      description: API Key of the service making the request
+      required: true
+      style: simple
+      explode: false
+      schema:
+        type: string
+    - name: graphUUID
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    - name: nodeKey
+      in: path
+      required: true
+      schema:
+        type: string
+  responses:
+    "200":
+      description: Node
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/BridgrSkillGapNode.yml'
+    "400":
+      description: Invalid request
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/ErrorResponse.yml'
+    "401":
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/ErrorResponse.yml'
+    "404":
+      description: Not found
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/NotFoundErrorResponse.yml'
+    "500":
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/ErrorResponse.yml'

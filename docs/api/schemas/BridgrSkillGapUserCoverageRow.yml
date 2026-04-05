@@ -1,0 +1,36 @@
+type: object
+description: Per-analysis coverage summary for dashboard lists (matches aggregated SQL read)
+properties:
+  analysis_id:
+    type: integer
+    format: int64
+  analysis_uuid:
+    type: string
+    format: uuid
+  user_id:
+    type: integer
+    format: int32
+  title:
+    type: string
+    nullable: true
+  status:
+    $ref: './BridgrSkillGapAnalysisStatus.yml'
+  created_at:
+    type: string
+    format: date-time
+  candidate_skills:
+    type: integer
+    format: int64
+    nullable: true
+  required_skills:
+    type: integer
+    format: int64
+    nullable: true
+  matched_skills:
+    type: integer
+    format: int64
+    nullable: true
+  coverage_pct:
+    type: number
+    format: float
+    nullable: true

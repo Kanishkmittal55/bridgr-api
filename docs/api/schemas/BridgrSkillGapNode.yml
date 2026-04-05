@@ -1,0 +1,54 @@
+type: object
+required:
+  - uuid
+  - id
+  - graph_uuid
+  - node_key
+  - display_name
+  - created_at
+  - updated_at
+properties:
+  uuid:
+    type: string
+    format: uuid
+  id:
+    type: integer
+    format: int64
+  graph_uuid:
+    type: string
+    format: uuid
+  node_key:
+    type: string
+  display_name:
+    type: string
+  description:
+    type: string
+    nullable: true
+  proficiency_hint:
+    type: string
+    nullable: true
+  source:
+    type: string
+    nullable: true
+  evidence:
+    type: object
+    additionalProperties: true
+    nullable: true
+  metadata:
+    type: object
+    additionalProperties: true
+    nullable: true
+  position_x:
+    type: integer
+    format: int32
+    nullable: true
+  position_y:
+    type: integer
+    format: int32
+    nullable: true
+  created_at:
+    type: string
+    format: date-time
+  updated_at:
+    type: string
+    format: date-time

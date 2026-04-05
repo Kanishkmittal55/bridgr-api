@@ -1,0 +1,76 @@
+type: object
+description: One CV/JD skill-gap analysis run
+required:
+  - uuid
+  - id
+  - user_id
+  - status
+  - created_at
+  - updated_at
+properties:
+  uuid:
+    type: string
+    format: uuid
+  id:
+    type: integer
+    format: int64
+  user_id:
+    type: integer
+    format: int32
+  founder_persona_uuid:
+    type: string
+    format: uuid
+    nullable: true
+  pursuit_uuid:
+    type: string
+    format: uuid
+    nullable: true
+  title:
+    type: string
+    nullable: true
+  status:
+    $ref: './BridgrSkillGapAnalysisStatus.yml'
+  cv_asset_uri:
+    type: string
+    nullable: true
+  jd_asset_uri:
+    type: string
+    nullable: true
+  cv_fingerprint:
+    type: string
+    nullable: true
+  jd_fingerprint:
+    type: string
+    nullable: true
+  llm_model:
+    type: string
+    nullable: true
+  prompt_version:
+    type: string
+    nullable: true
+  extraction_payload:
+    type: object
+    additionalProperties: true
+    nullable: true
+  gap_summary:
+    type: object
+    additionalProperties: true
+    nullable: true
+  mermaid_diagram:
+    type: string
+    nullable: true
+  error_code:
+    type: string
+    nullable: true
+  error_detail:
+    type: string
+    nullable: true
+  sqs_message_id:
+    type: string
+    nullable: true
+  created_at:
+    type: string
+    format: date-time
+  updated_at:
+    type: string
+    format: date-time

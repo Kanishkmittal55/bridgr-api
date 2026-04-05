@@ -1,0 +1,16 @@
+type: object
+properties:
+  path_version:
+    type: integer
+    format: int32
+    nullable: true
+  algorithm:
+    type: string
+    nullable: true
+  title:
+    type: string
+    nullable: true
+  path_metadata:
+    type: object
+    additionalProperties: true
+    nullable: true

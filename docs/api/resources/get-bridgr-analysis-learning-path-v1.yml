@@ -1,0 +1,52 @@
+get:
+  summary: Latest learning path for analysis
+  description: Returns the row with highest path_version for the analysis.
+  operationId: V1GetBridgrAnalysisLearningPath
+  tags:
+    - bridgr
+  parameters:
+    - name: X-API-KEY
+      in: header
+      description: API Key of the service making the request
+      required: true
+      style: simple
+      explode: false
+      schema:
+        type: string
+    - name: analysisUUID
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+  responses:
+    "200":
+      description: Learning path
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/BridgrSkillGapLearningPath.yml'
+    "400":
+      description: Invalid request
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/ErrorResponse.yml'
+    "401":
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/ErrorResponse.yml'
+    "404":
+      description: Not found
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/NotFoundErrorResponse.yml'
+    "500":
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/ErrorResponse.yml'

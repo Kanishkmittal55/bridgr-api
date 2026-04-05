@@ -1,0 +1,51 @@
+get:
+  summary: Matched skills (role nodes that exist on candidate graph)
+  operationId: V1GetBridgrAnalysisNodesMatched
+  tags:
+    - bridgr
+  parameters:
+    - name: X-API-KEY
+      in: header
+      description: API Key of the service making the request
+      required: true
+      style: simple
+      explode: false
+      schema:
+        type: string
+    - name: analysisUUID
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+  responses:
+    "200":
+      description: Role-requirement nodes with a candidate counterpart
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/BridgrSkillGapNodeListResponse.yml'
+    "400":
+      description: Invalid request
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/ErrorResponse.yml'
+    "401":
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/ErrorResponse.yml'
+    "404":
+      description: Analysis not found
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/NotFoundErrorResponse.yml'
+    "500":
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/ErrorResponse.yml'

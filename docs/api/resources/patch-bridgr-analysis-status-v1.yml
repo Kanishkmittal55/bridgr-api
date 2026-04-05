@@ -1,0 +1,58 @@
+patch:
+  summary: Update analysis pipeline status
+  description: Used by workers or admin to advance pending → extracting → graphed → pathed → completed/failed.
+  operationId: V1PatchBridgrAnalysisStatus
+  tags:
+    - bridgr
+  parameters:
+    - name: X-API-KEY
+      in: header
+      description: API Key of the service making the request
+      required: true
+      style: simple
+      explode: false
+      schema:
+        type: string
+    - name: analysisUUID
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: '../schemas/UpdateBridgrSkillGapAnalysisStatusRequest.yml'
+  responses:
+    "200":
+      description: Updated analysis
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/BridgrSkillGapAnalysis.yml'
+    "400":
+      description: Invalid request
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/ErrorResponse.yml'
+    "401":
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/ErrorResponse.yml'
+    "404":
+      description: Not found
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/NotFoundErrorResponse.yml'
+    "500":
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/ErrorResponse.yml'

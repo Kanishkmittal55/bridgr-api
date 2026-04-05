@@ -1,0 +1,8 @@
+type: object
+required:
+  - learning_paths
+properties:
+  learning_paths:
+    type: array
+    items:
+      $ref: './BridgrSkillGapLearningPath.yml'

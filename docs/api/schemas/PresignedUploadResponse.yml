@@ -1,0 +1,23 @@
+type: object
+properties:
+  upload_url:
+    type: string
+    format: uri
+    description: Presigned URL for uploading the file via HTTP PUT.
+    example: "https://s3.amazonaws.com/hassleskipbuckets/inputs/123/abc-uuid/file.pdf?X-Amz-..."
+  s3_key:
+    type: string
+    description: The S3 object key where the file will be stored.
+    example: "inputs/123/abc-uuid/file.pdf"
+  s3_uri:
+    type: string
+    format: uri
+    description: The S3 URI to use with scraper/start endpoint (input_file_url).
+    example: "s3://hassleskipbuckets/inputs/123/abc-uuid/file.pdf"
+  expires_at:
+    type: string
+    format: date-time
+    description: When the presigned URL expires.
+    example: "2024-12-07T12:30:00Z"
+
+

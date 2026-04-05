@@ -1,0 +1,60 @@
+type: object
+required:
+  - uuid
+  - id
+  - path_uuid
+  - step_index
+  - title
+  - created_at
+  - updated_at
+properties:
+  uuid:
+    type: string
+    format: uuid
+  id:
+    type: integer
+    format: int64
+  path_uuid:
+    type: string
+    format: uuid
+  step_index:
+    type: integer
+    format: int32
+  title:
+    type: string
+  rationale:
+    type: string
+    nullable: true
+  estimated_hours:
+    type: number
+    format: float
+    nullable: true
+  resource_uri:
+    type: string
+    nullable: true
+  resource_kind:
+    type: string
+    nullable: true
+  founder_learning_item_uuid:
+    type: string
+    format: uuid
+    nullable: true
+  course_lesson_uuid:
+    type: string
+    format: uuid
+    nullable: true
+  linked_node_keys:
+    type: array
+    items:
+      type: string
+    nullable: true
+  metadata:
+    type: object
+    additionalProperties: true
+    nullable: true
+  created_at:
+    type: string
+    format: date-time
+  updated_at:
+    type: string
+    format: date-time

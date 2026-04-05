@@ -1,0 +1,51 @@
+post:
+  summary: Generate a presigned URL for file upload
+  description: >
+    Generates a presigned S3 URL that allows the client to upload a file directly
+    to S3. The returned s3_uri can then be used with the scraper/start endpoint
+    to process the uploaded document.
+  operationId: v1PostGenerateUploadUrl
+  tags:
+    - bridgr
+  parameters:
+    - name: X-API-KEY
+      in: header
+      description: API Key of the service making the request
+      required: true
+      style: simple
+      explode: false
+      schema:
+        type: string
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: '../schemas/PresignedUploadRequest.yml'
+  responses:
+    "200":
+      description: Presigned URL generated successfully
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/PresignedUploadResponse.yml'
+    "400":
+      description: Invalid request (missing user_id or filename)
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/ErrorResponse.yml'
+    "401":
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/ErrorResponse.yml'
+    "500":
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/ErrorResponse.yml'
+
+

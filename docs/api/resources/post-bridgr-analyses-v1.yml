@@ -1,0 +1,46 @@
+post:
+  summary: Create skill-gap analysis
+  description: Inserts a new analysis row (typically status pending; async worker consumes SQS).
+  operationId: V1PostBridgrAnalyses
+  tags:
+    - bridgr
+  parameters:
+    - name: X-API-KEY
+      in: header
+      description: API Key of the service making the request
+      required: true
+      style: simple
+      explode: false
+      schema:
+        type: string
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: '../schemas/CreateBridgrSkillGapAnalysisRequest.yml'
+  responses:
+    "201":
+      description: Created
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/BridgrSkillGapAnalysis.yml'
+    "400":
+      description: Invalid request
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/ErrorResponse.yml'
+    "401":
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/ErrorResponse.yml'
+    "500":
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/ErrorResponse.yml'

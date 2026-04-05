@@ -1,0 +1,19 @@
+get:
+  summary: Bridgr liveness
+  description: Returns service identification for Bridgr / skill-gap mode smoke tests.
+  operationId: V1GetBridgrPing
+  tags:
+    - bridgr
+  responses:
+    "200":
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/BridgrPingResponse.yml'
+    "500":
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/ErrorResponse.yml'

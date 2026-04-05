@@ -1,0 +1,80 @@
+# Standalone Bridgr service — bundle this file (Redocly) then run oapi-codegen with docs/api/config/*.yaml
+openapi: 3.1.0
+
+info:
+  title: Bridgr API
+  description: Skill-gap navigator HTTP API (decoupled from hassleskip/users legacyapi).
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:8080
+  - url: http://api:8080
+
+paths:
+  /v1/autograph/upload-url:
+    post:
+      $ref: "./resources/post-generate-upload-url-v1.yml#/post"
+
+  /v1/bridgr/ping:
+    $ref: "./resources/get-bridgr-ping-v1.yml"
+  /v1/bridgr/analyses:
+    post:
+      $ref: "./resources/post-bridgr-analyses-v1.yml#/post"
+  /v1/bridgr/analyses/{analysisUUID}:
+    get:
+      $ref: "./resources/get-bridgr-analysis-v1.yml#/get"
+    delete:
+      $ref: "./resources/delete-bridgr-analysis-v1.yml#/delete"
+  /v1/bridgr/analyses/{analysisUUID}/status:
+    patch:
+      $ref: "./resources/patch-bridgr-analysis-status-v1.yml#/patch"
+  /v1/bridgr/analyses/{analysisUUID}/graphs:
+    get:
+      $ref: "./resources/get-bridgr-analysis-graphs-v1.yml#/get"
+    post:
+      $ref: "./resources/post-bridgr-analysis-graphs-v1.yml#/post"
+    delete:
+      $ref: "./resources/delete-bridgr-analysis-graphs-v1.yml#/delete"
+  /v1/bridgr/analyses/{analysisUUID}/graphs/{kind}:
+    get:
+      $ref: "./resources/get-bridgr-analysis-graph-by-kind-v1.yml#/get"
+  /v1/bridgr/analyses/{analysisUUID}/nodes/matched:
+    get:
+      $ref: "./resources/get-bridgr-analysis-nodes-matched-v1.yml#/get"
+  /v1/bridgr/analyses/{analysisUUID}/nodes/unmatched:
+    get:
+      $ref: "./resources/get-bridgr-analysis-nodes-unmatched-v1.yml#/get"
+  /v1/bridgr/analyses/{analysisUUID}/learning-path:
+    get:
+      $ref: "./resources/get-bridgr-analysis-learning-path-v1.yml#/get"
+    post:
+      $ref: "./resources/post-bridgr-analysis-learning-path-v1.yml#/post"
+    delete:
+      $ref: "./resources/delete-bridgr-analysis-learning-path-v1.yml#/delete"
+  /v1/bridgr/analyses/{analysisUUID}/coverage:
+    get:
+      $ref: "./resources/get-bridgr-analysis-coverage-v1.yml#/get"
+  /v1/bridgr/graphs/{graphUUID}/nodes:
+    get:
+      $ref: "./resources/get-bridgr-graph-nodes-v1.yml#/get"
+    post:
+      $ref: "./resources/post-bridgr-graph-nodes-v1.yml#/post"
+  /v1/bridgr/graphs/{graphUUID}/nodes/by-key/{nodeKey}:
+    get:
+      $ref: "./resources/get-bridgr-graph-node-by-key-v1.yml#/get"
+  /v1/bridgr/graphs/{graphUUID}/edges:
+    get:
+      $ref: "./resources/get-bridgr-graph-edges-v1.yml#/get"
+    post:
+      $ref: "./resources/post-bridgr-graph-edges-v1.yml#/post"
+  /v1/bridgr/paths/{pathUUID}/steps:
+    get:
+      $ref: "./resources/get-bridgr-path-steps-v1.yml#/get"
+  /v1/bridgr/users/{userID}/analyses:
+    get:
+      $ref: "./resources/get-bridgr-user-analyses-v1.yml#/get"
+  /v1/bridgr/users/{userID}/coverage:
+    get:
+      $ref: "./resources/get-bridgr-user-coverage-v1.yml#/get"
+
+# Paths reference ../schemas/*.yml via resource files; no components map required for bundling.

@@ -1,0 +1,42 @@
+type: object
+required:
+  - uuid
+  - id
+  - graph_uuid
+  - from_node_uuid
+  - to_node_uuid
+  - relation
+  - created_at
+  - updated_at
+properties:
+  uuid:
+    type: string
+    format: uuid
+  id:
+    type: integer
+    format: int64
+  graph_uuid:
+    type: string
+    format: uuid
+  from_node_uuid:
+    type: string
+    format: uuid
+  to_node_uuid:
+    type: string
+    format: uuid
+  relation:
+    type: string
+  weight:
+    type: number
+    format: float
+    nullable: true
+  metadata:
+    type: object
+    additionalProperties: true
+    nullable: true
+  created_at:
+    type: string
+    format: date-time
+  updated_at:
+    type: string
+    format: date-time

@@ -1,0 +1,34 @@
+type: object
+required:
+  - node_key
+  - display_name
+properties:
+  node_key:
+    type: string
+  display_name:
+    type: string
+  description:
+    type: string
+    nullable: true
+  proficiency_hint:
+    type: string
+    nullable: true
+  source:
+    type: string
+    nullable: true
+  evidence:
+    type: object
+    additionalProperties: true
+    nullable: true
+  metadata:
+    type: object
+    additionalProperties: true
+    nullable: true
+  position_x:
+    type: integer
+    format: int32
+    nullable: true
+  position_y:
+    type: integer
+    format: int32
+    nullable: true

@@ -1,0 +1,24 @@
+version: "2"
+sql:
+  - engine: postgresql
+    queries:
+      - queries/bridgr_skill_gap_analyses.sql
+      - queries/bridgr_skill_gap_coverage.sql
+      - queries/bridgr_skill_gap_edges.sql
+      - queries/bridgr_skill_gap_graphs.sql
+      - queries/bridgr_skill_gap_learning_paths.sql
+      - queries/bridgr_skill_gap_nodes.sql
+      - queries/bridgr_skill_gap_path_step_deps.sql
+      - queries/bridgr_skill_gap_path_steps.sql
+    # Regenerated from live DB: `make migration-structure-sql` then commit db/sqlc-structure.sql
+    schema: sqlc-structure.sql
+    gen:
+      go:
+        package: sqlc
+        out: ../internal/repository/sqlc
+        sql_package: "pgx/v5"
+        emit_interface: true
+        emit_prepared_queries: true
+        emit_db_tags: true
+        rename:
+          bonuse: Bonus

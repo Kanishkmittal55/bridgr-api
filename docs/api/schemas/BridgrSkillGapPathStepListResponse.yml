@@ -1,0 +1,8 @@
+type: object
+required:
+  - steps
+properties:
+  steps:
+    type: array
+    items:
+      $ref: './BridgrSkillGapPathStep.yml'

@@ -1,0 +1,8 @@
+type: object
+required:
+  - edges
+properties:
+  edges:
+    type: array
+    items:
+      $ref: './BridgrSkillGapEdge.yml'

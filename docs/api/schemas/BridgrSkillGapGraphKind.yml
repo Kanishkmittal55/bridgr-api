@@ -1,0 +1,5 @@
+type: string
+enum:
+  - candidate
+  - role_requirement
+description: candidate = skills from CV; role_requirement = skills from JD

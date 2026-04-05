@@ -1,0 +1,14 @@
+package: bridgr
+# Paths are relative to repo root when running `make oapi-gen`
+output: internal/api/bridgr/bridgr.gen.go
+generate:
+  chi-server: true
+output-options:
+  include-tags:
+    - bridgr
+  exclude-schemas:
+    - ErrorResponse
+    - NotFoundErrorResponse
+additional-imports:
+  - package: github.com/hassleskip/bridgr-api/pkg/types
+    alias: .

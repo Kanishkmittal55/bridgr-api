@@ -1,0 +1,14 @@
+type: object
+required:
+  - error
+  - not_found_by_api
+properties:
+  error:
+    type: string
+    description: Error message
+  not_found_by_api:
+    type: boolean
+    description: |
+      Always true. This key indicates that the API successfully fielded the request and that the specific resource requested
+      was positively identified as not existing by the API.
+      This key is used as a flag to distinguish 404s due to something not existing from other 404s such as mismatched routes or LB settings.

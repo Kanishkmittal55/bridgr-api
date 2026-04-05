@@ -1,0 +1,9 @@
+services:
+  openapi:
+    image: openapitools/openapi-generator-cli
+    build:
+      context: ../..
+      dockerfile: docker/openapi/Dockerfile
+    volumes:
+      - ../..:/workspace
+    working_dir: /workspace

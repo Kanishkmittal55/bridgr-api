@@ -1,0 +1,11 @@
+type: object
+required:
+  - status
+  - product
+properties:
+  status:
+    type: string
+    example: ok
+  product:
+    type: string
+    example: bridgr

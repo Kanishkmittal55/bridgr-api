@@ -1,0 +1,30 @@
+type: object
+required:
+  - uuid
+  - id
+  - analysis_uuid
+  - kind
+  - created_at
+  - updated_at
+properties:
+  uuid:
+    type: string
+    format: uuid
+  id:
+    type: integer
+    format: int64
+  analysis_uuid:
+    type: string
+    format: uuid
+  kind:
+    $ref: './BridgrSkillGapGraphKind.yml'
+  metadata:
+    type: object
+    additionalProperties: true
+    nullable: true
+  created_at:
+    type: string
+    format: date-time
+  updated_at:
+    type: string
+    format: date-time

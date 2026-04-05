@@ -1,0 +1,1880 @@
+openapi: 3.1.0
+info:
+  title: Bridgr API
+  description: Skill-gap navigator HTTP API (decoupled from hassleskip/users legacyapi).
+  version: 1.0.0
+servers:
+  - url: http://localhost:8080
+  - url: http://api:8080
+paths:
+  /v1/autograph/upload-url:
+    post:
+      summary: Generate a presigned URL for file upload
+      description: |
+        Generates a presigned S3 URL that allows the client to upload a file directly to S3. The returned s3_uri can then be used with the scraper/start endpoint to process the uploaded document.
+      operationId: v1PostGenerateUploadUrl
+      tags:
+        - bridgr
+      parameters:
+        - name: X-API-KEY
+          in: header
+          description: API Key of the service making the request
+          required: true
+          style: simple
+          explode: false
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PresignedUploadRequest'
+      responses:
+        '200':
+          description: Presigned URL generated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PresignedUploadResponse'
+        '400':
+          description: Invalid request (missing user_id or filename)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /v1/bridgr/ping:
+    get:
+      summary: Bridgr liveness
+      description: Returns service identification for Bridgr / skill-gap mode smoke tests.
+      operationId: V1GetBridgrPing
+      tags:
+        - bridgr
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BridgrPingResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /v1/bridgr/analyses:
+    post:
+      summary: Create skill-gap analysis
+      description: Inserts a new analysis row (typically status pending; async worker consumes SQS).
+      operationId: V1PostBridgrAnalyses
+      tags:
+        - bridgr
+      parameters:
+        - name: X-API-KEY
+          in: header
+          description: API Key of the service making the request
+          required: true
+          style: simple
+          explode: false
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateBridgrSkillGapAnalysisRequest'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BridgrSkillGapAnalysis'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /v1/bridgr/analyses/{analysisUUID}:
+    get:
+      summary: Get analysis by UUID
+      operationId: V1GetBridgrAnalysis
+      tags:
+        - bridgr
+      parameters:
+        - name: X-API-KEY
+          in: header
+          description: API Key of the service making the request
+          required: true
+          style: simple
+          explode: false
+          schema:
+            type: string
+        - name: analysisUUID
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Analysis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BridgrSkillGapAnalysis'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    delete:
+      summary: Delete analysis by UUID
+      operationId: V1DeleteBridgrAnalysis
+      tags:
+        - bridgr
+      parameters:
+        - name: X-API-KEY
+          in: header
+          description: API Key of the service making the request
+          required: true
+          style: simple
+          explode: false
+          schema:
+            type: string
+        - name: analysisUUID
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Deleted
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /v1/bridgr/analyses/{analysisUUID}/status:
+    patch:
+      summary: Update analysis pipeline status
+      description: Used by workers or admin to advance pending → extracting → graphed → pathed → completed/failed.
+      operationId: V1PatchBridgrAnalysisStatus
+      tags:
+        - bridgr
+      parameters:
+        - name: X-API-KEY
+          in: header
+          description: API Key of the service making the request
+          required: true
+          style: simple
+          explode: false
+          schema:
+            type: string
+        - name: analysisUUID
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateBridgrSkillGapAnalysisStatusRequest'
+      responses:
+        '200':
+          description: Updated analysis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BridgrSkillGapAnalysis'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /v1/bridgr/analyses/{analysisUUID}/graphs:
+    get:
+      summary: List graphs for analysis
+      description: Returns candidate and role_requirement graphs (if any) for the analysis.
+      operationId: V1GetBridgrAnalysisGraphs
+      tags:
+        - bridgr
+      parameters:
+        - name: X-API-KEY
+          in: header
+          description: API Key of the service making the request
+          required: true
+          style: simple
+          explode: false
+          schema:
+            type: string
+        - name: analysisUUID
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Graphs
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BridgrSkillGapGraphListResponse'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Analysis not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    post:
+      summary: Create skill graph for analysis
+      description: Inserts a candidate or role_requirement graph row for the analysis.
+      operationId: V1PostBridgrAnalysisGraphs
+      tags:
+        - bridgr
+      parameters:
+        - name: X-API-KEY
+          in: header
+          description: API Key of the service making the request
+          required: true
+          style: simple
+          explode: false
+          schema:
+            type: string
+        - name: analysisUUID
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateBridgrSkillGapGraphRequest'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BridgrSkillGapGraph'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Analysis not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    delete:
+      summary: Delete all graphs for analysis
+      description: Removes graph rows for the analysis (nodes/edges are normally cleared by workers or cascading app logic).
+      operationId: V1DeleteBridgrAnalysisGraphs
+      tags:
+        - bridgr
+      parameters:
+        - name: X-API-KEY
+          in: header
+          description: API Key of the service making the request
+          required: true
+          style: simple
+          explode: false
+          schema:
+            type: string
+        - name: analysisUUID
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Deleted
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /v1/bridgr/analyses/{analysisUUID}/graphs/{kind}:
+    get:
+      summary: Get graph by analysis and kind
+      operationId: V1GetBridgrAnalysisGraphByKind
+      tags:
+        - bridgr
+      parameters:
+        - name: X-API-KEY
+          in: header
+          description: API Key of the service making the request
+          required: true
+          style: simple
+          explode: false
+          schema:
+            type: string
+        - name: analysisUUID
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: kind
+          in: path
+          required: true
+          description: candidate or role_requirement
+          schema:
+            $ref: '#/components/schemas/BridgrSkillGapGraphKind'
+      responses:
+        '200':
+          description: Graph
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BridgrSkillGapGraph'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /v1/bridgr/analyses/{analysisUUID}/nodes/matched:
+    get:
+      summary: Matched skills (role nodes that exist on candidate graph)
+      operationId: V1GetBridgrAnalysisNodesMatched
+      tags:
+        - bridgr
+      parameters:
+        - name: X-API-KEY
+          in: header
+          description: API Key of the service making the request
+          required: true
+          style: simple
+          explode: false
+          schema:
+            type: string
+        - name: analysisUUID
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Role-requirement nodes with a candidate counterpart
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BridgrSkillGapNodeListResponse'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Analysis not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /v1/bridgr/analyses/{analysisUUID}/nodes/unmatched:
+    get:
+      summary: Skill gaps (required role skills missing from candidate)
+      operationId: V1GetBridgrAnalysisNodesUnmatched
+      tags:
+        - bridgr
+      parameters:
+        - name: X-API-KEY
+          in: header
+          description: API Key of the service making the request
+          required: true
+          style: simple
+          explode: false
+          schema:
+            type: string
+        - name: analysisUUID
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Role-requirement nodes with no candidate node_key match
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BridgrSkillGapNodeListResponse'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Analysis not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /v1/bridgr/analyses/{analysisUUID}/learning-path:
+    get:
+      summary: Latest learning path for analysis
+      description: Returns the row with highest path_version for the analysis.
+      operationId: V1GetBridgrAnalysisLearningPath
+      tags:
+        - bridgr
+      parameters:
+        - name: X-API-KEY
+          in: header
+          description: API Key of the service making the request
+          required: true
+          style: simple
+          explode: false
+          schema:
+            type: string
+        - name: analysisUUID
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Learning path
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BridgrSkillGapLearningPath'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    post:
+      summary: Create learning path for analysis
+      operationId: V1PostBridgrAnalysisLearningPath
+      tags:
+        - bridgr
+      parameters:
+        - name: X-API-KEY
+          in: header
+          description: API Key of the service making the request
+          required: true
+          style: simple
+          explode: false
+          schema:
+            type: string
+        - name: analysisUUID
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateBridgrSkillGapLearningPathRequest'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BridgrSkillGapLearningPath'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Analysis not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    delete:
+      summary: Delete all learning path versions for analysis
+      operationId: V1DeleteBridgrAnalysisLearningPath
+      tags:
+        - bridgr
+      parameters:
+        - name: X-API-KEY
+          in: header
+          description: API Key of the service making the request
+          required: true
+          style: simple
+          explode: false
+          schema:
+            type: string
+        - name: analysisUUID
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Deleted
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /v1/bridgr/analyses/{analysisUUID}/coverage:
+    get:
+      summary: Coverage snapshot for analysis
+      description: Aggregated candidate vs required vs matched skill counts and coverage percentage.
+      operationId: V1GetBridgrAnalysisCoverage
+      tags:
+        - bridgr
+      parameters:
+        - name: X-API-KEY
+          in: header
+          description: API Key of the service making the request
+          required: true
+          style: simple
+          explode: false
+          schema:
+            type: string
+        - name: analysisUUID
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Snapshot
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BridgrSkillGapCoverageSnapshot'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Analysis not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /v1/bridgr/graphs/{graphUUID}/nodes:
+    get:
+      summary: List nodes for graph
+      operationId: V1GetBridgrGraphNodes
+      tags:
+        - bridgr
+      parameters:
+        - name: X-API-KEY
+          in: header
+          description: API Key of the service making the request
+          required: true
+          style: simple
+          explode: false
+          schema:
+            type: string
+        - name: graphUUID
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Nodes
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BridgrSkillGapNodeListResponse'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Graph not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    post:
+      summary: Create graph node
+      operationId: V1PostBridgrGraphNodes
+      tags:
+        - bridgr
+      parameters:
+        - name: X-API-KEY
+          in: header
+          description: API Key of the service making the request
+          required: true
+          style: simple
+          explode: false
+          schema:
+            type: string
+        - name: graphUUID
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateBridgrSkillGapNodeRequest'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BridgrSkillGapNode'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Graph not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /v1/bridgr/graphs/{graphUUID}/nodes/by-key/{nodeKey}:
+    get:
+      summary: Get node by graph and node_key
+      operationId: V1GetBridgrGraphNodeByKey
+      tags:
+        - bridgr
+      parameters:
+        - name: X-API-KEY
+          in: header
+          description: API Key of the service making the request
+          required: true
+          style: simple
+          explode: false
+          schema:
+            type: string
+        - name: graphUUID
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: nodeKey
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Node
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BridgrSkillGapNode'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /v1/bridgr/graphs/{graphUUID}/edges:
+    get:
+      summary: List edges for graph
+      operationId: V1GetBridgrGraphEdges
+      tags:
+        - bridgr
+      parameters:
+        - name: X-API-KEY
+          in: header
+          description: API Key of the service making the request
+          required: true
+          style: simple
+          explode: false
+          schema:
+            type: string
+        - name: graphUUID
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Edges
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BridgrSkillGapEdgeListResponse'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Graph not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    post:
+      summary: Create directed edge in graph
+      operationId: V1PostBridgrGraphEdges
+      tags:
+        - bridgr
+      parameters:
+        - name: X-API-KEY
+          in: header
+          description: API Key of the service making the request
+          required: true
+          style: simple
+          explode: false
+          schema:
+            type: string
+        - name: graphUUID
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateBridgrSkillGapEdgeRequest'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BridgrSkillGapEdge'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Graph not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /v1/bridgr/paths/{pathUUID}/steps:
+    get:
+      summary: List ordered path steps
+      operationId: V1GetBridgrPathSteps
+      tags:
+        - bridgr
+      parameters:
+        - name: X-API-KEY
+          in: header
+          description: API Key of the service making the request
+          required: true
+          style: simple
+          explode: false
+          schema:
+            type: string
+        - name: pathUUID
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Steps
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BridgrSkillGapPathStepListResponse'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Learning path not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /v1/bridgr/users/{userID}/analyses:
+    get:
+      summary: List skill-gap analyses for a user
+      operationId: V1GetBridgrUserAnalyses
+      tags:
+        - bridgr
+      parameters:
+        - name: X-API-KEY
+          in: header
+          description: API Key of the service making the request
+          required: true
+          style: simple
+          explode: false
+          schema:
+            type: string
+        - name: userID
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int32
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            format: int32
+            default: 20
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            format: int32
+            default: 0
+      responses:
+        '200':
+          description: Paginated list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BridgrSkillGapAnalysisListResponse'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /v1/bridgr/users/{userID}/coverage:
+    get:
+      summary: List analyses with coverage for a user
+      operationId: V1GetBridgrUserCoverage
+      tags:
+        - bridgr
+      parameters:
+        - name: X-API-KEY
+          in: header
+          description: API Key of the service making the request
+          required: true
+          style: simple
+          explode: false
+          schema:
+            type: string
+        - name: userID
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int32
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            format: int32
+            default: 20
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            format: int32
+            default: 0
+      responses:
+        '200':
+          description: Paginated coverage summaries
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BridgrSkillGapUserCoverageListResponse'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+components:
+  schemas:
+    PresignedUploadRequest:
+      type: object
+      required:
+        - user_id
+        - filename
+      properties:
+        user_id:
+          type: integer
+          format: int64
+          description: The ID of the user requesting the upload URL.
+          example: 123
+        filename:
+          type: string
+          description: Name of the file to be uploaded (used to generate S3 key).
+          example: business-report.pdf
+        content_type:
+          type: string
+          description: |
+            MIME type of the file. If not provided, will be inferred from filename extension.
+          example: application/pdf
+    PresignedUploadResponse:
+      type: object
+      properties:
+        upload_url:
+          type: string
+          format: uri
+          description: Presigned URL for uploading the file via HTTP PUT.
+          example: https://s3.amazonaws.com/hassleskipbuckets/inputs/123/abc-uuid/file.pdf?X-Amz-...
+        s3_key:
+          type: string
+          description: The S3 object key where the file will be stored.
+          example: inputs/123/abc-uuid/file.pdf
+        s3_uri:
+          type: string
+          format: uri
+          description: The S3 URI to use with scraper/start endpoint (input_file_url).
+          example: s3://hassleskipbuckets/inputs/123/abc-uuid/file.pdf
+        expires_at:
+          type: string
+          format: date-time
+          description: When the presigned URL expires.
+          example: '2024-12-07T12:30:00Z'
+    ErrorResponse:
+      type: object
+      required:
+        - error
+      properties:
+        error:
+          type: string
+          description: Error message
+    BridgrPingResponse:
+      type: object
+      required:
+        - status
+        - product
+      properties:
+        status:
+          type: string
+          example: ok
+        product:
+          type: string
+          example: bridgr
+    CreateBridgrSkillGapAnalysisRequest:
+      type: object
+      required:
+        - user_id
+      properties:
+        user_id:
+          type: integer
+          format: int32
+        founder_persona_uuid:
+          type: string
+          format: uuid
+          nullable: true
+        pursuit_uuid:
+          type: string
+          format: uuid
+          nullable: true
+        title:
+          type: string
+          nullable: true
+        cv_asset_uri:
+          type: string
+          nullable: true
+        jd_asset_uri:
+          type: string
+          nullable: true
+        cv_fingerprint:
+          type: string
+          nullable: true
+        jd_fingerprint:
+          type: string
+          nullable: true
+        llm_model:
+          type: string
+          nullable: true
+        prompt_version:
+          type: string
+          nullable: true
+    BridgrSkillGapAnalysisStatus:
+      type: string
+      description: Pipeline state aligned with async worker steps
+      enum:
+        - pending
+        - extracting
+        - graphed
+        - pathed
+        - completed
+        - failed
+      x-enum-varnames:
+        - BridgrSkillGapPending
+        - Extracting
+        - Graphed
+        - Pathed
+        - Completed
+        - Failed
+    BridgrSkillGapAnalysis:
+      type: object
+      description: One CV/JD skill-gap analysis run
+      required:
+        - uuid
+        - id
+        - user_id
+        - status
+        - created_at
+        - updated_at
+      properties:
+        uuid:
+          type: string
+          format: uuid
+        id:
+          type: integer
+          format: int64
+        user_id:
+          type: integer
+          format: int32
+        founder_persona_uuid:
+          type: string
+          format: uuid
+          nullable: true
+        pursuit_uuid:
+          type: string
+          format: uuid
+          nullable: true
+        title:
+          type: string
+          nullable: true
+        status:
+          $ref: '#/components/schemas/BridgrSkillGapAnalysisStatus'
+        cv_asset_uri:
+          type: string
+          nullable: true
+        jd_asset_uri:
+          type: string
+          nullable: true
+        cv_fingerprint:
+          type: string
+          nullable: true
+        jd_fingerprint:
+          type: string
+          nullable: true
+        llm_model:
+          type: string
+          nullable: true
+        prompt_version:
+          type: string
+          nullable: true
+        extraction_payload:
+          type: object
+          additionalProperties: true
+          nullable: true
+        gap_summary:
+          type: object
+          additionalProperties: true
+          nullable: true
+        mermaid_diagram:
+          type: string
+          nullable: true
+        error_code:
+          type: string
+          nullable: true
+        error_detail:
+          type: string
+          nullable: true
+        sqs_message_id:
+          type: string
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+    NotFoundErrorResponse:
+      type: object
+      required:
+        - error
+        - not_found_by_api
+      properties:
+        error:
+          type: string
+          description: Error message
+        not_found_by_api:
+          type: boolean
+          description: |
+            Always true. This key indicates that the API successfully fielded the request and that the specific resource requested
+            was positively identified as not existing by the API.
+            This key is used as a flag to distinguish 404s due to something not existing from other 404s such as mismatched routes or LB settings.
+    UpdateBridgrSkillGapAnalysisStatusRequest:
+      type: object
+      required:
+        - status
+      properties:
+        status:
+          $ref: '#/components/schemas/BridgrSkillGapAnalysisStatus'
+    BridgrSkillGapGraphKind:
+      type: string
+      enum:
+        - candidate
+        - role_requirement
+      description: candidate = skills from CV; role_requirement = skills from JD
+    BridgrSkillGapGraph:
+      type: object
+      required:
+        - uuid
+        - id
+        - analysis_uuid
+        - kind
+        - created_at
+        - updated_at
+      properties:
+        uuid:
+          type: string
+          format: uuid
+        id:
+          type: integer
+          format: int64
+        analysis_uuid:
+          type: string
+          format: uuid
+        kind:
+          $ref: '#/components/schemas/BridgrSkillGapGraphKind'
+        metadata:
+          type: object
+          additionalProperties: true
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+    BridgrSkillGapGraphListResponse:
+      type: object
+      required:
+        - graphs
+      properties:
+        graphs:
+          type: array
+          items:
+            $ref: '#/components/schemas/BridgrSkillGapGraph'
+    CreateBridgrSkillGapGraphRequest:
+      type: object
+      required:
+        - kind
+      properties:
+        kind:
+          $ref: '#/components/schemas/BridgrSkillGapGraphKind'
+        metadata:
+          type: object
+          additionalProperties: true
+          nullable: true
+    BridgrSkillGapNode:
+      type: object
+      required:
+        - uuid
+        - id
+        - graph_uuid
+        - node_key
+        - display_name
+        - created_at
+        - updated_at
+      properties:
+        uuid:
+          type: string
+          format: uuid
+        id:
+          type: integer
+          format: int64
+        graph_uuid:
+          type: string
+          format: uuid
+        node_key:
+          type: string
+        display_name:
+          type: string
+        description:
+          type: string
+          nullable: true
+        proficiency_hint:
+          type: string
+          nullable: true
+        source:
+          type: string
+          nullable: true
+        evidence:
+          type: object
+          additionalProperties: true
+          nullable: true
+        metadata:
+          type: object
+          additionalProperties: true
+          nullable: true
+        position_x:
+          type: integer
+          format: int32
+          nullable: true
+        position_y:
+          type: integer
+          format: int32
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+    BridgrSkillGapNodeListResponse:
+      type: object
+      required:
+        - nodes
+      properties:
+        nodes:
+          type: array
+          items:
+            $ref: '#/components/schemas/BridgrSkillGapNode'
+    BridgrSkillGapLearningPath:
+      type: object
+      required:
+        - uuid
+        - id
+        - analysis_uuid
+        - path_version
+        - created_at
+        - updated_at
+      properties:
+        uuid:
+          type: string
+          format: uuid
+        id:
+          type: integer
+          format: int64
+        analysis_uuid:
+          type: string
+          format: uuid
+        path_version:
+          type: integer
+          format: int32
+        algorithm:
+          type: string
+          nullable: true
+        title:
+          type: string
+          nullable: true
+        path_metadata:
+          type: object
+          additionalProperties: true
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+    CreateBridgrSkillGapLearningPathRequest:
+      type: object
+      properties:
+        path_version:
+          type: integer
+          format: int32
+          nullable: true
+        algorithm:
+          type: string
+          nullable: true
+        title:
+          type: string
+          nullable: true
+        path_metadata:
+          type: object
+          additionalProperties: true
+          nullable: true
+    BridgrSkillGapCoverageSnapshot:
+      type: object
+      description: Aggregated coverage for an analysis (derived from graph overlap)
+      properties:
+        candidate_skills:
+          nullable: true
+        required_skills:
+          nullable: true
+        matched_skills:
+          nullable: true
+        coverage_pct:
+          type: number
+          format: float
+          nullable: true
+    CreateBridgrSkillGapNodeRequest:
+      type: object
+      required:
+        - node_key
+        - display_name
+      properties:
+        node_key:
+          type: string
+        display_name:
+          type: string
+        description:
+          type: string
+          nullable: true
+        proficiency_hint:
+          type: string
+          nullable: true
+        source:
+          type: string
+          nullable: true
+        evidence:
+          type: object
+          additionalProperties: true
+          nullable: true
+        metadata:
+          type: object
+          additionalProperties: true
+          nullable: true
+        position_x:
+          type: integer
+          format: int32
+          nullable: true
+        position_y:
+          type: integer
+          format: int32
+          nullable: true
+    BridgrSkillGapEdge:
+      type: object
+      required:
+        - uuid
+        - id
+        - graph_uuid
+        - from_node_uuid
+        - to_node_uuid
+        - relation
+        - created_at
+        - updated_at
+      properties:
+        uuid:
+          type: string
+          format: uuid
+        id:
+          type: integer
+          format: int64
+        graph_uuid:
+          type: string
+          format: uuid
+        from_node_uuid:
+          type: string
+          format: uuid
+        to_node_uuid:
+          type: string
+          format: uuid
+        relation:
+          type: string
+        weight:
+          type: number
+          format: float
+          nullable: true
+        metadata:
+          type: object
+          additionalProperties: true
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+    BridgrSkillGapEdgeListResponse:
+      type: object
+      required:
+        - edges
+      properties:
+        edges:
+          type: array
+          items:
+            $ref: '#/components/schemas/BridgrSkillGapEdge'
+    CreateBridgrSkillGapEdgeRequest:
+      type: object
+      required:
+        - from_node_uuid
+        - to_node_uuid
+        - relation
+      properties:
+        from_node_uuid:
+          type: string
+          format: uuid
+        to_node_uuid:
+          type: string
+          format: uuid
+        relation:
+          type: string
+        weight:
+          type: number
+          format: float
+          nullable: true
+        metadata:
+          type: object
+          additionalProperties: true
+          nullable: true
+    BridgrSkillGapPathStep:
+      type: object
+      required:
+        - uuid
+        - id
+        - path_uuid
+        - step_index
+        - title
+        - created_at
+        - updated_at
+      properties:
+        uuid:
+          type: string
+          format: uuid
+        id:
+          type: integer
+          format: int64
+        path_uuid:
+          type: string
+          format: uuid
+        step_index:
+          type: integer
+          format: int32
+        title:
+          type: string
+        rationale:
+          type: string
+          nullable: true
+        estimated_hours:
+          type: number
+          format: float
+          nullable: true
+        resource_uri:
+          type: string
+          nullable: true
+        resource_kind:
+          type: string
+          nullable: true
+        founder_learning_item_uuid:
+          type: string
+          format: uuid
+          nullable: true
+        course_lesson_uuid:
+          type: string
+          format: uuid
+          nullable: true
+        linked_node_keys:
+          type: array
+          items:
+            type: string
+          nullable: true
+        metadata:
+          type: object
+          additionalProperties: true
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+    BridgrSkillGapPathStepListResponse:
+      type: object
+      required:
+        - steps
+      properties:
+        steps:
+          type: array
+          items:
+            $ref: '#/components/schemas/BridgrSkillGapPathStep'
+    BridgrSkillGapAnalysisListResponse:
+      type: object
+      required:
+        - analyses
+      properties:
+        analyses:
+          type: array
+          items:
+            $ref: '#/components/schemas/BridgrSkillGapAnalysis'
+    BridgrSkillGapUserCoverageRow:
+      type: object
+      description: Per-analysis coverage summary for dashboard lists (matches aggregated SQL read)
+      properties:
+        analysis_id:
+          type: integer
+          format: int64
+        analysis_uuid:
+          type: string
+          format: uuid
+        user_id:
+          type: integer
+          format: int32
+        title:
+          type: string
+          nullable: true
+        status:
+          $ref: '#/components/schemas/BridgrSkillGapAnalysisStatus'
+        created_at:
+          type: string
+          format: date-time
+        candidate_skills:
+          type: integer
+          format: int64
+          nullable: true
+        required_skills:
+          type: integer
+          format: int64
+          nullable: true
+        matched_skills:
+          type: integer
+          format: int64
+          nullable: true
+        coverage_pct:
+          type: number
+          format: float
+          nullable: true
+    BridgrSkillGapUserCoverageListResponse:
+      type: object
+      required:
+        - items
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/BridgrSkillGapUserCoverageRow'

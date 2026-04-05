@@ -1,0 +1,1 @@
+DROP FUNCTION IF EXISTS hskip_users.tr_control_time();

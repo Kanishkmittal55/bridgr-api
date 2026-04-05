@@ -1,0 +1,8 @@
+type: object
+required:
+  - graphs
+properties:
+  graphs:
+    type: array
+    items:
+      $ref: './BridgrSkillGapGraph.yml'

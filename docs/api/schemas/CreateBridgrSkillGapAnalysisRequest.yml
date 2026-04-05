@@ -1,0 +1,36 @@
+type: object
+required:
+  - user_id
+properties:
+  user_id:
+    type: integer
+    format: int32
+  founder_persona_uuid:
+    type: string
+    format: uuid
+    nullable: true
+  pursuit_uuid:
+    type: string
+    format: uuid
+    nullable: true
+  title:
+    type: string
+    nullable: true
+  cv_asset_uri:
+    type: string
+    nullable: true
+  jd_asset_uri:
+    type: string
+    nullable: true
+  cv_fingerprint:
+    type: string
+    nullable: true
+  jd_fingerprint:
+    type: string
+    nullable: true
+  llm_model:
+    type: string
+    nullable: true
+  prompt_version:
+    type: string
+    nullable: true

@@ -1,0 +1,13 @@
+type: object
+description: Aggregated coverage for an analysis (derived from graph overlap)
+properties:
+  candidate_skills:
+    nullable: true
+  required_skills:
+    nullable: true
+  matched_skills:
+    nullable: true
+  coverage_pct:
+    type: number
+    format: float
+    nullable: true

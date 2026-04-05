@@ -1,0 +1,22 @@
+type: object
+required:
+  - from_node_uuid
+  - to_node_uuid
+  - relation
+properties:
+  from_node_uuid:
+    type: string
+    format: uuid
+  to_node_uuid:
+    type: string
+    format: uuid
+  relation:
+    type: string
+  weight:
+    type: number
+    format: float
+    nullable: true
+  metadata:
+    type: object
+    additionalProperties: true
+    nullable: true

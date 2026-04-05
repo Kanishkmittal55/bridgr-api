@@ -1,0 +1,21 @@
+type: object
+required:
+  - user_id
+  - filename
+properties:
+  user_id:
+    type: integer
+    format: int64
+    description: The ID of the user requesting the upload URL.
+    example: 123
+  filename:
+    type: string
+    description: Name of the file to be uploaded (used to generate S3 key).
+    example: "business-report.pdf"
+  content_type:
+    type: string
+    description: >
+      MIME type of the file. If not provided, will be inferred from filename extension.
+    example: "application/pdf"
+
+

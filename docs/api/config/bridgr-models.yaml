@@ -1,0 +1,10 @@
+package: types
+generate:
+  models: true
+output-options:
+  include-tags:
+    - bridgr
+  exclude-schemas:
+    - ErrorResponse
+    - NotFoundErrorResponse
+output: pkg/types/bridgr.gen.go
