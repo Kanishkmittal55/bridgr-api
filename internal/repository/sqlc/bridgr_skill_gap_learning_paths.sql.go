@@ -13,7 +13,7 @@ import (
 
 const createSkillGapLearningPath = `-- name: CreateSkillGapLearningPath :one
 
-INSERT INTO hskip_users.bridgr_skill_gap_learning_paths (
+INSERT INTO bridgr.skill_gap_learning_paths (
     analysis_uuid,
     path_version,
     algorithm,
@@ -59,7 +59,7 @@ func (q *Queries) CreateSkillGapLearningPath(ctx context.Context, arg CreateSkil
 }
 
 const deleteSkillGapLearningPathByAnalysis = `-- name: DeleteSkillGapLearningPathByAnalysis :exec
-DELETE FROM hskip_users.bridgr_skill_gap_learning_paths
+DELETE FROM bridgr.skill_gap_learning_paths
 WHERE analysis_uuid = $1
 `
 
@@ -69,7 +69,7 @@ func (q *Queries) DeleteSkillGapLearningPathByAnalysis(ctx context.Context, anal
 }
 
 const getSkillGapLearningPath = `-- name: GetSkillGapLearningPath :one
-SELECT uuid, id, analysis_uuid, path_version, algorithm, title, path_metadata, created_at, updated_at FROM hskip_users.bridgr_skill_gap_learning_paths
+SELECT uuid, id, analysis_uuid, path_version, algorithm, title, path_metadata, created_at, updated_at FROM bridgr.skill_gap_learning_paths
 WHERE id = $1
 `
 
@@ -91,7 +91,7 @@ func (q *Queries) GetSkillGapLearningPath(ctx context.Context, id int64) (HskipU
 }
 
 const getSkillGapLearningPathByAnalysis = `-- name: GetSkillGapLearningPathByAnalysis :one
-SELECT uuid, id, analysis_uuid, path_version, algorithm, title, path_metadata, created_at, updated_at FROM hskip_users.bridgr_skill_gap_learning_paths
+SELECT uuid, id, analysis_uuid, path_version, algorithm, title, path_metadata, created_at, updated_at FROM bridgr.skill_gap_learning_paths
 WHERE analysis_uuid = $1
 ORDER BY path_version DESC
 LIMIT 1
@@ -115,7 +115,7 @@ func (q *Queries) GetSkillGapLearningPathByAnalysis(ctx context.Context, analysi
 }
 
 const getSkillGapLearningPathByUUID = `-- name: GetSkillGapLearningPathByUUID :one
-SELECT uuid, id, analysis_uuid, path_version, algorithm, title, path_metadata, created_at, updated_at FROM hskip_users.bridgr_skill_gap_learning_paths
+SELECT uuid, id, analysis_uuid, path_version, algorithm, title, path_metadata, created_at, updated_at FROM bridgr.skill_gap_learning_paths
 WHERE uuid = $1
 `
 
@@ -137,7 +137,7 @@ func (q *Queries) GetSkillGapLearningPathByUUID(ctx context.Context, uuid pgtype
 }
 
 const updateSkillGapLearningPathMetadata = `-- name: UpdateSkillGapLearningPathMetadata :one
-UPDATE hskip_users.bridgr_skill_gap_learning_paths
+UPDATE bridgr.skill_gap_learning_paths
 SET path_metadata = $2
 WHERE id = $1
 RETURNING uuid, id, analysis_uuid, path_version, algorithm, title, path_metadata, created_at, updated_at

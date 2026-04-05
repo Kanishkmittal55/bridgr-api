@@ -26,7 +26,7 @@ type BulkCreateSkillGapNodesParams struct {
 
 const createSkillGapNode = `-- name: CreateSkillGapNode :one
 
-INSERT INTO hskip_users.bridgr_skill_gap_nodes (
+INSERT INTO bridgr.skill_gap_nodes (
     graph_uuid,
     node_key,
     display_name,
@@ -92,7 +92,7 @@ func (q *Queries) CreateSkillGapNode(ctx context.Context, arg CreateSkillGapNode
 }
 
 const deleteSkillGapNodesByGraph = `-- name: DeleteSkillGapNodesByGraph :exec
-DELETE FROM hskip_users.bridgr_skill_gap_nodes
+DELETE FROM bridgr.skill_gap_nodes
 WHERE graph_uuid = $1
 `
 
@@ -102,7 +102,7 @@ func (q *Queries) DeleteSkillGapNodesByGraph(ctx context.Context, graphUuid pgty
 }
 
 const getSkillGapNode = `-- name: GetSkillGapNode :one
-SELECT uuid, id, graph_uuid, node_key, display_name, description, proficiency_hint, source, evidence, metadata, position_x, position_y, created_at, updated_at FROM hskip_users.bridgr_skill_gap_nodes
+SELECT uuid, id, graph_uuid, node_key, display_name, description, proficiency_hint, source, evidence, metadata, position_x, position_y, created_at, updated_at FROM bridgr.skill_gap_nodes
 WHERE id = $1
 `
 
@@ -129,7 +129,7 @@ func (q *Queries) GetSkillGapNode(ctx context.Context, id int64) (HskipUsersBrid
 }
 
 const getSkillGapNodeByKey = `-- name: GetSkillGapNodeByKey :one
-SELECT uuid, id, graph_uuid, node_key, display_name, description, proficiency_hint, source, evidence, metadata, position_x, position_y, created_at, updated_at FROM hskip_users.bridgr_skill_gap_nodes
+SELECT uuid, id, graph_uuid, node_key, display_name, description, proficiency_hint, source, evidence, metadata, position_x, position_y, created_at, updated_at FROM bridgr.skill_gap_nodes
 WHERE graph_uuid = $1 AND node_key = $2
 `
 
@@ -161,12 +161,12 @@ func (q *Queries) GetSkillGapNodeByKey(ctx context.Context, arg GetSkillGapNodeB
 }
 
 const listMatchedNodes = `-- name: ListMatchedNodes :many
-SELECT rn.uuid, rn.id, rn.graph_uuid, rn.node_key, rn.display_name, rn.description, rn.proficiency_hint, rn.source, rn.evidence, rn.metadata, rn.position_x, rn.position_y, rn.created_at, rn.updated_at FROM hskip_users.bridgr_skill_gap_nodes rn
-INNER JOIN hskip_users.bridgr_skill_gap_graphs rg
+SELECT rn.uuid, rn.id, rn.graph_uuid, rn.node_key, rn.display_name, rn.description, rn.proficiency_hint, rn.source, rn.evidence, rn.metadata, rn.position_x, rn.position_y, rn.created_at, rn.updated_at FROM bridgr.skill_gap_nodes rn
+INNER JOIN bridgr.skill_gap_graphs rg
     ON rg.uuid = rn.graph_uuid AND rg.kind = 'role_requirement'
-INNER JOIN hskip_users.bridgr_skill_gap_graphs cg
+INNER JOIN bridgr.skill_gap_graphs cg
     ON cg.analysis_uuid = rg.analysis_uuid AND cg.kind = 'candidate'
-INNER JOIN hskip_users.bridgr_skill_gap_nodes cn
+INNER JOIN bridgr.skill_gap_nodes cn
     ON cn.graph_uuid = cg.uuid AND cn.node_key = rn.node_key
 WHERE rg.analysis_uuid = $1
 ORDER BY rn.node_key ASC
@@ -209,7 +209,7 @@ func (q *Queries) ListMatchedNodes(ctx context.Context, analysisUuid pgtype.UUID
 }
 
 const listSkillGapNodesByGraph = `-- name: ListSkillGapNodesByGraph :many
-SELECT uuid, id, graph_uuid, node_key, display_name, description, proficiency_hint, source, evidence, metadata, position_x, position_y, created_at, updated_at FROM hskip_users.bridgr_skill_gap_nodes
+SELECT uuid, id, graph_uuid, node_key, display_name, description, proficiency_hint, source, evidence, metadata, position_x, position_y, created_at, updated_at FROM bridgr.skill_gap_nodes
 WHERE graph_uuid = $1
 ORDER BY node_key ASC
 `
@@ -250,13 +250,13 @@ func (q *Queries) ListSkillGapNodesByGraph(ctx context.Context, graphUuid pgtype
 }
 
 const listUnmatchedNodes = `-- name: ListUnmatchedNodes :many
-SELECT rn.uuid, rn.id, rn.graph_uuid, rn.node_key, rn.display_name, rn.description, rn.proficiency_hint, rn.source, rn.evidence, rn.metadata, rn.position_x, rn.position_y, rn.created_at, rn.updated_at FROM hskip_users.bridgr_skill_gap_nodes rn
-INNER JOIN hskip_users.bridgr_skill_gap_graphs rg
+SELECT rn.uuid, rn.id, rn.graph_uuid, rn.node_key, rn.display_name, rn.description, rn.proficiency_hint, rn.source, rn.evidence, rn.metadata, rn.position_x, rn.position_y, rn.created_at, rn.updated_at FROM bridgr.skill_gap_nodes rn
+INNER JOIN bridgr.skill_gap_graphs rg
     ON rg.uuid = rn.graph_uuid AND rg.kind = 'role_requirement'
 WHERE rg.analysis_uuid = $1
   AND NOT EXISTS (
-    SELECT 1 FROM hskip_users.bridgr_skill_gap_graphs cg
-    INNER JOIN hskip_users.bridgr_skill_gap_nodes cn ON cn.graph_uuid = cg.uuid
+    SELECT 1 FROM bridgr.skill_gap_graphs cg
+    INNER JOIN bridgr.skill_gap_nodes cn ON cn.graph_uuid = cg.uuid
     WHERE cg.analysis_uuid = rg.analysis_uuid
       AND cg.kind = 'candidate'
       AND cn.node_key = rn.node_key

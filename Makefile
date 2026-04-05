@@ -50,12 +50,8 @@ define STRIP_PSQL_RESTRICT
 	grep -vE '^\\(un)?restrict ' $(1) > $(1).tmp && mv $(1).tmp $(1)
 endef
 
-# Same flow as users: bring stack up first so postgres is reachable as hostname `postgres`.
-#
-# migration-structure.sql is used by db/init/200-schema.sql during docker postgres init.
-# Do NOT use pg_dump --create here: the official image already creates POSTGRES_DB (bridgr)
-# before running init scripts, so CREATE DATABASE bridgr in the dump fails with
-# "database already exists".
+# Same layout as users/users/Makefile migration-structure-sql: two pg_dump runs.
+# Omit --create on the first dump: the Postgres image already creates POSTGRES_DB (bridgr).
 migration-structure-sql: up
 	@echo "pg_dump $(PG_DUMP_URL) (network $(DOCKER_NETWORK)) -> db/migration-structure.sql + db/sqlc-structure.sql"
 	docker run \

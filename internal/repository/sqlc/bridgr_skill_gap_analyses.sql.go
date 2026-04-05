@@ -13,7 +13,7 @@ import (
 
 const createSkillGapAnalysis = `-- name: CreateSkillGapAnalysis :one
 
-INSERT INTO hskip_users.bridgr_skill_gap_analyses (
+INSERT INTO bridgr.skill_gap_analyses (
     user_id,
     founder_persona_uuid,
     pursuit_uuid,
@@ -106,7 +106,7 @@ func (q *Queries) CreateSkillGapAnalysis(ctx context.Context, arg CreateSkillGap
 }
 
 const deleteSkillGapAnalysis = `-- name: DeleteSkillGapAnalysis :exec
-DELETE FROM hskip_users.bridgr_skill_gap_analyses
+DELETE FROM bridgr.skill_gap_analyses
 WHERE id = $1
 `
 
@@ -116,7 +116,7 @@ func (q *Queries) DeleteSkillGapAnalysis(ctx context.Context, id int64) error {
 }
 
 const deleteSkillGapAnalysisByUUID = `-- name: DeleteSkillGapAnalysisByUUID :exec
-DELETE FROM hskip_users.bridgr_skill_gap_analyses
+DELETE FROM bridgr.skill_gap_analyses
 WHERE uuid = $1
 `
 
@@ -126,7 +126,7 @@ func (q *Queries) DeleteSkillGapAnalysisByUUID(ctx context.Context, uuid pgtype.
 }
 
 const getSkillGapAnalysis = `-- name: GetSkillGapAnalysis :one
-SELECT uuid, id, user_id, founder_persona_uuid, pursuit_uuid, title, status, cv_asset_uri, jd_asset_uri, cv_fingerprint, jd_fingerprint, llm_model, prompt_version, extraction_payload, gap_summary, mermaid_diagram, error_code, error_detail, sqs_message_id, created_at, updated_at FROM hskip_users.bridgr_skill_gap_analyses
+SELECT uuid, id, user_id, founder_persona_uuid, pursuit_uuid, title, status, cv_asset_uri, jd_asset_uri, cv_fingerprint, jd_fingerprint, llm_model, prompt_version, extraction_payload, gap_summary, mermaid_diagram, error_code, error_detail, sqs_message_id, created_at, updated_at FROM bridgr.skill_gap_analyses
 WHERE id = $1
 `
 
@@ -160,7 +160,7 @@ func (q *Queries) GetSkillGapAnalysis(ctx context.Context, id int64) (HskipUsers
 }
 
 const getSkillGapAnalysisByFingerprint = `-- name: GetSkillGapAnalysisByFingerprint :one
-SELECT uuid, id, user_id, founder_persona_uuid, pursuit_uuid, title, status, cv_asset_uri, jd_asset_uri, cv_fingerprint, jd_fingerprint, llm_model, prompt_version, extraction_payload, gap_summary, mermaid_diagram, error_code, error_detail, sqs_message_id, created_at, updated_at FROM hskip_users.bridgr_skill_gap_analyses
+SELECT uuid, id, user_id, founder_persona_uuid, pursuit_uuid, title, status, cv_asset_uri, jd_asset_uri, cv_fingerprint, jd_fingerprint, llm_model, prompt_version, extraction_payload, gap_summary, mermaid_diagram, error_code, error_detail, sqs_message_id, created_at, updated_at FROM bridgr.skill_gap_analyses
 WHERE user_id = $1
   AND cv_fingerprint = $2
   AND jd_fingerprint = $3
@@ -204,7 +204,7 @@ func (q *Queries) GetSkillGapAnalysisByFingerprint(ctx context.Context, arg GetS
 }
 
 const getSkillGapAnalysisByUUID = `-- name: GetSkillGapAnalysisByUUID :one
-SELECT uuid, id, user_id, founder_persona_uuid, pursuit_uuid, title, status, cv_asset_uri, jd_asset_uri, cv_fingerprint, jd_fingerprint, llm_model, prompt_version, extraction_payload, gap_summary, mermaid_diagram, error_code, error_detail, sqs_message_id, created_at, updated_at FROM hskip_users.bridgr_skill_gap_analyses
+SELECT uuid, id, user_id, founder_persona_uuid, pursuit_uuid, title, status, cv_asset_uri, jd_asset_uri, cv_fingerprint, jd_fingerprint, llm_model, prompt_version, extraction_payload, gap_summary, mermaid_diagram, error_code, error_detail, sqs_message_id, created_at, updated_at FROM bridgr.skill_gap_analyses
 WHERE uuid = $1
 `
 
@@ -238,7 +238,7 @@ func (q *Queries) GetSkillGapAnalysisByUUID(ctx context.Context, uuid pgtype.UUI
 }
 
 const getSkillGapAnalysisByUser = `-- name: GetSkillGapAnalysisByUser :many
-SELECT uuid, id, user_id, founder_persona_uuid, pursuit_uuid, title, status, cv_asset_uri, jd_asset_uri, cv_fingerprint, jd_fingerprint, llm_model, prompt_version, extraction_payload, gap_summary, mermaid_diagram, error_code, error_detail, sqs_message_id, created_at, updated_at FROM hskip_users.bridgr_skill_gap_analyses
+SELECT uuid, id, user_id, founder_persona_uuid, pursuit_uuid, title, status, cv_asset_uri, jd_asset_uri, cv_fingerprint, jd_fingerprint, llm_model, prompt_version, extraction_payload, gap_summary, mermaid_diagram, error_code, error_detail, sqs_message_id, created_at, updated_at FROM bridgr.skill_gap_analyses
 WHERE user_id = $1
 ORDER BY created_at DESC
 LIMIT $2
@@ -292,7 +292,7 @@ func (q *Queries) GetSkillGapAnalysisByUser(ctx context.Context, arg GetSkillGap
 }
 
 const listSkillGapAnalysesByUser = `-- name: ListSkillGapAnalysesByUser :many
-SELECT uuid, id, user_id, founder_persona_uuid, pursuit_uuid, title, status, cv_asset_uri, jd_asset_uri, cv_fingerprint, jd_fingerprint, llm_model, prompt_version, extraction_payload, gap_summary, mermaid_diagram, error_code, error_detail, sqs_message_id, created_at, updated_at FROM hskip_users.bridgr_skill_gap_analyses
+SELECT uuid, id, user_id, founder_persona_uuid, pursuit_uuid, title, status, cv_asset_uri, jd_asset_uri, cv_fingerprint, jd_fingerprint, llm_model, prompt_version, extraction_payload, gap_summary, mermaid_diagram, error_code, error_detail, sqs_message_id, created_at, updated_at FROM bridgr.skill_gap_analyses
 WHERE user_id = $1
 ORDER BY created_at DESC
 LIMIT $2 OFFSET $3
@@ -347,7 +347,7 @@ func (q *Queries) ListSkillGapAnalysesByUser(ctx context.Context, arg ListSkillG
 }
 
 const updateSkillGapAnalysisError = `-- name: UpdateSkillGapAnalysisError :one
-UPDATE hskip_users.bridgr_skill_gap_analyses
+UPDATE bridgr.skill_gap_analyses
 SET error_code = $2,
     error_detail = $3,
     status = 'failed'
@@ -391,7 +391,7 @@ func (q *Queries) UpdateSkillGapAnalysisError(ctx context.Context, arg UpdateSki
 }
 
 const updateSkillGapAnalysisStatus = `-- name: UpdateSkillGapAnalysisStatus :one
-UPDATE hskip_users.bridgr_skill_gap_analyses
+UPDATE bridgr.skill_gap_analyses
 SET status = $2
 WHERE id = $1
 RETURNING uuid, id, user_id, founder_persona_uuid, pursuit_uuid, title, status, cv_asset_uri, jd_asset_uri, cv_fingerprint, jd_fingerprint, llm_model, prompt_version, extraction_payload, gap_summary, mermaid_diagram, error_code, error_detail, sqs_message_id, created_at, updated_at
@@ -432,7 +432,7 @@ func (q *Queries) UpdateSkillGapAnalysisStatus(ctx context.Context, arg UpdateSk
 }
 
 const updateSkillGapAnalysisSummary = `-- name: UpdateSkillGapAnalysisSummary :one
-UPDATE hskip_users.bridgr_skill_gap_analyses
+UPDATE bridgr.skill_gap_analyses
 SET gap_summary = $2,
     mermaid_diagram = $3
 WHERE id = $1

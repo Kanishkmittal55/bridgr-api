@@ -64,7 +64,7 @@ type Querier interface {
 	GetSkillGapAnalysisByUser(ctx context.Context, arg GetSkillGapAnalysisByUserParams) ([]HskipUsersBridgrSkillGapAnalysis, error)
 	// =============================================================================
 	// BRIDGR SKILL GAP — COVERAGE (aggregated reads)
-	// Metrics derived from graphs + node overlap (not only bridgr_skill_gap_coverage rows).
+	// Metrics derived from graphs + node overlap (not only skill_gap_coverage rows).
 	// =============================================================================
 	GetSkillGapCoverage(ctx context.Context, analysisUuid pgtype.UUID) (GetSkillGapCoverageRow, error)
 	GetSkillGapCoverageByUser(ctx context.Context, arg GetSkillGapCoverageByUserParams) ([]GetSkillGapCoverageByUserRow, error)

@@ -28,24 +28,15 @@ Compose uses an explicit dev network **`bridgr-api-network`** (same idea as user
 | `make generate` | Currently alias for `generate-sqlc` (matches users `generate` composition you can extend). |
 | `make build-local-images` | Builds **`hassle-skip-migrate-local:latest`** from `docker/migration/Dockerfile` (same layout as users). |
 | `make create-migration <name>` | Runs `migrate create` in that image (timestamped `.up.sql` / `.down.sql` under `db/migrations/`). Example: `make create-migration add_widget`. |
-| `make migration-structure-sql` | **pg_dump** schema dumps for tooling (see below). |
+| `make migration-structure-sql` | Same idea as **users**: two **`postgres:16` `pg_dump -s`** runs → **`db/migration-structure.sql`** and **`db/sqlc-structure.sql`**. |
 
 ### When to run `make migration-structure-sql`
 
-Same pattern as **users**: the target depends on **`make up`**, then runs **`postgres:16` `pg_dump`** with **`--network=bridgr-api-network`** and URL host **`postgres:5432`**, so DNS matches the running compose stack.
+Same pattern as **users**: the target depends on **`make up`**, then runs **`pg_dump`** with **`--network=bridgr-api-network`** and **`postgres://bridgr:bridgr@postgres:5432/bridgr`** (override with **`PG_DUMP_URL`** if needed). The first dump omits **`--create`** (image already creates **`POSTGRES_DB`**).
 
-1. You want to **refresh** `db/migration-structure.sql` and **`db/sqlc-structure.sql`** (both are **schema-only** `pg_dump -s` against database `bridgr`). The first file is symlinked from `db/init/200-schema.sql` for Docker init — it must **not** include `CREATE DATABASE` (unlike users’ first `pg_dump --create`, because the Postgres image already creates `POSTGRES_DB`).
-2. Optional: `make migration-structure-sql PG_DUMP_URL='postgres://...'` if you use non-default DB creds.
+Then run **`make generate-sqlc`** so **`internal/repository/sqlc`** matches **`db/sqlc-structure.sql`**.
 
-**Immediately after**, run:
-
-```bash
-make generate-sqlc
-```
-
-so `internal/repository/sqlc` matches the live DDL. Commit updated `db/sqlc-structure.sql` when the schema change is intentional.
-
-New SQL migrations: **`make create-migration <name>`**, edit the generated files, bring up **`migrate`**, then **`migration-structure-sql`** → **`generate-sqlc`**.
+New SQL migrations: **`make create-migration <name>`**, edit, bring **`migrate`** up, then **`migration-structure-sql`** → **`generate-sqlc`**, commit as needed.
 
 ## OpenAPI layout (`docs/api/`)
 

@@ -19,7 +19,7 @@ type BulkCreateSkillGapPathStepDepsParams struct {
 
 const createSkillGapPathStepDep = `-- name: CreateSkillGapPathStepDep :one
 
-INSERT INTO hskip_users.bridgr_skill_gap_path_step_deps (
+INSERT INTO bridgr.skill_gap_path_step_deps (
     path_uuid,
     step_uuid,
     depends_on_step_uuid
@@ -53,7 +53,7 @@ func (q *Queries) CreateSkillGapPathStepDep(ctx context.Context, arg CreateSkill
 }
 
 const deleteSkillGapPathStepDepsByPath = `-- name: DeleteSkillGapPathStepDepsByPath :exec
-DELETE FROM hskip_users.bridgr_skill_gap_path_step_deps
+DELETE FROM bridgr.skill_gap_path_step_deps
 WHERE path_uuid = $1
 `
 
@@ -63,7 +63,7 @@ func (q *Queries) DeleteSkillGapPathStepDepsByPath(ctx context.Context, pathUuid
 }
 
 const listAllDepsByPath = `-- name: ListAllDepsByPath :many
-SELECT uuid, id, path_uuid, step_uuid, depends_on_step_uuid, created_at, updated_at FROM hskip_users.bridgr_skill_gap_path_step_deps
+SELECT uuid, id, path_uuid, step_uuid, depends_on_step_uuid, created_at, updated_at FROM bridgr.skill_gap_path_step_deps
 WHERE path_uuid = $1
 ORDER BY id ASC
 `
@@ -97,7 +97,7 @@ func (q *Queries) ListAllDepsByPath(ctx context.Context, pathUuid pgtype.UUID) (
 }
 
 const listDependenciesByStep = `-- name: ListDependenciesByStep :many
-SELECT uuid, id, path_uuid, step_uuid, depends_on_step_uuid, created_at, updated_at FROM hskip_users.bridgr_skill_gap_path_step_deps
+SELECT uuid, id, path_uuid, step_uuid, depends_on_step_uuid, created_at, updated_at FROM bridgr.skill_gap_path_step_deps
 WHERE path_uuid = $1 AND step_uuid = $2
 ORDER BY id ASC
 `
@@ -137,7 +137,7 @@ func (q *Queries) ListDependenciesByStep(ctx context.Context, arg ListDependenci
 }
 
 const listDependentsByStep = `-- name: ListDependentsByStep :many
-SELECT uuid, id, path_uuid, step_uuid, depends_on_step_uuid, created_at, updated_at FROM hskip_users.bridgr_skill_gap_path_step_deps
+SELECT uuid, id, path_uuid, step_uuid, depends_on_step_uuid, created_at, updated_at FROM bridgr.skill_gap_path_step_deps
 WHERE path_uuid = $1 AND depends_on_step_uuid = $2
 ORDER BY id ASC
 `

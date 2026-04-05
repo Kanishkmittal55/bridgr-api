@@ -4,7 +4,7 @@
 -- =============================================================================
 
 -- name: CreateSkillGapLearningPath :one
-INSERT INTO hskip_users.bridgr_skill_gap_learning_paths (
+INSERT INTO bridgr.skill_gap_learning_paths (
     analysis_uuid,
     path_version,
     algorithm,
@@ -14,25 +14,25 @@ INSERT INTO hskip_users.bridgr_skill_gap_learning_paths (
 RETURNING *;
 
 -- name: GetSkillGapLearningPath :one
-SELECT * FROM hskip_users.bridgr_skill_gap_learning_paths
+SELECT * FROM bridgr.skill_gap_learning_paths
 WHERE id = $1;
 
 -- name: GetSkillGapLearningPathByUUID :one
-SELECT * FROM hskip_users.bridgr_skill_gap_learning_paths
+SELECT * FROM bridgr.skill_gap_learning_paths
 WHERE uuid = $1;
 
 -- name: GetSkillGapLearningPathByAnalysis :one
-SELECT * FROM hskip_users.bridgr_skill_gap_learning_paths
+SELECT * FROM bridgr.skill_gap_learning_paths
 WHERE analysis_uuid = $1
 ORDER BY path_version DESC
 LIMIT 1;
 
 -- name: UpdateSkillGapLearningPathMetadata :one
-UPDATE hskip_users.bridgr_skill_gap_learning_paths
+UPDATE bridgr.skill_gap_learning_paths
 SET path_metadata = $2
 WHERE id = $1
 RETURNING *;
 
 -- name: DeleteSkillGapLearningPathByAnalysis :exec
-DELETE FROM hskip_users.bridgr_skill_gap_learning_paths
+DELETE FROM bridgr.skill_gap_learning_paths
 WHERE analysis_uuid = $1;

@@ -1,5 +1,5 @@
 -- Create a reusable function to manage created_at and updated_at timestamps.
-CREATE OR REPLACE FUNCTION hskip_users.tr_control_time()
+CREATE OR REPLACE FUNCTION bridgr.tr_control_time()
 RETURNS TRIGGER AS $$
 BEGIN
     -- For INSERT operations
@@ -23,4 +23,4 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-COMMENT ON FUNCTION hskip_users.tr_control_time() IS 'A generic trigger function to manage created_at and updated_at columns.';
+COMMENT ON FUNCTION bridgr.tr_control_time() IS 'A generic trigger function to manage created_at and updated_at columns.';

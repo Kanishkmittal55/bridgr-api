@@ -1,1 +1,1 @@
-DROP TABLE IF EXISTS hskip_users.bridgr_skill_gap_graphs;
+DROP TABLE IF EXISTS bridgr.skill_gap_graphs;

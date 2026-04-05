@@ -46,7 +46,7 @@ type HskipUsersBridgrSkillGapAnalysis struct {
 type HskipUsersBridgrSkillGapCoverage struct {
 	Uuid pgtype.UUID `db:"uuid"`
 	ID   int64       `db:"id"`
-	// App-enforced FK to bridgr_skill_gap_analyses.uuid
+	// App-enforced FK to skill_gap_analyses.uuid
 	AnalysisUuid pgtype.UUID `db:"analysis_uuid"`
 	// role_skill: pairing row; summary: one row roll-up; aggregate: optional bucket
 	CoverageKind      string      `db:"coverage_kind"`
@@ -64,11 +64,11 @@ type HskipUsersBridgrSkillGapCoverage struct {
 type HskipUsersBridgrSkillGapEdge struct {
 	Uuid pgtype.UUID `db:"uuid"`
 	ID   int64       `db:"id"`
-	// App-enforced FK to bridgr_skill_gap_graphs.uuid
+	// App-enforced FK to skill_gap_graphs.uuid
 	GraphUuid pgtype.UUID `db:"graph_uuid"`
-	// App-enforced FK to bridgr_skill_gap_nodes.uuid
+	// App-enforced FK to skill_gap_nodes.uuid
 	FromNodeUuid pgtype.UUID `db:"from_node_uuid"`
-	// App-enforced FK to bridgr_skill_gap_nodes.uuid
+	// App-enforced FK to skill_gap_nodes.uuid
 	ToNodeUuid pgtype.UUID `db:"to_node_uuid"`
 	// prerequisite, similarity, required_by, etc.
 	Relation  string           `db:"relation"`
@@ -82,7 +82,7 @@ type HskipUsersBridgrSkillGapEdge struct {
 type HskipUsersBridgrSkillGapGraph struct {
 	Uuid pgtype.UUID `db:"uuid"`
 	ID   int64       `db:"id"`
-	// App-enforced FK to bridgr_skill_gap_analyses.uuid
+	// App-enforced FK to skill_gap_analyses.uuid
 	AnalysisUuid pgtype.UUID `db:"analysis_uuid"`
 	// candidate = graph from CV; role_requirement = graph from job description
 	Kind string `db:"kind"`
@@ -96,7 +96,7 @@ type HskipUsersBridgrSkillGapGraph struct {
 type HskipUsersBridgrSkillGapLearningPath struct {
 	Uuid pgtype.UUID `db:"uuid"`
 	ID   int64       `db:"id"`
-	// App-enforced FK to bridgr_skill_gap_analyses.uuid
+	// App-enforced FK to skill_gap_analyses.uuid
 	AnalysisUuid pgtype.UUID `db:"analysis_uuid"`
 	// Increment when regenerating path for same analysis
 	PathVersion  int32            `db:"path_version"`
@@ -111,7 +111,7 @@ type HskipUsersBridgrSkillGapLearningPath struct {
 type HskipUsersBridgrSkillGapNode struct {
 	Uuid pgtype.UUID `db:"uuid"`
 	ID   int64       `db:"id"`
-	// App-enforced FK to bridgr_skill_gap_graphs.uuid
+	// App-enforced FK to skill_gap_graphs.uuid
 	GraphUuid pgtype.UUID `db:"graph_uuid"`
 	// Stable key for this node within the graph (e.g. normalized skill id)
 	NodeKey string `db:"node_key"`
@@ -134,7 +134,7 @@ type HskipUsersBridgrSkillGapNode struct {
 type HskipUsersBridgrSkillGapPathStep struct {
 	Uuid pgtype.UUID `db:"uuid"`
 	ID   int64       `db:"id"`
-	// App-enforced FK to bridgr_skill_gap_learning_paths.uuid
+	// App-enforced FK to skill_gap_learning_paths.uuid
 	PathUuid pgtype.UUID `db:"path_uuid"`
 	// Order within the path (0-based or 1-based per app convention)
 	StepIndex      int32          `db:"step_index"`
@@ -158,11 +158,11 @@ type HskipUsersBridgrSkillGapPathStep struct {
 type HskipUsersBridgrSkillGapPathStepDep struct {
 	Uuid pgtype.UUID `db:"uuid"`
 	ID   int64       `db:"id"`
-	// App-enforced FK to bridgr_skill_gap_learning_paths.uuid
+	// App-enforced FK to skill_gap_learning_paths.uuid
 	PathUuid pgtype.UUID `db:"path_uuid"`
-	// App-enforced FK to bridgr_skill_gap_path_steps.uuid — dependent step
+	// App-enforced FK to skill_gap_path_steps.uuid — dependent step
 	StepUuid pgtype.UUID `db:"step_uuid"`
-	// App-enforced FK to bridgr_skill_gap_path_steps.uuid — must be done first
+	// App-enforced FK to skill_gap_path_steps.uuid — must be done first
 	DependsOnStepUuid pgtype.UUID      `db:"depends_on_step_uuid"`
 	CreatedAt         pgtype.Timestamp `db:"created_at"`
 	UpdatedAt         pgtype.Timestamp `db:"updated_at"`

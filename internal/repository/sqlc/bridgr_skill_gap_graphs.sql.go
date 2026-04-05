@@ -13,7 +13,7 @@ import (
 
 const createSkillGapGraph = `-- name: CreateSkillGapGraph :one
 
-INSERT INTO hskip_users.bridgr_skill_gap_graphs (analysis_uuid, kind, metadata)
+INSERT INTO bridgr.skill_gap_graphs (analysis_uuid, kind, metadata)
 VALUES ($1, $2, $3)
 RETURNING uuid, id, analysis_uuid, kind, metadata, created_at, updated_at
 `
@@ -44,7 +44,7 @@ func (q *Queries) CreateSkillGapGraph(ctx context.Context, arg CreateSkillGapGra
 }
 
 const deleteSkillGapGraphsByAnalysis = `-- name: DeleteSkillGapGraphsByAnalysis :exec
-DELETE FROM hskip_users.bridgr_skill_gap_graphs
+DELETE FROM bridgr.skill_gap_graphs
 WHERE analysis_uuid = $1
 `
 
@@ -54,7 +54,7 @@ func (q *Queries) DeleteSkillGapGraphsByAnalysis(ctx context.Context, analysisUu
 }
 
 const getSkillGapGraph = `-- name: GetSkillGapGraph :one
-SELECT uuid, id, analysis_uuid, kind, metadata, created_at, updated_at FROM hskip_users.bridgr_skill_gap_graphs
+SELECT uuid, id, analysis_uuid, kind, metadata, created_at, updated_at FROM bridgr.skill_gap_graphs
 WHERE id = $1
 `
 
@@ -74,7 +74,7 @@ func (q *Queries) GetSkillGapGraph(ctx context.Context, id int64) (HskipUsersBri
 }
 
 const getSkillGapGraphByKind = `-- name: GetSkillGapGraphByKind :one
-SELECT uuid, id, analysis_uuid, kind, metadata, created_at, updated_at FROM hskip_users.bridgr_skill_gap_graphs
+SELECT uuid, id, analysis_uuid, kind, metadata, created_at, updated_at FROM bridgr.skill_gap_graphs
 WHERE analysis_uuid = $1 AND kind = $2
 `
 
@@ -99,7 +99,7 @@ func (q *Queries) GetSkillGapGraphByKind(ctx context.Context, arg GetSkillGapGra
 }
 
 const getSkillGapGraphByUUID = `-- name: GetSkillGapGraphByUUID :one
-SELECT uuid, id, analysis_uuid, kind, metadata, created_at, updated_at FROM hskip_users.bridgr_skill_gap_graphs
+SELECT uuid, id, analysis_uuid, kind, metadata, created_at, updated_at FROM bridgr.skill_gap_graphs
 WHERE uuid = $1
 `
 
@@ -119,7 +119,7 @@ func (q *Queries) GetSkillGapGraphByUUID(ctx context.Context, uuid pgtype.UUID) 
 }
 
 const getSkillGapGraphsByAnalysis = `-- name: GetSkillGapGraphsByAnalysis :many
-SELECT uuid, id, analysis_uuid, kind, metadata, created_at, updated_at FROM hskip_users.bridgr_skill_gap_graphs
+SELECT uuid, id, analysis_uuid, kind, metadata, created_at, updated_at FROM bridgr.skill_gap_graphs
 WHERE analysis_uuid = $1
 ORDER BY kind ASC
 `

@@ -1,18 +1,14 @@
 /*
-Same role-grant layout as users/db/init/300-users.sql, but database name is `bridgr`
-(standalone bridgr-api compose). Schema for Bridgr tables remains `hskip_users`.
+Role + grant layout aligned with users/db/init/300-users.sql:
+- Database: bridgr
+- Application schema: bridgr (tables skill_gap_*)
+- Role/login names: bridgr_* only
 */
 
--- change db to application database (not the hskip_users database name from the monolith)
 \c bridgr
 
-/*
--- in future db's avoid using public for anything other than contrib
--- for legacy systems leave this commented out
-*/
-
 -- ------------------------------------------------------------------------------
--- DataVail Monitoring
+-- DataVail monitoring login (optional local dev)
 -- ------------------------------------------------------------------------------
 
 CREATE USER datavail_monitor_tool WITH PASSWORD 'secret';
@@ -22,62 +18,60 @@ GRANT pg_monitor TO datavail_monitor_tool;
 -- ------------------------------------------------------------------------------
 -- Roles
 -- ------------------------------------------------------------------------------
--- create hassle_skip readonly role
-GRANT CONNECT, TEMPORARY ON DATABASE bridgr TO hassle_skip_readonly_role;
 
-GRANT USAGE ON SCHEMA hskip_users TO hassle_skip_readonly_role;
-GRANT SELECT ON ALL TABLES IN SCHEMA hskip_users TO hassle_skip_readonly_role;
+GRANT CONNECT, TEMPORARY ON DATABASE bridgr TO bridgr_readonly_role;
 
-GRANT USAGE ON SCHEMA public TO hassle_skip_readonly_role;
-GRANT SELECT ON ALL TABLES IN SCHEMA public TO hassle_skip_readonly_role;
+GRANT USAGE ON SCHEMA bridgr TO bridgr_readonly_role;
+GRANT SELECT ON ALL TABLES IN SCHEMA bridgr TO bridgr_readonly_role;
 
-ALTER ROLE hassle_skip_readonly_role SET search_path TO hskip_users, public;
-ALTER ROLE hassle_skip_readonly_role SET search_path = "$user", public, hskip_users;
+GRANT USAGE ON SCHEMA public TO bridgr_readonly_role;
+GRANT SELECT ON ALL TABLES IN SCHEMA public TO bridgr_readonly_role;
 
- -- create hassle_skip_app_role
-GRANT CONNECT, TEMPORARY ON DATABASE bridgr TO hassle_skip_app_role;
+ALTER ROLE bridgr_readonly_role SET search_path TO bridgr, public;
+ALTER ROLE bridgr_readonly_role SET search_path = "$user", public, bridgr;
 
-GRANT USAGE ON SCHEMA hskip_users TO hassle_skip_app_role;
-GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA hskip_users TO hassle_skip_app_role;
+GRANT CONNECT, TEMPORARY ON DATABASE bridgr TO bridgr_app_role;
 
-GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA hskip_users TO hassle_skip_app_role;
-ALTER ROLE hassle_skip_app_role SET search_path TO hskip_users, public;
+GRANT USAGE ON SCHEMA bridgr TO bridgr_app_role;
+GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA bridgr TO bridgr_app_role;
 
-GRANT USAGE ON SCHEMA public TO hassle_skip_app_role;
-GRANT SELECT ON ALL TABLES IN SCHEMA public TO hassle_skip_app_role;
+GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA bridgr TO bridgr_app_role;
+ALTER ROLE bridgr_app_role SET search_path TO bridgr, public;
 
-ALTER ROLE hassle_skip_app_role SET search_path TO hskip_users, public;
-ALTER ROLE hassle_skip_app SET search_path = "$user", public, hskip_users;
+GRANT USAGE ON SCHEMA public TO bridgr_app_role;
+GRANT SELECT ON ALL TABLES IN SCHEMA public TO bridgr_app_role;
 
- -- create hassle_skip_migration_role
-GRANT CONNECT, TEMPORARY ON DATABASE bridgr TO hassle_skip_migration_role;
+ALTER ROLE bridgr_app_role SET search_path TO bridgr, public;
+ALTER ROLE bridgr SET search_path = "$user", public, bridgr;
 
-GRANT USAGE, CREATE ON SCHEMA hskip_users TO hassle_skip_migration_role;
-GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA hskip_users TO hassle_skip_migration_role;
+GRANT CONNECT, TEMPORARY ON DATABASE bridgr TO bridgr_migration_role;
 
-GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA hskip_users TO hassle_skip_migration_role;
-ALTER ROLE hassle_skip_migration_role SET search_path TO hskip_users, public;
-ALTER ROLE hassle_skip_migration SET search_path = "$user", public, hskip_users;
+GRANT USAGE, CREATE ON SCHEMA bridgr TO bridgr_migration_role;
+GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA bridgr TO bridgr_migration_role;
 
-GRANT USAGE ON SCHEMA public TO hassle_skip_migration_role;
-GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO hassle_skip_migration_role;
+GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA bridgr TO bridgr_migration_role;
+ALTER ROLE bridgr_migration_role SET search_path TO bridgr, public;
+ALTER ROLE bridgr_migration SET search_path = "$user", public, bridgr;
 
-SET search_path TO hskip_users, public;
+GRANT USAGE ON SCHEMA public TO bridgr_migration_role;
+GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO bridgr_migration_role;
+
+SET search_path TO bridgr, public;
 
 -- ------------------------------------------------------------------------------
--- Logins — default privileges
+-- Default privileges
 -- ------------------------------------------------------------------------------
 
 \c bridgr
-ALTER DEFAULT PRIVILEGES FOR USER hassle_skip_migration IN SCHEMA hskip_users GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO hassle_skip_app_role ;
-ALTER DEFAULT PRIVILEGES FOR USER hassle_skip_migration IN SCHEMA hskip_users GRANT SELECT ON TABLES TO hassle_skip_readonly_role ;
 
-ALTER DEFAULT PRIVILEGES FOR USER hassle_skip_migration IN SCHEMA public GRANT SELECT ON TABLES TO hassle_skip_app_role ;
-ALTER DEFAULT PRIVILEGES FOR USER hassle_skip_migration IN SCHEMA public GRANT SELECT ON TABLES TO hassle_skip_readonly_role ;
+ALTER DEFAULT PRIVILEGES FOR USER bridgr_migration IN SCHEMA bridgr GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO bridgr_app_role;
+ALTER DEFAULT PRIVILEGES FOR USER bridgr_migration IN SCHEMA bridgr GRANT SELECT ON TABLES TO bridgr_readonly_role;
 
--- sequences
-ALTER DEFAULT PRIVILEGES FOR USER hassle_skip_migration IN SCHEMA hskip_users GRANT USAGE, SELECT ON SEQUENCES TO hassle_skip_app_role ;
-ALTER DEFAULT PRIVILEGES FOR USER hassle_skip_migration IN SCHEMA hskip_users GRANT USAGE, SELECT ON SEQUENCES TO hassle_skip_readonly_role ;
+ALTER DEFAULT PRIVILEGES FOR USER bridgr_migration IN SCHEMA public GRANT SELECT ON TABLES TO bridgr_app_role;
+ALTER DEFAULT PRIVILEGES FOR USER bridgr_migration IN SCHEMA public GRANT SELECT ON TABLES TO bridgr_readonly_role;
 
-ALTER DEFAULT PRIVILEGES FOR USER hassle_skip_migration IN SCHEMA public GRANT USAGE, SELECT ON SEQUENCES TO hassle_skip_app_role ;
-ALTER DEFAULT PRIVILEGES FOR USER hassle_skip_migration IN SCHEMA public GRANT USAGE, SELECT ON SEQUENCES TO hassle_skip_readonly_role ;
+ALTER DEFAULT PRIVILEGES FOR USER bridgr_migration IN SCHEMA bridgr GRANT USAGE, SELECT ON SEQUENCES TO bridgr_app_role;
+ALTER DEFAULT PRIVILEGES FOR USER bridgr_migration IN SCHEMA bridgr GRANT USAGE, SELECT ON SEQUENCES TO bridgr_readonly_role;
+
+ALTER DEFAULT PRIVILEGES FOR USER bridgr_migration IN SCHEMA public GRANT USAGE, SELECT ON SEQUENCES TO bridgr_app_role;
+ALTER DEFAULT PRIVILEGES FOR USER bridgr_migration IN SCHEMA public GRANT USAGE, SELECT ON SEQUENCES TO bridgr_readonly_role;

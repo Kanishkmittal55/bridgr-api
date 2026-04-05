@@ -1,6 +1,6 @@
 -- =============================================================================
 -- BRIDGR SKILL GAP — COVERAGE (aggregated reads)
--- Metrics derived from graphs + node overlap (not only bridgr_skill_gap_coverage rows).
+-- Metrics derived from graphs + node overlap (not only skill_gap_coverage rows).
 -- =============================================================================
 
 -- name: GetSkillGapCoverage :one
@@ -18,8 +18,8 @@ FROM (
         COALESCE(
             (
                 SELECT COUNT(*)::bigint
-                FROM hskip_users.bridgr_skill_gap_nodes n
-                INNER JOIN hskip_users.bridgr_skill_gap_graphs g
+                FROM bridgr.skill_gap_nodes n
+                INNER JOIN bridgr.skill_gap_graphs g
                     ON g.uuid = n.graph_uuid AND g.kind = 'candidate'
                 WHERE g.analysis_uuid = $1
             ),
@@ -28,8 +28,8 @@ FROM (
         COALESCE(
             (
                 SELECT COUNT(*)::bigint
-                FROM hskip_users.bridgr_skill_gap_nodes n
-                INNER JOIN hskip_users.bridgr_skill_gap_graphs g
+                FROM bridgr.skill_gap_nodes n
+                INNER JOIN bridgr.skill_gap_graphs g
                     ON g.uuid = n.graph_uuid AND g.kind = 'role_requirement'
                 WHERE g.analysis_uuid = $1
             ),
@@ -38,14 +38,14 @@ FROM (
         COALESCE(
             (
                 SELECT COUNT(DISTINCT rn.node_key)::bigint
-                FROM hskip_users.bridgr_skill_gap_nodes rn
-                INNER JOIN hskip_users.bridgr_skill_gap_graphs rg
+                FROM bridgr.skill_gap_nodes rn
+                INNER JOIN bridgr.skill_gap_graphs rg
                     ON rg.uuid = rn.graph_uuid AND rg.kind = 'role_requirement'
                 WHERE rg.analysis_uuid = $1
                   AND EXISTS (
                       SELECT 1
-                      FROM hskip_users.bridgr_skill_gap_nodes cn
-                      INNER JOIN hskip_users.bridgr_skill_gap_graphs cg
+                      FROM bridgr.skill_gap_nodes cn
+                      INNER JOIN bridgr.skill_gap_graphs cg
                           ON cg.uuid = cn.graph_uuid AND cg.kind = 'candidate'
                       WHERE cg.analysis_uuid = $1 AND cn.node_key = rn.node_key
                   )
@@ -81,8 +81,8 @@ FROM (
         COALESCE(
             (
                 SELECT COUNT(*)::bigint
-                FROM hskip_users.bridgr_skill_gap_nodes n
-                INNER JOIN hskip_users.bridgr_skill_gap_graphs g
+                FROM bridgr.skill_gap_nodes n
+                INNER JOIN bridgr.skill_gap_graphs g
                     ON g.uuid = n.graph_uuid AND g.kind = 'candidate'
                 WHERE g.analysis_uuid = a.uuid
             ),
@@ -91,8 +91,8 @@ FROM (
         COALESCE(
             (
                 SELECT COUNT(*)::bigint
-                FROM hskip_users.bridgr_skill_gap_nodes n
-                INNER JOIN hskip_users.bridgr_skill_gap_graphs g
+                FROM bridgr.skill_gap_nodes n
+                INNER JOIN bridgr.skill_gap_graphs g
                     ON g.uuid = n.graph_uuid AND g.kind = 'role_requirement'
                 WHERE g.analysis_uuid = a.uuid
             ),
@@ -101,21 +101,21 @@ FROM (
         COALESCE(
             (
                 SELECT COUNT(DISTINCT rn.node_key)::bigint
-                FROM hskip_users.bridgr_skill_gap_nodes rn
-                INNER JOIN hskip_users.bridgr_skill_gap_graphs rg
+                FROM bridgr.skill_gap_nodes rn
+                INNER JOIN bridgr.skill_gap_graphs rg
                     ON rg.uuid = rn.graph_uuid AND rg.kind = 'role_requirement'
                 WHERE rg.analysis_uuid = a.uuid
                   AND EXISTS (
                       SELECT 1
-                      FROM hskip_users.bridgr_skill_gap_nodes cn
-                      INNER JOIN hskip_users.bridgr_skill_gap_graphs cg
+                      FROM bridgr.skill_gap_nodes cn
+                      INNER JOIN bridgr.skill_gap_graphs cg
                           ON cg.uuid = cn.graph_uuid AND cg.kind = 'candidate'
                       WHERE cg.analysis_uuid = a.uuid AND cn.node_key = rn.node_key
                   )
             ),
             0
         ) AS matched_skills
-    FROM hskip_users.bridgr_skill_gap_analyses a
+    FROM bridgr.skill_gap_analyses a
     WHERE a.user_id = $1
 ) sub
 ORDER BY sub.created_at DESC

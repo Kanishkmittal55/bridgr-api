@@ -4,7 +4,7 @@
 -- =============================================================================
 
 -- name: CreateSkillGapEdge :one
-INSERT INTO hskip_users.bridgr_skill_gap_edges (
+INSERT INTO bridgr.skill_gap_edges (
     graph_uuid,
     from_node_uuid,
     to_node_uuid,
@@ -15,7 +15,7 @@ INSERT INTO hskip_users.bridgr_skill_gap_edges (
 RETURNING *;
 
 -- name: BulkCreateSkillGapEdges :copyfrom
-INSERT INTO hskip_users.bridgr_skill_gap_edges (
+INSERT INTO bridgr.skill_gap_edges (
     graph_uuid,
     from_node_uuid,
     to_node_uuid,
@@ -27,16 +27,16 @@ INSERT INTO hskip_users.bridgr_skill_gap_edges (
 );
 
 -- name: ListSkillGapEdgesByGraph :many
-SELECT * FROM hskip_users.bridgr_skill_gap_edges
+SELECT * FROM bridgr.skill_gap_edges
 WHERE graph_uuid = $1
 ORDER BY id ASC;
 
 -- name: ListSkillGapEdgesByNode :many
-SELECT * FROM hskip_users.bridgr_skill_gap_edges
+SELECT * FROM bridgr.skill_gap_edges
 WHERE graph_uuid = $1
   AND (from_node_uuid = $2 OR to_node_uuid = $2)
 ORDER BY id ASC;
 
 -- name: DeleteSkillGapEdgesByGraph :exec
-DELETE FROM hskip_users.bridgr_skill_gap_edges
+DELETE FROM bridgr.skill_gap_edges
 WHERE graph_uuid = $1;

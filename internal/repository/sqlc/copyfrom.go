@@ -43,7 +43,7 @@ func (r iteratorForBulkCreateSkillGapEdges) Err() error {
 }
 
 func (q *Queries) BulkCreateSkillGapEdges(ctx context.Context, arg []BulkCreateSkillGapEdgesParams) (int64, error) {
-	return q.db.CopyFrom(ctx, []string{"hskip_users", "bridgr_skill_gap_edges"}, []string{"graph_uuid", "from_node_uuid", "to_node_uuid", "relation", "weight", "metadata"}, &iteratorForBulkCreateSkillGapEdges{rows: arg})
+	return q.db.CopyFrom(ctx, []string{"bridgr", "skill_gap_edges"}, []string{"graph_uuid", "from_node_uuid", "to_node_uuid", "relation", "weight", "metadata"}, &iteratorForBulkCreateSkillGapEdges{rows: arg})
 }
 
 // iteratorForBulkCreateSkillGapNodes implements pgx.CopyFromSource.
@@ -84,7 +84,7 @@ func (r iteratorForBulkCreateSkillGapNodes) Err() error {
 }
 
 func (q *Queries) BulkCreateSkillGapNodes(ctx context.Context, arg []BulkCreateSkillGapNodesParams) (int64, error) {
-	return q.db.CopyFrom(ctx, []string{"hskip_users", "bridgr_skill_gap_nodes"}, []string{"graph_uuid", "node_key", "display_name", "description", "proficiency_hint", "source", "evidence", "metadata", "position_x", "position_y"}, &iteratorForBulkCreateSkillGapNodes{rows: arg})
+	return q.db.CopyFrom(ctx, []string{"bridgr", "skill_gap_nodes"}, []string{"graph_uuid", "node_key", "display_name", "description", "proficiency_hint", "source", "evidence", "metadata", "position_x", "position_y"}, &iteratorForBulkCreateSkillGapNodes{rows: arg})
 }
 
 // iteratorForBulkCreateSkillGapPathStepDeps implements pgx.CopyFromSource.
@@ -118,7 +118,7 @@ func (r iteratorForBulkCreateSkillGapPathStepDeps) Err() error {
 }
 
 func (q *Queries) BulkCreateSkillGapPathStepDeps(ctx context.Context, arg []BulkCreateSkillGapPathStepDepsParams) (int64, error) {
-	return q.db.CopyFrom(ctx, []string{"hskip_users", "bridgr_skill_gap_path_step_deps"}, []string{"path_uuid", "step_uuid", "depends_on_step_uuid"}, &iteratorForBulkCreateSkillGapPathStepDeps{rows: arg})
+	return q.db.CopyFrom(ctx, []string{"bridgr", "skill_gap_path_step_deps"}, []string{"path_uuid", "step_uuid", "depends_on_step_uuid"}, &iteratorForBulkCreateSkillGapPathStepDeps{rows: arg})
 }
 
 // iteratorForBulkCreateSkillGapPathSteps implements pgx.CopyFromSource.
@@ -160,5 +160,5 @@ func (r iteratorForBulkCreateSkillGapPathSteps) Err() error {
 }
 
 func (q *Queries) BulkCreateSkillGapPathSteps(ctx context.Context, arg []BulkCreateSkillGapPathStepsParams) (int64, error) {
-	return q.db.CopyFrom(ctx, []string{"hskip_users", "bridgr_skill_gap_path_steps"}, []string{"path_uuid", "step_index", "title", "rationale", "estimated_hours", "resource_uri", "resource_kind", "founder_learning_item_uuid", "course_lesson_uuid", "linked_node_keys", "metadata"}, &iteratorForBulkCreateSkillGapPathSteps{rows: arg})
+	return q.db.CopyFrom(ctx, []string{"bridgr", "skill_gap_path_steps"}, []string{"path_uuid", "step_index", "title", "rationale", "estimated_hours", "resource_uri", "resource_kind", "founder_learning_item_uuid", "course_lesson_uuid", "linked_node_keys", "metadata"}, &iteratorForBulkCreateSkillGapPathSteps{rows: arg})
 }

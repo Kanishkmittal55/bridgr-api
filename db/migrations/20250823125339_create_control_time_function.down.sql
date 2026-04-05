@@ -1,1 +1,1 @@
-DROP FUNCTION IF EXISTS hskip_users.tr_control_time();
+DROP FUNCTION IF EXISTS bridgr.tr_control_time();

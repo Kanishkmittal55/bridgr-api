@@ -27,7 +27,7 @@ type BulkCreateSkillGapPathStepsParams struct {
 
 const createSkillGapPathStep = `-- name: CreateSkillGapPathStep :one
 
-INSERT INTO hskip_users.bridgr_skill_gap_path_steps (
+INSERT INTO bridgr.skill_gap_path_steps (
     path_uuid,
     step_index,
     title,
@@ -97,7 +97,7 @@ func (q *Queries) CreateSkillGapPathStep(ctx context.Context, arg CreateSkillGap
 }
 
 const deleteSkillGapPathStepsByPath = `-- name: DeleteSkillGapPathStepsByPath :exec
-DELETE FROM hskip_users.bridgr_skill_gap_path_steps
+DELETE FROM bridgr.skill_gap_path_steps
 WHERE path_uuid = $1
 `
 
@@ -107,7 +107,7 @@ func (q *Queries) DeleteSkillGapPathStepsByPath(ctx context.Context, pathUuid pg
 }
 
 const getSkillGapPathStep = `-- name: GetSkillGapPathStep :one
-SELECT uuid, id, path_uuid, step_index, title, rationale, estimated_hours, resource_uri, resource_kind, founder_learning_item_uuid, course_lesson_uuid, linked_node_keys, metadata, created_at, updated_at FROM hskip_users.bridgr_skill_gap_path_steps
+SELECT uuid, id, path_uuid, step_index, title, rationale, estimated_hours, resource_uri, resource_kind, founder_learning_item_uuid, course_lesson_uuid, linked_node_keys, metadata, created_at, updated_at FROM bridgr.skill_gap_path_steps
 WHERE id = $1
 `
 
@@ -135,7 +135,7 @@ func (q *Queries) GetSkillGapPathStep(ctx context.Context, id int64) (HskipUsers
 }
 
 const listSkillGapPathStepsByPath = `-- name: ListSkillGapPathStepsByPath :many
-SELECT uuid, id, path_uuid, step_index, title, rationale, estimated_hours, resource_uri, resource_kind, founder_learning_item_uuid, course_lesson_uuid, linked_node_keys, metadata, created_at, updated_at FROM hskip_users.bridgr_skill_gap_path_steps
+SELECT uuid, id, path_uuid, step_index, title, rationale, estimated_hours, resource_uri, resource_kind, founder_learning_item_uuid, course_lesson_uuid, linked_node_keys, metadata, created_at, updated_at FROM bridgr.skill_gap_path_steps
 WHERE path_uuid = $1
 ORDER BY step_index ASC
 `
@@ -177,7 +177,7 @@ func (q *Queries) ListSkillGapPathStepsByPath(ctx context.Context, pathUuid pgty
 }
 
 const updateSkillGapPathStep = `-- name: UpdateSkillGapPathStep :one
-UPDATE hskip_users.bridgr_skill_gap_path_steps
+UPDATE bridgr.skill_gap_path_steps
 SET resource_uri = $2,
     resource_kind = $3
 WHERE id = $1

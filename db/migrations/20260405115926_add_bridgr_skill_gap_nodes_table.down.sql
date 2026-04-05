@@ -1,1 +1,1 @@
-DROP TABLE IF EXISTS hskip_users.bridgr_skill_gap_nodes;
+DROP TABLE IF EXISTS bridgr.skill_gap_nodes;

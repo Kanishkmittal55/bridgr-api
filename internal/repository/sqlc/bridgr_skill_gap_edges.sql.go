@@ -22,7 +22,7 @@ type BulkCreateSkillGapEdgesParams struct {
 
 const createSkillGapEdge = `-- name: CreateSkillGapEdge :one
 
-INSERT INTO hskip_users.bridgr_skill_gap_edges (
+INSERT INTO bridgr.skill_gap_edges (
     graph_uuid,
     from_node_uuid,
     to_node_uuid,
@@ -72,7 +72,7 @@ func (q *Queries) CreateSkillGapEdge(ctx context.Context, arg CreateSkillGapEdge
 }
 
 const deleteSkillGapEdgesByGraph = `-- name: DeleteSkillGapEdgesByGraph :exec
-DELETE FROM hskip_users.bridgr_skill_gap_edges
+DELETE FROM bridgr.skill_gap_edges
 WHERE graph_uuid = $1
 `
 
@@ -82,7 +82,7 @@ func (q *Queries) DeleteSkillGapEdgesByGraph(ctx context.Context, graphUuid pgty
 }
 
 const listSkillGapEdgesByGraph = `-- name: ListSkillGapEdgesByGraph :many
-SELECT uuid, id, graph_uuid, from_node_uuid, to_node_uuid, relation, weight, metadata, created_at, updated_at FROM hskip_users.bridgr_skill_gap_edges
+SELECT uuid, id, graph_uuid, from_node_uuid, to_node_uuid, relation, weight, metadata, created_at, updated_at FROM bridgr.skill_gap_edges
 WHERE graph_uuid = $1
 ORDER BY id ASC
 `
@@ -119,7 +119,7 @@ func (q *Queries) ListSkillGapEdgesByGraph(ctx context.Context, graphUuid pgtype
 }
 
 const listSkillGapEdgesByNode = `-- name: ListSkillGapEdgesByNode :many
-SELECT uuid, id, graph_uuid, from_node_uuid, to_node_uuid, relation, weight, metadata, created_at, updated_at FROM hskip_users.bridgr_skill_gap_edges
+SELECT uuid, id, graph_uuid, from_node_uuid, to_node_uuid, relation, weight, metadata, created_at, updated_at FROM bridgr.skill_gap_edges
 WHERE graph_uuid = $1
   AND (from_node_uuid = $2 OR to_node_uuid = $2)
 ORDER BY id ASC
