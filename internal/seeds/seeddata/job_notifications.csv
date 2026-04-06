@@ -1,0 +1,2 @@
+uuid,id,user_id,job_candidate_uuid,channel,status,payload,sent_at,seen_at,error_detail,created_at,updated_at
+550e8400-e29b-41d4-a716-446655440010,1,1,550e8400-e29b-41d4-a716-446655440004,in_app,seen,"{""title"":""New job match""}",2026-01-10T12:00:00Z,2026-01-10T12:01:00Z,,2026-01-10T12:00:00Z,2026-01-10T12:00:00Z

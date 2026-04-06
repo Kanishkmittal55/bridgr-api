@@ -95,6 +95,9 @@ func (rw *ResponseWriter) writeResponse(ctx context.Context, w http.ResponseWrit
 	case stderrors.Is(err, apierrors.ErrBadRequest):
 		httpStatus = http.StatusBadRequest
 		WriteResponse(w, r, httpStatus, types.NewErrorResponse(err.Error()))
+	case stderrors.Is(err, apierrors.ErrConflict):
+		httpStatus = http.StatusConflict
+		WriteResponse(w, r, httpStatus, types.NewErrorResponse(err.Error()))
 	case stderrors.Is(err, apierrors.ErrNotFound):
 		httpStatus = http.StatusNotFound
 		WriteResponse(w, r, httpStatus, types.NewNotFoundErrorResponse(err.Error()))

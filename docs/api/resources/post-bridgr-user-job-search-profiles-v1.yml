@@ -1,0 +1,57 @@
+post:
+  summary: Create a job search profile
+  operationId: V1CreateBridgrUserJobSearchProfile
+  tags:
+    - bridgr
+  parameters:
+    - name: X-API-KEY
+      in: header
+      description: API Key of the service making the request
+      required: true
+      style: simple
+      explode: false
+      schema:
+        type: string
+    - name: userID
+      in: path
+      required: true
+      schema:
+        type: integer
+        format: int32
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: '../schemas/CreateBridgrJobSearchProfileRequest.yml'
+  responses:
+    "201":
+      description: Created profile
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/BridgrJobSearchProfile.yml'
+    "400":
+      description: Invalid request
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/ErrorResponse.yml'
+    "401":
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/ErrorResponse.yml'
+    "409":
+      description: Duplicate profile (same target role, location, board, intent, and CV analysis)
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/ErrorResponse.yml'
+    "500":
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/ErrorResponse.yml'

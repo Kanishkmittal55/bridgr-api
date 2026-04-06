@@ -1,0 +1,2 @@
+uuid,id,user_id,founder_persona_uuid,pursuit_uuid,title,status,cv_asset_uri,jd_asset_uri,cv_fingerprint,jd_fingerprint,llm_model,prompt_version,extraction_payload,gap_summary,mermaid_diagram,created_at,updated_at
+550e8400-e29b-41d4-a716-446655440001,1,1,,,Demo Bridgr analysis,completed,,,,,,,{},,,2026-01-10T12:00:00Z,2026-01-10T12:00:00Z

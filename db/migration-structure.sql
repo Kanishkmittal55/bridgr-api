@@ -865,15 +865,17 @@ CREATE TABLE bridgr.job_search_profiles (
     uuid uuid DEFAULT gen_random_uuid() NOT NULL,
     id bigint NOT NULL,
     user_id integer NOT NULL,
-    target_roles jsonb DEFAULT '[]'::jsonb NOT NULL,
-    locations jsonb DEFAULT '[]'::jsonb NOT NULL,
-    boards_enabled jsonb DEFAULT '[]'::jsonb NOT NULL,
-    matching jsonb DEFAULT '{}'::jsonb NOT NULL,
+    target_role text DEFAULT ''::text NOT NULL,
+    location text DEFAULT ''::text NOT NULL,
+    source_board text DEFAULT 'indeed'::text NOT NULL,
+    career_switch boolean DEFAULT false NOT NULL,
+    company_stage text DEFAULT 'any'::text NOT NULL,
+    seniority_goal text DEFAULT 'any'::text NOT NULL,
+    compensation_goal text DEFAULT 'any'::text NOT NULL,
+    software_stack_must_have text[] DEFAULT '{}'::text[] NOT NULL,
     canonical_cv_analysis_uuid uuid,
-    max_surfaced_jobs integer DEFAULT 3 NOT NULL,
     created_at timestamp without time zone DEFAULT now() NOT NULL,
-    updated_at timestamp without time zone DEFAULT now() NOT NULL,
-    CONSTRAINT chk_job_search_profiles_max_surfaced CHECK (((max_surfaced_jobs > 0) AND (max_surfaced_jobs <= 20)))
+    updated_at timestamp without time zone DEFAULT now() NOT NULL
 );
 
 
@@ -883,7 +885,7 @@ ALTER TABLE bridgr.job_search_profiles OWNER TO bridgr;
 -- Name: TABLE job_search_profiles; Type: COMMENT; Schema: bridgr; Owner: bridgr
 --
 
-COMMENT ON TABLE bridgr.job_search_profiles IS 'Bridgr job discovery: user preferences for Radar search and surfacing.';
+COMMENT ON TABLE bridgr.job_search_profiles IS 'Bridgr job discovery: one row = one Radar search slice (query, location, board, goals).';
 
 
 --
@@ -894,31 +896,59 @@ COMMENT ON COLUMN bridgr.job_search_profiles.user_id IS 'App-enforced FK to user
 
 
 --
--- Name: COLUMN job_search_profiles.target_roles; Type: COMMENT; Schema: bridgr; Owner: bridgr
+-- Name: COLUMN job_search_profiles.target_role; Type: COMMENT; Schema: bridgr; Owner: bridgr
 --
 
-COMMENT ON COLUMN bridgr.job_search_profiles.target_roles IS 'JSON array of role strings or objects';
-
-
---
--- Name: COLUMN job_search_profiles.locations; Type: COMMENT; Schema: bridgr; Owner: bridgr
---
-
-COMMENT ON COLUMN bridgr.job_search_profiles.locations IS 'JSON array of location descriptors (city, remote flags, etc.)';
+COMMENT ON COLUMN bridgr.job_search_profiles.target_role IS 'Single search string passed to Radar (e.g. primary target role or fixed query).';
 
 
 --
--- Name: COLUMN job_search_profiles.boards_enabled; Type: COMMENT; Schema: bridgr; Owner: bridgr
+-- Name: COLUMN job_search_profiles.location; Type: COMMENT; Schema: bridgr; Owner: bridgr
 --
 
-COMMENT ON COLUMN bridgr.job_search_profiles.boards_enabled IS 'JSON array of board ids (e.g. linkedin, indeed)';
+COMMENT ON COLUMN bridgr.job_search_profiles.location IS 'Single location string for this slice (city, remote label, etc.).';
 
 
 --
--- Name: COLUMN job_search_profiles.matching; Type: COMMENT; Schema: bridgr; Owner: bridgr
+-- Name: COLUMN job_search_profiles.source_board; Type: COMMENT; Schema: bridgr; Owner: bridgr
 --
 
-COMMENT ON COLUMN bridgr.job_search_profiles.matching IS 'Policy blob: strict_no_skill_gaps, tiers, etc.';
+COMMENT ON COLUMN bridgr.job_search_profiles.source_board IS 'Single board id for this slice (e.g. linkedin, indeed).';
+
+
+--
+-- Name: COLUMN job_search_profiles.career_switch; Type: COMMENT; Schema: bridgr; Owner: bridgr
+--
+
+COMMENT ON COLUMN bridgr.job_search_profiles.career_switch IS 'True when the user is seeking a career change / new domain.';
+
+
+--
+-- Name: COLUMN job_search_profiles.company_stage; Type: COMMENT; Schema: bridgr; Owner: bridgr
+--
+
+COMMENT ON COLUMN bridgr.job_search_profiles.company_stage IS 'Employer stage filter; product-defined values (e.g. startup, growth, enterprise, any).';
+
+
+--
+-- Name: COLUMN job_search_profiles.seniority_goal; Type: COMMENT; Schema: bridgr; Owner: bridgr
+--
+
+COMMENT ON COLUMN bridgr.job_search_profiles.seniority_goal IS 'Allowed: up, lateral, down, any.';
+
+
+--
+-- Name: COLUMN job_search_profiles.compensation_goal; Type: COMMENT; Schema: bridgr; Owner: bridgr
+--
+
+COMMENT ON COLUMN bridgr.job_search_profiles.compensation_goal IS 'Allowed: up, lateral, down, any.';
+
+
+--
+-- Name: COLUMN job_search_profiles.software_stack_must_have; Type: COMMENT; Schema: bridgr; Owner: bridgr
+--
+
+COMMENT ON COLUMN bridgr.job_search_profiles.software_stack_must_have IS 'Tags for required technologies in this search slice.';
 
 
 --
@@ -2207,14 +2237,6 @@ ALTER TABLE ONLY bridgr.job_harvest_schedules
 
 ALTER TABLE ONLY bridgr.job_scores
     ADD CONSTRAINT uq_job_scores_candidate_user UNIQUE (job_candidate_uuid, user_id);
-
-
---
--- Name: job_search_profiles uq_job_search_profiles_user; Type: CONSTRAINT; Schema: bridgr; Owner: bridgr
---
-
-ALTER TABLE ONLY bridgr.job_search_profiles
-    ADD CONSTRAINT uq_job_search_profiles_user UNIQUE (user_id);
 
 
 --

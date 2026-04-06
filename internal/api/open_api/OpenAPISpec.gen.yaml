@@ -1357,10 +1357,10 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-  /v1/bridgr/users/{userID}/job-search-profile:
+  /v1/bridgr/users/{userID}/job-search-profiles:
     get:
-      summary: Get job search profile for user
-      operationId: V1GetBridgrUserJobSearchProfile
+      summary: List job search profiles for user
+      operationId: V1ListBridgrUserJobSearchProfiles
       tags:
         - bridgr
       parameters:
@@ -1380,32 +1380,26 @@ paths:
             format: int32
       responses:
         '200':
-          description: Profile
+          description: Profiles for the user (may be empty)
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/BridgrJobSearchProfile'
+                $ref: '#/components/schemas/BridgrJobSearchProfileListResponse'
         '401':
           description: Unauthorized
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-        '404':
-          description: No profile for user
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/NotFoundErrorResponse'
         '500':
           description: Internal server error
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-    put:
-      summary: Create or update job search profile
-      operationId: V1PutBridgrUserJobSearchProfile
+    post:
+      summary: Create a job search profile
+      operationId: V1CreateBridgrUserJobSearchProfile
       tags:
         - bridgr
       parameters:
@@ -1428,14 +1422,8 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/UpsertBridgrJobSearchProfileRequest'
+              $ref: '#/components/schemas/CreateBridgrJobSearchProfileRequest'
       responses:
-        '200':
-          description: Updated profile
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/BridgrJobSearchProfile'
         '201':
           description: Created profile
           content:
@@ -1454,6 +1442,180 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Duplicate profile (same target role, location, board, intent, and CV analysis)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /v1/bridgr/users/{userID}/job-search-profiles/{profileUUID}:
+    get:
+      summary: Get one job search profile by UUID
+      operationId: V1GetBridgrUserJobSearchProfileByUUID
+      tags:
+        - bridgr
+      parameters:
+        - name: X-API-KEY
+          in: header
+          description: API Key of the service making the request
+          required: true
+          style: simple
+          explode: false
+          schema:
+            type: string
+        - name: userID
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int32
+        - name: profileUUID
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Profile
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BridgrJobSearchProfile'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    put:
+      summary: Update a job search profile by UUID
+      operationId: V1PutBridgrUserJobSearchProfileByUUID
+      tags:
+        - bridgr
+      parameters:
+        - name: X-API-KEY
+          in: header
+          description: API Key of the service making the request
+          required: true
+          style: simple
+          explode: false
+          schema:
+            type: string
+        - name: userID
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int32
+        - name: profileUUID
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpsertBridgrJobSearchProfileRequest'
+      responses:
+        '200':
+          description: Updated profile
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BridgrJobSearchProfile'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundErrorResponse'
+        '409':
+          description: Would duplicate another profile
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    delete:
+      summary: Delete a job search profile by UUID
+      operationId: V1DeleteBridgrUserJobSearchProfile
+      tags:
+        - bridgr
+      parameters:
+        - name: X-API-KEY
+          in: header
+          description: API Key of the service making the request
+          required: true
+          style: simple
+          explode: false
+          schema:
+            type: string
+        - name: userID
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int32
+        - name: profileUUID
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Deleted
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundErrorResponse'
         '500':
           description: Internal server error
           content:
@@ -2593,12 +2755,19 @@ components:
             $ref: '#/components/schemas/BridgrSkillGapUserCoverageRow'
     BridgrJobSearchProfile:
       type: object
-      description: Per-user job search / Radar preferences
+      description: One canonical Radar search slice per row (bridgr.job_search_profiles).
       required:
         - uuid
         - id
         - user_id
-        - max_surfaced_jobs
+        - target_role
+        - location
+        - source_board
+        - career_switch
+        - company_stage
+        - seniority_goal
+        - compensation_goal
+        - software_stack_must_have
         - created_at
         - updated_at
       properties:
@@ -2608,29 +2777,53 @@ components:
         id:
           type: integer
           format: int64
-        max_surfaced_jobs:
-          type: integer
-          format: int32
         user_id:
           type: integer
           format: int32
-        target_roles:
+        target_role:
+          type: string
+          description: Primary role or search phrase for this slice
+        location:
+          type: string
+        source_board:
+          type: string
+          description: Job board id for this search slice (Radar source)
+          enum:
+            - indeed
+            - linkedin
+            - glassdoor
+        career_switch:
+          type: boolean
+          description: True when seeking a career change / new domain
+        company_stage:
+          type: string
+          description: Employer company stage filter
+          enum:
+            - any
+            - startup
+            - growth
+            - enterprise
+        seniority_goal:
+          type: string
+          description: Seniority direction for this slice
+          enum:
+            - any
+            - up
+            - lateral
+            - down
+        compensation_goal:
+          type: string
+          description: Compensation direction for this slice
+          enum:
+            - any
+            - up
+            - lateral
+            - down
+        software_stack_must_have:
           type: array
+          description: Technology tags that must appear in listings for this slice
           items:
             type: string
-        locations:
-          type: array
-          items:
-            type: object
-            additionalProperties: true
-        boards_enabled:
-          type: array
-          items:
-            type: string
-        matching:
-          type: object
-          additionalProperties: true
-          nullable: true
         canonical_cv_analysis_uuid:
           type: string
           format: uuid
@@ -2641,38 +2834,78 @@ components:
         updated_at:
           type: string
           format: date-time
+    BridgrJobSearchProfileListResponse:
+      type: object
+      required:
+        - items
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/BridgrJobSearchProfile'
     UpsertBridgrJobSearchProfileRequest:
       type: object
-      description: Fields to upsert; omitted keys leave existing DB values unchanged on update. On create, defaults apply for missing columns.
+      description: |
+        Create or update a job search profile. Omitted keys leave existing DB values unchanged on update;
+        on create, server defaults apply for missing columns (e.g. indeed, any goals, empty stack).
       properties:
-        target_roles:
+        target_role:
+          type: string
+          nullable: true
+        location:
+          type: string
+          nullable: true
+        source_board:
+          type: string
+          nullable: true
+          description: Job board id for this search slice
+          enum:
+            - indeed
+            - linkedin
+            - glassdoor
+        career_switch:
+          type: boolean
+          nullable: true
+        company_stage:
+          type: string
+          nullable: true
+          description: Employer company stage filter
+          enum:
+            - any
+            - startup
+            - growth
+            - enterprise
+        seniority_goal:
+          type: string
+          nullable: true
+          description: Seniority direction for this slice
+          enum:
+            - any
+            - up
+            - lateral
+            - down
+        compensation_goal:
+          type: string
+          nullable: true
+          description: Compensation direction for this slice
+          enum:
+            - any
+            - up
+            - lateral
+            - down
+        software_stack_must_have:
           type: array
+          nullable: true
           items:
             type: string
-          nullable: true
-        locations:
-          type: array
-          items:
-            type: object
-            additionalProperties: true
-          nullable: true
-        boards_enabled:
-          type: array
-          items:
-            type: string
-          nullable: true
-        matching:
-          type: object
-          additionalProperties: true
-          nullable: true
         canonical_cv_analysis_uuid:
           type: string
           format: uuid
           nullable: true
-        max_surfaced_jobs:
-          type: integer
-          format: int32
-          nullable: true
+    CreateBridgrJobSearchProfileRequest:
+      description: Body to create a job search profile (same fields as upsert; omitted keys use DB defaults).
+      allOf:
+        - $ref: '#/components/schemas/UpsertBridgrJobSearchProfileRequest'
     BridgrJobSearchDiscoveryRun:
       type: object
       required:

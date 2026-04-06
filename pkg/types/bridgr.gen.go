@@ -15,6 +15,37 @@ const (
 	Presigned BridgrAnalysisAssetReadUrlResponseAccess = "presigned"
 )
 
+// Defines values for BridgrJobSearchProfileCompanyStage.
+const (
+	BridgrJobSearchProfileCompanyStageAny        BridgrJobSearchProfileCompanyStage = "any"
+	BridgrJobSearchProfileCompanyStageEnterprise BridgrJobSearchProfileCompanyStage = "enterprise"
+	BridgrJobSearchProfileCompanyStageGrowth     BridgrJobSearchProfileCompanyStage = "growth"
+	BridgrJobSearchProfileCompanyStageStartup    BridgrJobSearchProfileCompanyStage = "startup"
+)
+
+// Defines values for BridgrJobSearchProfileCompensationGoal.
+const (
+	BridgrJobSearchProfileCompensationGoalAny     BridgrJobSearchProfileCompensationGoal = "any"
+	BridgrJobSearchProfileCompensationGoalDown    BridgrJobSearchProfileCompensationGoal = "down"
+	BridgrJobSearchProfileCompensationGoalLateral BridgrJobSearchProfileCompensationGoal = "lateral"
+	BridgrJobSearchProfileCompensationGoalUp      BridgrJobSearchProfileCompensationGoal = "up"
+)
+
+// Defines values for BridgrJobSearchProfileSeniorityGoal.
+const (
+	BridgrJobSearchProfileSeniorityGoalAny     BridgrJobSearchProfileSeniorityGoal = "any"
+	BridgrJobSearchProfileSeniorityGoalDown    BridgrJobSearchProfileSeniorityGoal = "down"
+	BridgrJobSearchProfileSeniorityGoalLateral BridgrJobSearchProfileSeniorityGoal = "lateral"
+	BridgrJobSearchProfileSeniorityGoalUp      BridgrJobSearchProfileSeniorityGoal = "up"
+)
+
+// Defines values for BridgrJobSearchProfileSourceBoard.
+const (
+	BridgrJobSearchProfileSourceBoardGlassdoor BridgrJobSearchProfileSourceBoard = "glassdoor"
+	BridgrJobSearchProfileSourceBoardIndeed    BridgrJobSearchProfileSourceBoard = "indeed"
+	BridgrJobSearchProfileSourceBoardLinkedin  BridgrJobSearchProfileSourceBoard = "linkedin"
+)
+
 // Defines values for BridgrSkillGapAnalysisStatus.
 const (
 	BridgrSkillGapPending BridgrSkillGapAnalysisStatus = "pending"
@@ -29,6 +60,37 @@ const (
 const (
 	Candidate       BridgrSkillGapGraphKind = "candidate"
 	RoleRequirement BridgrSkillGapGraphKind = "role_requirement"
+)
+
+// Defines values for UpsertBridgrJobSearchProfileRequestCompanyStage.
+const (
+	UpsertBridgrJobSearchProfileRequestCompanyStageAny        UpsertBridgrJobSearchProfileRequestCompanyStage = "any"
+	UpsertBridgrJobSearchProfileRequestCompanyStageEnterprise UpsertBridgrJobSearchProfileRequestCompanyStage = "enterprise"
+	UpsertBridgrJobSearchProfileRequestCompanyStageGrowth     UpsertBridgrJobSearchProfileRequestCompanyStage = "growth"
+	UpsertBridgrJobSearchProfileRequestCompanyStageStartup    UpsertBridgrJobSearchProfileRequestCompanyStage = "startup"
+)
+
+// Defines values for UpsertBridgrJobSearchProfileRequestCompensationGoal.
+const (
+	UpsertBridgrJobSearchProfileRequestCompensationGoalAny     UpsertBridgrJobSearchProfileRequestCompensationGoal = "any"
+	UpsertBridgrJobSearchProfileRequestCompensationGoalDown    UpsertBridgrJobSearchProfileRequestCompensationGoal = "down"
+	UpsertBridgrJobSearchProfileRequestCompensationGoalLateral UpsertBridgrJobSearchProfileRequestCompensationGoal = "lateral"
+	UpsertBridgrJobSearchProfileRequestCompensationGoalUp      UpsertBridgrJobSearchProfileRequestCompensationGoal = "up"
+)
+
+// Defines values for UpsertBridgrJobSearchProfileRequestSeniorityGoal.
+const (
+	UpsertBridgrJobSearchProfileRequestSeniorityGoalAny     UpsertBridgrJobSearchProfileRequestSeniorityGoal = "any"
+	UpsertBridgrJobSearchProfileRequestSeniorityGoalDown    UpsertBridgrJobSearchProfileRequestSeniorityGoal = "down"
+	UpsertBridgrJobSearchProfileRequestSeniorityGoalLateral UpsertBridgrJobSearchProfileRequestSeniorityGoal = "lateral"
+	UpsertBridgrJobSearchProfileRequestSeniorityGoalUp      UpsertBridgrJobSearchProfileRequestSeniorityGoal = "up"
+)
+
+// Defines values for UpsertBridgrJobSearchProfileRequestSourceBoard.
+const (
+	UpsertBridgrJobSearchProfileRequestSourceBoardGlassdoor UpsertBridgrJobSearchProfileRequestSourceBoard = "glassdoor"
+	UpsertBridgrJobSearchProfileRequestSourceBoardIndeed    UpsertBridgrJobSearchProfileRequestSourceBoard = "indeed"
+	UpsertBridgrJobSearchProfileRequestSourceBoardLinkedin  UpsertBridgrJobSearchProfileRequestSourceBoard = "linkedin"
 )
 
 // BridgrAnalysisAssetReadUrlResponse URL usable in the browser to display the CV or JD asset.
@@ -128,19 +190,53 @@ type BridgrJobSearchDiscoveryRunListResponse struct {
 	Runs []BridgrJobSearchDiscoveryRun `json:"runs"`
 }
 
-// BridgrJobSearchProfile Per-user job search / Radar preferences
+// BridgrJobSearchProfile One canonical Radar search slice per row (bridgr.job_search_profiles).
 type BridgrJobSearchProfile struct {
-	BoardsEnabled           *[]string                 `json:"boards_enabled,omitempty"`
-	CanonicalCvAnalysisUuid *openapi_types.UUID       `json:"canonical_cv_analysis_uuid"`
-	CreatedAt               time.Time                 `json:"created_at"`
-	Id                      int64                     `json:"id"`
-	Locations               *[]map[string]interface{} `json:"locations,omitempty"`
-	Matching                *map[string]interface{}   `json:"matching"`
-	MaxSurfacedJobs         int32                     `json:"max_surfaced_jobs"`
-	TargetRoles             *[]string                 `json:"target_roles,omitempty"`
-	UpdatedAt               time.Time                 `json:"updated_at"`
-	UserId                  int32                     `json:"user_id"`
-	Uuid                    openapi_types.UUID        `json:"uuid"`
+	CanonicalCvAnalysisUuid *openapi_types.UUID `json:"canonical_cv_analysis_uuid"`
+
+	// CareerSwitch True when seeking a career change / new domain
+	CareerSwitch bool `json:"career_switch"`
+
+	// CompanyStage Employer company stage filter
+	CompanyStage BridgrJobSearchProfileCompanyStage `json:"company_stage"`
+
+	// CompensationGoal Compensation direction for this slice
+	CompensationGoal BridgrJobSearchProfileCompensationGoal `json:"compensation_goal"`
+	CreatedAt        time.Time                              `json:"created_at"`
+	Id               int64                                  `json:"id"`
+	Location         string                                 `json:"location"`
+
+	// SeniorityGoal Seniority direction for this slice
+	SeniorityGoal BridgrJobSearchProfileSeniorityGoal `json:"seniority_goal"`
+
+	// SoftwareStackMustHave Technology tags that must appear in listings for this slice
+	SoftwareStackMustHave []string `json:"software_stack_must_have"`
+
+	// SourceBoard Job board id for this search slice (Radar source)
+	SourceBoard BridgrJobSearchProfileSourceBoard `json:"source_board"`
+
+	// TargetRole Primary role or search phrase for this slice
+	TargetRole string             `json:"target_role"`
+	UpdatedAt  time.Time          `json:"updated_at"`
+	UserId     int32              `json:"user_id"`
+	Uuid       openapi_types.UUID `json:"uuid"`
+}
+
+// BridgrJobSearchProfileCompanyStage Employer company stage filter
+type BridgrJobSearchProfileCompanyStage string
+
+// BridgrJobSearchProfileCompensationGoal Compensation direction for this slice
+type BridgrJobSearchProfileCompensationGoal string
+
+// BridgrJobSearchProfileSeniorityGoal Seniority direction for this slice
+type BridgrJobSearchProfileSeniorityGoal string
+
+// BridgrJobSearchProfileSourceBoard Job board id for this search slice (Radar source)
+type BridgrJobSearchProfileSourceBoard string
+
+// BridgrJobSearchProfileListResponse defines model for BridgrJobSearchProfileListResponse.
+type BridgrJobSearchProfileListResponse struct {
+	Items []BridgrJobSearchProfile `json:"items"`
 }
 
 // BridgrPingResponse defines model for BridgrPingResponse.
@@ -318,6 +414,10 @@ type CreateBridgrJobSearchDiscoveryRunRequest struct {
 	RequestParams *map[string]interface{} `json:"request_params"`
 }
 
+// CreateBridgrJobSearchProfileRequest Create or update a job search profile. Omitted keys leave existing DB values unchanged on update;
+// on create, server defaults apply for missing columns (e.g. indeed, any goals, empty stack).
+type CreateBridgrJobSearchProfileRequest = UpsertBridgrJobSearchProfileRequest
+
 // CreateBridgrSkillGapAnalysisRequest defines model for CreateBridgrSkillGapAnalysisRequest.
 type CreateBridgrSkillGapAnalysisRequest struct {
 	CvAssetUri         *string             `json:"cv_asset_uri"`
@@ -416,15 +516,39 @@ type UpdateBridgrSkillGapAnalysisStatusRequest struct {
 	Status BridgrSkillGapAnalysisStatus `json:"status"`
 }
 
-// UpsertBridgrJobSearchProfileRequest Fields to upsert; omitted keys leave existing DB values unchanged on update. On create, defaults apply for missing columns.
+// UpsertBridgrJobSearchProfileRequest Create or update a job search profile. Omitted keys leave existing DB values unchanged on update;
+// on create, server defaults apply for missing columns (e.g. indeed, any goals, empty stack).
 type UpsertBridgrJobSearchProfileRequest struct {
-	BoardsEnabled           *[]string                 `json:"boards_enabled"`
-	CanonicalCvAnalysisUuid *openapi_types.UUID       `json:"canonical_cv_analysis_uuid"`
-	Locations               *[]map[string]interface{} `json:"locations"`
-	Matching                *map[string]interface{}   `json:"matching"`
-	MaxSurfacedJobs         *int32                    `json:"max_surfaced_jobs"`
-	TargetRoles             *[]string                 `json:"target_roles"`
+	CanonicalCvAnalysisUuid *openapi_types.UUID `json:"canonical_cv_analysis_uuid"`
+	CareerSwitch            *bool               `json:"career_switch"`
+
+	// CompanyStage Employer company stage filter
+	CompanyStage *UpsertBridgrJobSearchProfileRequestCompanyStage `json:"company_stage"`
+
+	// CompensationGoal Compensation direction for this slice
+	CompensationGoal *UpsertBridgrJobSearchProfileRequestCompensationGoal `json:"compensation_goal"`
+	Location         *string                                              `json:"location"`
+
+	// SeniorityGoal Seniority direction for this slice
+	SeniorityGoal         *UpsertBridgrJobSearchProfileRequestSeniorityGoal `json:"seniority_goal"`
+	SoftwareStackMustHave *[]string                                         `json:"software_stack_must_have"`
+
+	// SourceBoard Job board id for this search slice
+	SourceBoard *UpsertBridgrJobSearchProfileRequestSourceBoard `json:"source_board"`
+	TargetRole  *string                                         `json:"target_role"`
 }
+
+// UpsertBridgrJobSearchProfileRequestCompanyStage Employer company stage filter
+type UpsertBridgrJobSearchProfileRequestCompanyStage string
+
+// UpsertBridgrJobSearchProfileRequestCompensationGoal Compensation direction for this slice
+type UpsertBridgrJobSearchProfileRequestCompensationGoal string
+
+// UpsertBridgrJobSearchProfileRequestSeniorityGoal Seniority direction for this slice
+type UpsertBridgrJobSearchProfileRequestSeniorityGoal string
+
+// UpsertBridgrJobSearchProfileRequestSourceBoard Job board id for this search slice
+type UpsertBridgrJobSearchProfileRequestSourceBoard string
 
 // V1PostGenerateUploadUrlParams defines parameters for V1PostGenerateUploadUrl.
 type V1PostGenerateUploadUrlParams struct {
@@ -648,14 +772,32 @@ type V1GetBridgrUserJobNotificationsParams struct {
 	XAPIKEY string `json:"X-API-KEY"`
 }
 
-// V1GetBridgrUserJobSearchProfileParams defines parameters for V1GetBridgrUserJobSearchProfile.
-type V1GetBridgrUserJobSearchProfileParams struct {
+// V1ListBridgrUserJobSearchProfilesParams defines parameters for V1ListBridgrUserJobSearchProfiles.
+type V1ListBridgrUserJobSearchProfilesParams struct {
 	// XAPIKEY API Key of the service making the request
 	XAPIKEY string `json:"X-API-KEY"`
 }
 
-// V1PutBridgrUserJobSearchProfileParams defines parameters for V1PutBridgrUserJobSearchProfile.
-type V1PutBridgrUserJobSearchProfileParams struct {
+// V1CreateBridgrUserJobSearchProfileParams defines parameters for V1CreateBridgrUserJobSearchProfile.
+type V1CreateBridgrUserJobSearchProfileParams struct {
+	// XAPIKEY API Key of the service making the request
+	XAPIKEY string `json:"X-API-KEY"`
+}
+
+// V1DeleteBridgrUserJobSearchProfileParams defines parameters for V1DeleteBridgrUserJobSearchProfile.
+type V1DeleteBridgrUserJobSearchProfileParams struct {
+	// XAPIKEY API Key of the service making the request
+	XAPIKEY string `json:"X-API-KEY"`
+}
+
+// V1GetBridgrUserJobSearchProfileByUUIDParams defines parameters for V1GetBridgrUserJobSearchProfileByUUID.
+type V1GetBridgrUserJobSearchProfileByUUIDParams struct {
+	// XAPIKEY API Key of the service making the request
+	XAPIKEY string `json:"X-API-KEY"`
+}
+
+// V1PutBridgrUserJobSearchProfileByUUIDParams defines parameters for V1PutBridgrUserJobSearchProfileByUUID.
+type V1PutBridgrUserJobSearchProfileByUUIDParams struct {
 	// XAPIKEY API Key of the service making the request
 	XAPIKEY string `json:"X-API-KEY"`
 }
@@ -687,5 +829,8 @@ type V1PatchBridgrJobNotificationJSONRequestBody = PatchBridgrJobNotificationReq
 // V1PostBridgrUserJobDiscoveryRunsJSONRequestBody defines body for V1PostBridgrUserJobDiscoveryRuns for application/json ContentType.
 type V1PostBridgrUserJobDiscoveryRunsJSONRequestBody = CreateBridgrJobSearchDiscoveryRunRequest
 
-// V1PutBridgrUserJobSearchProfileJSONRequestBody defines body for V1PutBridgrUserJobSearchProfile for application/json ContentType.
-type V1PutBridgrUserJobSearchProfileJSONRequestBody = UpsertBridgrJobSearchProfileRequest
+// V1CreateBridgrUserJobSearchProfileJSONRequestBody defines body for V1CreateBridgrUserJobSearchProfile for application/json ContentType.
+type V1CreateBridgrUserJobSearchProfileJSONRequestBody = CreateBridgrJobSearchProfileRequest
+
+// V1PutBridgrUserJobSearchProfileByUUIDJSONRequestBody defines body for V1PutBridgrUserJobSearchProfileByUUID for application/json ContentType.
+type V1PutBridgrUserJobSearchProfileByUUIDJSONRequestBody = UpsertBridgrJobSearchProfileRequest

@@ -1,10 +1,17 @@
 type: object
-description: Per-user job search / Radar preferences
+description: One canonical Radar search slice per row (bridgr.job_search_profiles).
 required:
   - uuid
   - id
   - user_id
-  - max_surfaced_jobs
+  - target_role
+  - location
+  - source_board
+  - career_switch
+  - company_stage
+  - seniority_goal
+  - compensation_goal
+  - software_stack_must_have
   - created_at
   - updated_at
 properties:
@@ -14,29 +21,53 @@ properties:
   id:
     type: integer
     format: int64
-  max_surfaced_jobs:
-    type: integer
-    format: int32
   user_id:
     type: integer
     format: int32
-  target_roles:
+  target_role:
+    type: string
+    description: Primary role or search phrase for this slice
+  location:
+    type: string
+  source_board:
+    type: string
+    description: Job board id for this search slice (Radar source)
+    enum:
+      - indeed
+      - linkedin
+      - glassdoor
+  career_switch:
+    type: boolean
+    description: True when seeking a career change / new domain
+  company_stage:
+    type: string
+    description: Employer company stage filter
+    enum:
+      - any
+      - startup
+      - growth
+      - enterprise
+  seniority_goal:
+    type: string
+    description: Seniority direction for this slice
+    enum:
+      - any
+      - up
+      - lateral
+      - down
+  compensation_goal:
+    type: string
+    description: Compensation direction for this slice
+    enum:
+      - any
+      - up
+      - lateral
+      - down
+  software_stack_must_have:
     type: array
+    description: Technology tags that must appear in listings for this slice
     items:
       type: string
-  locations:
-    type: array
-    items:
-      type: object
-      additionalProperties: true
-  boards_enabled:
-    type: array
-    items:
-      type: string
-  matching:
-    type: object
-    additionalProperties: true
-    nullable: true
   canonical_cv_analysis_uuid:
     type: string
     format: uuid

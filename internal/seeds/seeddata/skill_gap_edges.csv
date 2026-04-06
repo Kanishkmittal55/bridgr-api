@@ -1,0 +1,2 @@
+uuid,id,graph_uuid,from_node_uuid,to_node_uuid,relation,weight,metadata,created_at,updated_at
+550e8400-e29b-41d4-a716-446655440018,1,550e8400-e29b-41d4-a716-446655440012,550e8400-e29b-41d4-a716-446655440014,550e8400-e29b-41d4-a716-446655440015,prerequisite,1.0,{},2026-01-10T12:00:00Z,2026-01-10T12:00:00Z

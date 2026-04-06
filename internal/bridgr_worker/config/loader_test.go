@@ -19,7 +19,7 @@ func TestLoad_DevelopmentDefaults(t *testing.T) {
 	if opts.MaxMessages != 5 {
 		t.Fatalf("max_messages: got %d", opts.MaxMessages)
 	}
-	if opts.DiscoverySchedulerTriggerInterval != 60 {
+	if opts.DiscoverySchedulerTriggerInterval != 100 {
 		t.Fatalf("discovery_scheduler_trigger_interval: got %d", opts.DiscoverySchedulerTriggerInterval)
 	}
 }

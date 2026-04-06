@@ -1,0 +1,2 @@
+uuid,id,user_id,profile_uuid,enabled,cadence_minutes,boards_rotation,last_run_at,next_run_at,created_at,updated_at
+550e8400-e29b-41d4-a716-446655440024,1,1,550e8400-e29b-41d4-a716-446655440002,true,360,"[""linkedin""]",,,2026-01-10T12:00:00Z,2026-01-10T12:00:00Z

@@ -211,23 +211,30 @@ type BridgrJobSearchDiscoveryRun struct {
 	UpdatedAt    pgtype.Timestamp `db:"updated_at"`
 }
 
-// Bridgr job discovery: user preferences for Radar search and surfacing.
+// Bridgr job discovery: one row = one Radar search slice (query, location, board, goals).
 type BridgrJobSearchProfile struct {
 	Uuid pgtype.UUID `db:"uuid"`
 	ID   int64       `db:"id"`
 	// App-enforced FK to users.id
 	UserID int32 `db:"user_id"`
-	// JSON array of role strings or objects
-	TargetRoles []byte `db:"target_roles"`
-	// JSON array of location descriptors (city, remote flags, etc.)
-	Locations []byte `db:"locations"`
-	// JSON array of board ids (e.g. linkedin, indeed)
-	BoardsEnabled []byte `db:"boards_enabled"`
-	// Policy blob: strict_no_skill_gaps, tiers, etc.
-	Matching []byte `db:"matching"`
+	// Single search string passed to Radar (e.g. primary target role or fixed query).
+	TargetRole string `db:"target_role"`
+	// Single location string for this slice (city, remote label, etc.).
+	Location string `db:"location"`
+	// Single board id for this slice (e.g. linkedin, indeed).
+	SourceBoard string `db:"source_board"`
+	// True when the user is seeking a career change / new domain.
+	CareerSwitch bool `db:"career_switch"`
+	// Employer stage filter; product-defined values (e.g. startup, growth, enterprise, any).
+	CompanyStage string `db:"company_stage"`
+	// Allowed: up, lateral, down, any.
+	SeniorityGoal string `db:"seniority_goal"`
+	// Allowed: up, lateral, down, any.
+	CompensationGoal string `db:"compensation_goal"`
+	// Tags for required technologies in this search slice.
+	SoftwareStackMustHave []string `db:"software_stack_must_have"`
 	// Optional app-enforced FK to skill_gap_analyses.uuid for CV fingerprint context
 	CanonicalCvAnalysisUuid pgtype.UUID      `db:"canonical_cv_analysis_uuid"`
-	MaxSurfacedJobs         int32            `db:"max_surfaced_jobs"`
 	CreatedAt               pgtype.Timestamp `db:"created_at"`
 	UpdatedAt               pgtype.Timestamp `db:"updated_at"`
 }

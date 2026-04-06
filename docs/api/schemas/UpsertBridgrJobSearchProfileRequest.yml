@@ -1,31 +1,58 @@
 type: object
-description: Fields to upsert; omitted keys leave existing DB values unchanged on update. On create, defaults apply for missing columns.
+description: |
+  Create or update a job search profile. Omitted keys leave existing DB values unchanged on update;
+  on create, server defaults apply for missing columns (e.g. indeed, any goals, empty stack).
 properties:
-  target_roles:
+  target_role:
+    type: string
+    nullable: true
+  location:
+    type: string
+    nullable: true
+  source_board:
+    type: string
+    nullable: true
+    description: Job board id for this search slice
+    enum:
+      - indeed
+      - linkedin
+      - glassdoor
+  career_switch:
+    type: boolean
+    nullable: true
+  company_stage:
+    type: string
+    nullable: true
+    description: Employer company stage filter
+    enum:
+      - any
+      - startup
+      - growth
+      - enterprise
+  seniority_goal:
+    type: string
+    nullable: true
+    description: Seniority direction for this slice
+    enum:
+      - any
+      - up
+      - lateral
+      - down
+  compensation_goal:
+    type: string
+    nullable: true
+    description: Compensation direction for this slice
+    enum:
+      - any
+      - up
+      - lateral
+      - down
+  software_stack_must_have:
     type: array
+    nullable: true
     items:
       type: string
-    nullable: true
-  locations:
-    type: array
-    items:
-      type: object
-      additionalProperties: true
-    nullable: true
-  boards_enabled:
-    type: array
-    items:
-      type: string
-    nullable: true
-  matching:
-    type: object
-    additionalProperties: true
-    nullable: true
   canonical_cv_analysis_uuid:
     type: string
     format: uuid
-    nullable: true
-  max_surfaced_jobs:
-    type: integer
-    format: int32
     nullable: true

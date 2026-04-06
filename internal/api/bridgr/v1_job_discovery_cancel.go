@@ -8,8 +8,8 @@ import (
 	"net/http"
 	"time"
 
-	apierrors "github.com/Kanishkmittal55/bridgr-api/internal/errors"
 	"github.com/Kanishkmittal55/bridgr-api/internal/config"
+	apierrors "github.com/Kanishkmittal55/bridgr-api/internal/errors"
 	"github.com/Kanishkmittal55/bridgr-api/internal/logger"
 	"github.com/Kanishkmittal55/bridgr-api/internal/radar"
 	"github.com/Kanishkmittal55/bridgr-api/internal/repository/sqlc"
@@ -75,15 +75,17 @@ func (s *server) cancelJobDiscoveryRun(ctx context.Context, userID int32, runUUI
 		"cancelled":    true,
 		"cancelled_at": now.Time.Format(time.RFC3339Nano),
 	})
-	updated, uerr := s.deps.Repo.UpdateJobSearchDiscoveryRunFinished(ctx, s.querier(), sqlc.UpdateJobSearchDiscoveryRunFinishedParams{
+	updated, uerr := s.deps.Repo.PatchJobSearchDiscoveryRun(ctx, s.querier(), sqlc.PatchJobSearchDiscoveryRunParams{
 		ID:                row.ID,
 		Status:            "cancelled",
+		StartedAt:         row.StartedAt,
 		CompletedAt:       now,
 		RawCandidateCount: row.RawCandidateCount,
 		NewCandidateCount: row.NewCandidateCount,
 		RadarMeta:         meta,
 		ErrorCode:         pgtype.Text{String: "cancelled", Valid: true},
 		ErrorDetail:       pgtype.Text{String: "cancelled by user", Valid: true},
+		SqsMessageID:      row.SqsMessageID,
 	})
 	if uerr != nil {
 		return nil, fmt.Errorf("%w: update run: %w", apierrors.ErrInternal, uerr)

@@ -1,0 +1,2 @@
+uuid,id,user_id,job_candidate_uuid,score_uuid,verification_uuid,composite_score,gap_severity,title,company,location,job_url,match_summary,gap_summary,feed_status,surfaced_at,seen_at,created_at,updated_at
+550e8400-e29b-41d4-a716-446655440009,1,1,550e8400-e29b-41d4-a716-446655440004,550e8400-e29b-41d4-a716-446655440007,,0.8,minor,Senior Backend Engineer,Acme Corp,Remote US,https://example.com/jobs/1,Strong stack match,Minor Kubernetes gap,new,2026-01-10T12:00:00Z,,2026-01-10T12:00:00Z,2026-01-10T12:00:00Z

@@ -9,11 +9,11 @@ import (
 	"net/http"
 	"time"
 
-	apierrors "github.com/Kanishkmittal55/bridgr-api/internal/errors"
 	"github.com/Kanishkmittal55/bridgr-api/internal/bridgr_worker"
+	"github.com/Kanishkmittal55/bridgr-api/internal/cloud"
 	"github.com/Kanishkmittal55/bridgr-api/internal/config"
+	apierrors "github.com/Kanishkmittal55/bridgr-api/internal/errors"
 	"github.com/Kanishkmittal55/bridgr-api/internal/logger"
-	"github.com/Kanishkmittal55/bridgr-api/internal/radar"
 	"github.com/Kanishkmittal55/bridgr-api/internal/repository/sqlc"
 	"github.com/Kanishkmittal55/bridgr-api/internal/uuid"
 	types "github.com/Kanishkmittal55/bridgr-api/pkg/types"
@@ -22,89 +22,6 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 	openapi_types "github.com/oapi-codegen/runtime/types"
 )
-
-// V1GetBridgrUserJobSearchProfile handles GET /v1/bridgr/users/{userID}/job-search-profile
-func (s *server) V1GetBridgrUserJobSearchProfile(w http.ResponseWriter, r *http.Request, userID int32, params types.V1GetBridgrUserJobSearchProfileParams) {
-	ctx := r.Context()
-	resp, err := s.v1GetBridgrUserJobSearchProfile(ctx, userID)
-	s.deps.ResponseWriter.WriteOkResponse(ctx, w, r, resp, err)
-}
-
-func (s *server) v1GetBridgrUserJobSearchProfile(ctx context.Context, userID int32) (*types.BridgrJobSearchProfile, error) {
-	if err := s.requireStore(); err != nil {
-		return nil, err
-	}
-	row, err := s.deps.Repo.GetJobSearchProfileByUserID(ctx, s.querier(), userID)
-	if err != nil {
-		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, fmt.Errorf("%w: job search profile not found", apierrors.ErrNotFound)
-		}
-		return nil, fmt.Errorf("%w: load profile: %w", apierrors.ErrInternal, err)
-	}
-	out, err := jobSearchProfileFromRow(row)
-	if err != nil {
-		return nil, fmt.Errorf("%w: map profile: %w", apierrors.ErrInternal, err)
-	}
-	return &out, nil
-}
-
-// V1PutBridgrUserJobSearchProfile handles PUT /v1/bridgr/users/{userID}/job-search-profile
-func (s *server) V1PutBridgrUserJobSearchProfile(w http.ResponseWriter, r *http.Request, userID int32, params types.V1PutBridgrUserJobSearchProfileParams) {
-	ctx := r.Context()
-	var body types.UpsertBridgrJobSearchProfileRequest
-	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
-		s.deps.ResponseWriter.WriteOkResponse(ctx, w, r, nil, fmt.Errorf("%w: invalid JSON body: %v", apierrors.ErrBadRequest, err))
-		return
-	}
-	resp, created, err := s.v1PutBridgrUserJobSearchProfile(ctx, userID, body)
-	if err != nil {
-		s.deps.ResponseWriter.WriteOkResponse(ctx, w, r, nil, err)
-		return
-	}
-	if created {
-		s.writeCreated(w, r, resp)
-		return
-	}
-	s.deps.ResponseWriter.WriteOkResponse(ctx, w, r, resp, nil)
-}
-
-func (s *server) v1PutBridgrUserJobSearchProfile(ctx context.Context, userID int32, body types.UpsertBridgrJobSearchProfileRequest) (*types.BridgrJobSearchProfile, bool, error) {
-	if err := s.requireStore(); err != nil {
-		return nil, false, err
-	}
-	existing, err := s.deps.Repo.GetJobSearchProfileByUserID(ctx, s.querier(), userID)
-	if err != nil {
-		if errors.Is(err, pgx.ErrNoRows) {
-			cp, perr := profileToCreateParams(userID, body)
-			if perr != nil {
-				return nil, false, fmt.Errorf("%w: %v", apierrors.ErrBadRequest, perr)
-			}
-			row, cerr := s.deps.Repo.CreateJobSearchProfile(ctx, s.querier(), cp)
-			if cerr != nil {
-				return nil, false, fmt.Errorf("%w: create profile: %w", apierrors.ErrInternal, cerr)
-			}
-			out, merr := jobSearchProfileFromRow(row)
-			if merr != nil {
-				return nil, true, fmt.Errorf("%w: map profile: %w", apierrors.ErrInternal, merr)
-			}
-			return &out, true, nil
-		}
-		return nil, false, fmt.Errorf("%w: load profile: %w", apierrors.ErrInternal, err)
-	}
-	up, err := profileToUpdateByUserParams(existing, body)
-	if err != nil {
-		return nil, false, fmt.Errorf("%w: %v", apierrors.ErrBadRequest, err)
-	}
-	row, err := s.deps.Repo.UpdateJobSearchProfileByUserID(ctx, s.querier(), up)
-	if err != nil {
-		return nil, false, fmt.Errorf("%w: update profile: %w", apierrors.ErrInternal, err)
-	}
-	out, err := jobSearchProfileFromRow(row)
-	if err != nil {
-		return nil, false, fmt.Errorf("%w: map profile: %w", apierrors.ErrInternal, err)
-	}
-	return &out, false, nil
-}
 
 // V1PostBridgrUserJobDiscoveryRuns handles POST /v1/bridgr/users/{userID}/job-discovery/runs
 func (s *server) V1PostBridgrUserJobDiscoveryRuns(w http.ResponseWriter, r *http.Request, userID int32, params types.V1PostBridgrUserJobDiscoveryRunsParams) {
@@ -129,22 +46,22 @@ func (s *server) v1PostBridgrUserJobDiscoveryRuns(ctx context.Context, userID in
 		return nil, err
 	}
 	cfg := config.Get()
-	if cfg.JobDiscoveryMaxRunsPerHour > 0 {
-		n, err := s.deps.Repo.CountJobSearchDiscoveryRunsByUserSince(ctx, s.querier(), sqlc.CountJobSearchDiscoveryRunsByUserSinceParams{
-			UserID:    userID,
-			CreatedAt: discoveryRateWindowStart(),
-		})
-		if err != nil {
-			return nil, fmt.Errorf("%w: rate check: %w", apierrors.ErrInternal, err)
-		}
-		if n >= int64(cfg.JobDiscoveryMaxRunsPerHour) {
-			return nil, fmt.Errorf("%w: too many job discovery runs in the last hour for this user", apierrors.ErrTooManyRequests)
-		}
-	}
 
-	reqParams, err := s.buildDiscoveryRequestParams(ctx, userID, body.RequestParams)
+	profiles, err := s.deps.Repo.ListJobSearchProfilesByUserID(ctx, s.querier(), userID)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%w: list profiles: %w", apierrors.ErrInternal, err)
+	}
+	var profPtr *sqlc.BridgrJobSearchProfile
+	if len(profiles) > 0 {
+		profPtr = &profiles[0]
+	}
+	var overrides map[string]interface{}
+	if body.RequestParams != nil {
+		overrides = *body.RequestParams
+	}
+	reqParams, err := bridgr_worker.BuildDiscoveryRequestParams(userID, profPtr, overrides)
+	if err != nil {
+		return nil, fmt.Errorf("%w: %v", apierrors.ErrBadRequest, err)
 	}
 
 	runPtr, err := s.deps.Repo.CreateJobSearchDiscoveryRun(ctx, s.querier(), sqlc.CreateJobSearchDiscoveryRunParams{
@@ -169,46 +86,22 @@ func (s *server) v1PostBridgrUserJobDiscoveryRuns(ctx context.Context, userID in
 		return nil, fmt.Errorf("%w: run uuid: %w", apierrors.ErrInternal, uerr)
 	}
 
-	// Sync-in-dev runs FindJobs inside the API process (RADAR_ADDR). When BRIDGR_JOB_DISCOVERY_SYNC_IN_DEV
-	// is set, it wins over SQS so local Docker does not require bridgr-worker for discovery; otherwise a
-	// queued run is only processed when the worker drains SQS_BRIDGR_QUEUE_URL.
-	if cfg.JobDiscoverySyncInDev {
-		syncBody, err := json.Marshal(bridgr_worker.QueuePayload{
-			Kind:    bridgr_worker.KindJobDiscovery,
-			RunUUID: runUUID.String(),
-			UserID:  userID,
-		})
-		if err != nil {
-			return nil, fmt.Errorf("%w: marshal sync payload: %w", apierrors.ErrInternal, err)
-		}
-		var jobSearch *radar.JobSearchClient
-		if addr := config.Get().RadarAddr; addr != "" {
-			js, jerr := radar.NewJobSearchClient(radar.JobSearchConfig{Addr: addr})
-			if jerr != nil {
-				logger.Get(ctx).Warnw("sync job discovery: Radar client disabled", "addr", addr, "error", jerr)
-			} else {
-				jobSearch = js
-				defer func() { _ = js.Close() }()
-			}
-		}
-		if err := bridgr_worker.ProcessLocalJSON(ctx, s.deps.Repo, s.querier(), jobSearch, syncBody); err != nil {
-			return nil, fmt.Errorf("%w: sync job discovery: %w", apierrors.ErrInternal, err)
-		}
-		ref, err := s.deps.Repo.GetJobSearchDiscoveryRunByUUID(ctx, s.querier(), runPtr.Uuid)
-		if err != nil {
-			return nil, fmt.Errorf("%w: reload run: %w", apierrors.ErrInternal, err)
-		}
-		runPtr = ref
-	} else if cfg.BridgrQueueURL != "" && s.deps.SQSClient != nil {
-		msgID, err := bridgr_worker.EnqueueJobDiscovery(ctx, s.deps.SQSClient, cfg.BridgrQueueURL, runUUID, userID)
+	if cfg.BridgrQueueURL != "" && s.deps.SQSClient != nil {
+		msgID, err := cloud.EnqueueJobDiscovery(ctx, s.deps.SQSClient, cfg.BridgrQueueURL, runUUID, userID)
 		if err != nil {
 			return nil, fmt.Errorf("%w: enqueue job discovery: %w", apierrors.ErrInternal, err)
 		}
-		updated, err := s.deps.Repo.UpdateJobSearchDiscoveryRunStarted(ctx, s.querier(), sqlc.UpdateJobSearchDiscoveryRunStartedParams{
-			ID:           runPtr.ID,
-			Status:       "queued",
-			StartedAt:    pgtype.Timestamp{Valid: false},
-			SqsMessageID: pgtype.Text{String: msgID, Valid: msgID != ""},
+		updated, err := s.deps.Repo.PatchJobSearchDiscoveryRun(ctx, s.querier(), sqlc.PatchJobSearchDiscoveryRunParams{
+			ID:                runPtr.ID,
+			Status:            "queued",
+			StartedAt:         runPtr.StartedAt,
+			CompletedAt:       runPtr.CompletedAt,
+			RawCandidateCount: runPtr.RawCandidateCount,
+			NewCandidateCount: runPtr.NewCandidateCount,
+			RadarMeta:         runPtr.RadarMeta,
+			ErrorCode:         runPtr.ErrorCode,
+			ErrorDetail:       runPtr.ErrorDetail,
+			SqsMessageID:      pgtype.Text{String: msgID, Valid: msgID != ""},
 		})
 		if err != nil {
 			return nil, fmt.Errorf("%w: persist sqs id: %w", apierrors.ErrInternal, err)
@@ -228,40 +121,6 @@ func (s *server) v1PostBridgrUserJobDiscoveryRuns(ctx context.Context, userID in
 		return nil, fmt.Errorf("%w: map run: %w", apierrors.ErrInternal, err)
 	}
 	return &out, nil
-}
-
-func (s *server) buildDiscoveryRequestParams(ctx context.Context, userID int32, overrides *map[string]interface{}) ([]byte, error) {
-	merged := map[string]interface{}{"user_id": userID}
-	prof, err := s.deps.Repo.GetJobSearchProfileByUserID(ctx, s.querier(), userID)
-	if err == nil && prof != nil {
-		var roles interface{}
-		_ = json.Unmarshal(prof.TargetRoles, &roles)
-		var locs interface{}
-		_ = json.Unmarshal(prof.Locations, &locs)
-		var boards interface{}
-		_ = json.Unmarshal(prof.BoardsEnabled, &boards)
-		var match interface{}
-		_ = json.Unmarshal(prof.Matching, &match)
-		merged["target_roles"] = roles
-		merged["locations"] = locs
-		merged["boards_enabled"] = boards
-		merged["matching"] = match
-		merged["max_surfaced_jobs"] = prof.MaxSurfacedJobs
-		if prof.CanonicalCvAnalysisUuid.Valid {
-			u, _ := uuid.ToString(prof.CanonicalCvAnalysisUuid.Bytes)
-			merged["canonical_cv_analysis_uuid"] = u
-		}
-	}
-	if overrides != nil {
-		for k, v := range *overrides {
-			merged[k] = v
-		}
-	}
-	b, err := json.Marshal(merged)
-	if err != nil {
-		return nil, fmt.Errorf("%w: request_params: %w", apierrors.ErrBadRequest, err)
-	}
-	return b, nil
 }
 
 // V1GetBridgrUserJobDiscoveryRuns handles GET /v1/bridgr/users/{userID}/job-discovery/runs

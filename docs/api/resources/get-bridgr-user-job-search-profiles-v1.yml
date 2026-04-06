@@ -1,0 +1,39 @@
+get:
+  summary: List job search profiles for user
+  operationId: V1ListBridgrUserJobSearchProfiles
+  tags:
+    - bridgr
+  parameters:
+    - name: X-API-KEY
+      in: header
+      description: API Key of the service making the request
+      required: true
+      style: simple
+      explode: false
+      schema:
+        type: string
+    - name: userID
+      in: path
+      required: true
+      schema:
+        type: integer
+        format: int32
+  responses:
+    "200":
+      description: Profiles for the user (may be empty)
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/BridgrJobSearchProfileListResponse.yml'
+    "401":
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/ErrorResponse.yml'
+    "500":
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/ErrorResponse.yml'

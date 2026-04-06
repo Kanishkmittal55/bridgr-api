@@ -117,12 +117,21 @@ type ServerInterface interface {
 	// List job notifications for user
 	// (GET /v1/bridgr/users/{userID}/job-notifications)
 	V1GetBridgrUserJobNotifications(w http.ResponseWriter, r *http.Request, userID int32, params V1GetBridgrUserJobNotificationsParams)
-	// Get job search profile for user
-	// (GET /v1/bridgr/users/{userID}/job-search-profile)
-	V1GetBridgrUserJobSearchProfile(w http.ResponseWriter, r *http.Request, userID int32, params V1GetBridgrUserJobSearchProfileParams)
-	// Create or update job search profile
-	// (PUT /v1/bridgr/users/{userID}/job-search-profile)
-	V1PutBridgrUserJobSearchProfile(w http.ResponseWriter, r *http.Request, userID int32, params V1PutBridgrUserJobSearchProfileParams)
+	// List job search profiles for user
+	// (GET /v1/bridgr/users/{userID}/job-search-profiles)
+	V1ListBridgrUserJobSearchProfiles(w http.ResponseWriter, r *http.Request, userID int32, params V1ListBridgrUserJobSearchProfilesParams)
+	// Create a job search profile
+	// (POST /v1/bridgr/users/{userID}/job-search-profiles)
+	V1CreateBridgrUserJobSearchProfile(w http.ResponseWriter, r *http.Request, userID int32, params V1CreateBridgrUserJobSearchProfileParams)
+	// Delete a job search profile by UUID
+	// (DELETE /v1/bridgr/users/{userID}/job-search-profiles/{profileUUID})
+	V1DeleteBridgrUserJobSearchProfile(w http.ResponseWriter, r *http.Request, userID int32, profileUUID openapi_types.UUID, params V1DeleteBridgrUserJobSearchProfileParams)
+	// Get one job search profile by UUID
+	// (GET /v1/bridgr/users/{userID}/job-search-profiles/{profileUUID})
+	V1GetBridgrUserJobSearchProfileByUUID(w http.ResponseWriter, r *http.Request, userID int32, profileUUID openapi_types.UUID, params V1GetBridgrUserJobSearchProfileByUUIDParams)
+	// Update a job search profile by UUID
+	// (PUT /v1/bridgr/users/{userID}/job-search-profiles/{profileUUID})
+	V1PutBridgrUserJobSearchProfileByUUID(w http.ResponseWriter, r *http.Request, userID int32, profileUUID openapi_types.UUID, params V1PutBridgrUserJobSearchProfileByUUIDParams)
 }
 
 // Unimplemented server implementation that returns http.StatusNotImplemented for each endpoint.
@@ -333,15 +342,33 @@ func (_ Unimplemented) V1GetBridgrUserJobNotifications(w http.ResponseWriter, r 
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
-// Get job search profile for user
-// (GET /v1/bridgr/users/{userID}/job-search-profile)
-func (_ Unimplemented) V1GetBridgrUserJobSearchProfile(w http.ResponseWriter, r *http.Request, userID int32, params V1GetBridgrUserJobSearchProfileParams) {
+// List job search profiles for user
+// (GET /v1/bridgr/users/{userID}/job-search-profiles)
+func (_ Unimplemented) V1ListBridgrUserJobSearchProfiles(w http.ResponseWriter, r *http.Request, userID int32, params V1ListBridgrUserJobSearchProfilesParams) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
-// Create or update job search profile
-// (PUT /v1/bridgr/users/{userID}/job-search-profile)
-func (_ Unimplemented) V1PutBridgrUserJobSearchProfile(w http.ResponseWriter, r *http.Request, userID int32, params V1PutBridgrUserJobSearchProfileParams) {
+// Create a job search profile
+// (POST /v1/bridgr/users/{userID}/job-search-profiles)
+func (_ Unimplemented) V1CreateBridgrUserJobSearchProfile(w http.ResponseWriter, r *http.Request, userID int32, params V1CreateBridgrUserJobSearchProfileParams) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// Delete a job search profile by UUID
+// (DELETE /v1/bridgr/users/{userID}/job-search-profiles/{profileUUID})
+func (_ Unimplemented) V1DeleteBridgrUserJobSearchProfile(w http.ResponseWriter, r *http.Request, userID int32, profileUUID openapi_types.UUID, params V1DeleteBridgrUserJobSearchProfileParams) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// Get one job search profile by UUID
+// (GET /v1/bridgr/users/{userID}/job-search-profiles/{profileUUID})
+func (_ Unimplemented) V1GetBridgrUserJobSearchProfileByUUID(w http.ResponseWriter, r *http.Request, userID int32, profileUUID openapi_types.UUID, params V1GetBridgrUserJobSearchProfileByUUIDParams) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// Update a job search profile by UUID
+// (PUT /v1/bridgr/users/{userID}/job-search-profiles/{profileUUID})
+func (_ Unimplemented) V1PutBridgrUserJobSearchProfileByUUID(w http.ResponseWriter, r *http.Request, userID int32, profileUUID openapi_types.UUID, params V1PutBridgrUserJobSearchProfileByUUIDParams) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
@@ -2280,8 +2307,8 @@ func (siw *ServerInterfaceWrapper) V1GetBridgrUserJobNotifications(w http.Respon
 	handler.ServeHTTP(w, r.WithContext(ctx))
 }
 
-// V1GetBridgrUserJobSearchProfile operation middleware
-func (siw *ServerInterfaceWrapper) V1GetBridgrUserJobSearchProfile(w http.ResponseWriter, r *http.Request) {
+// V1ListBridgrUserJobSearchProfiles operation middleware
+func (siw *ServerInterfaceWrapper) V1ListBridgrUserJobSearchProfiles(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
 	var err error
@@ -2296,7 +2323,7 @@ func (siw *ServerInterfaceWrapper) V1GetBridgrUserJobSearchProfile(w http.Respon
 	}
 
 	// Parameter object where we will unmarshal all parameters from the context
-	var params V1GetBridgrUserJobSearchProfileParams
+	var params V1ListBridgrUserJobSearchProfilesParams
 
 	headers := r.Header
 
@@ -2324,7 +2351,7 @@ func (siw *ServerInterfaceWrapper) V1GetBridgrUserJobSearchProfile(w http.Respon
 	}
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		siw.Handler.V1GetBridgrUserJobSearchProfile(w, r, userID, params)
+		siw.Handler.V1ListBridgrUserJobSearchProfiles(w, r, userID, params)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -2334,8 +2361,8 @@ func (siw *ServerInterfaceWrapper) V1GetBridgrUserJobSearchProfile(w http.Respon
 	handler.ServeHTTP(w, r.WithContext(ctx))
 }
 
-// V1PutBridgrUserJobSearchProfile operation middleware
-func (siw *ServerInterfaceWrapper) V1PutBridgrUserJobSearchProfile(w http.ResponseWriter, r *http.Request) {
+// V1CreateBridgrUserJobSearchProfile operation middleware
+func (siw *ServerInterfaceWrapper) V1CreateBridgrUserJobSearchProfile(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
 	var err error
@@ -2350,7 +2377,7 @@ func (siw *ServerInterfaceWrapper) V1PutBridgrUserJobSearchProfile(w http.Respon
 	}
 
 	// Parameter object where we will unmarshal all parameters from the context
-	var params V1PutBridgrUserJobSearchProfileParams
+	var params V1CreateBridgrUserJobSearchProfileParams
 
 	headers := r.Header
 
@@ -2378,7 +2405,196 @@ func (siw *ServerInterfaceWrapper) V1PutBridgrUserJobSearchProfile(w http.Respon
 	}
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		siw.Handler.V1PutBridgrUserJobSearchProfile(w, r, userID, params)
+		siw.Handler.V1CreateBridgrUserJobSearchProfile(w, r, userID, params)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r.WithContext(ctx))
+}
+
+// V1DeleteBridgrUserJobSearchProfile operation middleware
+func (siw *ServerInterfaceWrapper) V1DeleteBridgrUserJobSearchProfile(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	var err error
+
+	// ------------- Path parameter "userID" -------------
+	var userID int32
+
+	err = runtime.BindStyledParameterWithLocation("simple", false, "userID", runtime.ParamLocationPath, chi.URLParam(r, "userID"), &userID)
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "userID", Err: err})
+		return
+	}
+
+	// ------------- Path parameter "profileUUID" -------------
+	var profileUUID openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithLocation("simple", false, "profileUUID", runtime.ParamLocationPath, chi.URLParam(r, "profileUUID"), &profileUUID)
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "profileUUID", Err: err})
+		return
+	}
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params V1DeleteBridgrUserJobSearchProfileParams
+
+	headers := r.Header
+
+	// ------------- Required header parameter "X-API-KEY" -------------
+	if valueList, found := headers[http.CanonicalHeaderKey("X-API-KEY")]; found {
+		var XAPIKEY string
+		n := len(valueList)
+		if n != 1 {
+			siw.ErrorHandlerFunc(w, r, &TooManyValuesForParamError{ParamName: "X-API-KEY", Count: n})
+			return
+		}
+
+		err = runtime.BindStyledParameterWithLocation("simple", false, "X-API-KEY", runtime.ParamLocationHeader, valueList[0], &XAPIKEY)
+		if err != nil {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "X-API-KEY", Err: err})
+			return
+		}
+
+		params.XAPIKEY = XAPIKEY
+
+	} else {
+		err := fmt.Errorf("Header parameter X-API-KEY is required, but not found")
+		siw.ErrorHandlerFunc(w, r, &RequiredHeaderError{ParamName: "X-API-KEY", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.V1DeleteBridgrUserJobSearchProfile(w, r, userID, profileUUID, params)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r.WithContext(ctx))
+}
+
+// V1GetBridgrUserJobSearchProfileByUUID operation middleware
+func (siw *ServerInterfaceWrapper) V1GetBridgrUserJobSearchProfileByUUID(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	var err error
+
+	// ------------- Path parameter "userID" -------------
+	var userID int32
+
+	err = runtime.BindStyledParameterWithLocation("simple", false, "userID", runtime.ParamLocationPath, chi.URLParam(r, "userID"), &userID)
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "userID", Err: err})
+		return
+	}
+
+	// ------------- Path parameter "profileUUID" -------------
+	var profileUUID openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithLocation("simple", false, "profileUUID", runtime.ParamLocationPath, chi.URLParam(r, "profileUUID"), &profileUUID)
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "profileUUID", Err: err})
+		return
+	}
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params V1GetBridgrUserJobSearchProfileByUUIDParams
+
+	headers := r.Header
+
+	// ------------- Required header parameter "X-API-KEY" -------------
+	if valueList, found := headers[http.CanonicalHeaderKey("X-API-KEY")]; found {
+		var XAPIKEY string
+		n := len(valueList)
+		if n != 1 {
+			siw.ErrorHandlerFunc(w, r, &TooManyValuesForParamError{ParamName: "X-API-KEY", Count: n})
+			return
+		}
+
+		err = runtime.BindStyledParameterWithLocation("simple", false, "X-API-KEY", runtime.ParamLocationHeader, valueList[0], &XAPIKEY)
+		if err != nil {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "X-API-KEY", Err: err})
+			return
+		}
+
+		params.XAPIKEY = XAPIKEY
+
+	} else {
+		err := fmt.Errorf("Header parameter X-API-KEY is required, but not found")
+		siw.ErrorHandlerFunc(w, r, &RequiredHeaderError{ParamName: "X-API-KEY", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.V1GetBridgrUserJobSearchProfileByUUID(w, r, userID, profileUUID, params)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r.WithContext(ctx))
+}
+
+// V1PutBridgrUserJobSearchProfileByUUID operation middleware
+func (siw *ServerInterfaceWrapper) V1PutBridgrUserJobSearchProfileByUUID(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	var err error
+
+	// ------------- Path parameter "userID" -------------
+	var userID int32
+
+	err = runtime.BindStyledParameterWithLocation("simple", false, "userID", runtime.ParamLocationPath, chi.URLParam(r, "userID"), &userID)
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "userID", Err: err})
+		return
+	}
+
+	// ------------- Path parameter "profileUUID" -------------
+	var profileUUID openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithLocation("simple", false, "profileUUID", runtime.ParamLocationPath, chi.URLParam(r, "profileUUID"), &profileUUID)
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "profileUUID", Err: err})
+		return
+	}
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params V1PutBridgrUserJobSearchProfileByUUIDParams
+
+	headers := r.Header
+
+	// ------------- Required header parameter "X-API-KEY" -------------
+	if valueList, found := headers[http.CanonicalHeaderKey("X-API-KEY")]; found {
+		var XAPIKEY string
+		n := len(valueList)
+		if n != 1 {
+			siw.ErrorHandlerFunc(w, r, &TooManyValuesForParamError{ParamName: "X-API-KEY", Count: n})
+			return
+		}
+
+		err = runtime.BindStyledParameterWithLocation("simple", false, "X-API-KEY", runtime.ParamLocationHeader, valueList[0], &XAPIKEY)
+		if err != nil {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "X-API-KEY", Err: err})
+			return
+		}
+
+		params.XAPIKEY = XAPIKEY
+
+	} else {
+		err := fmt.Errorf("Header parameter X-API-KEY is required, but not found")
+		siw.ErrorHandlerFunc(w, r, &RequiredHeaderError{ParamName: "X-API-KEY", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.V1PutBridgrUserJobSearchProfileByUUID(w, r, userID, profileUUID, params)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -2604,10 +2820,19 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 		r.Get(options.BaseURL+"/v1/bridgr/users/{userID}/job-notifications", wrapper.V1GetBridgrUserJobNotifications)
 	})
 	r.Group(func(r chi.Router) {
-		r.Get(options.BaseURL+"/v1/bridgr/users/{userID}/job-search-profile", wrapper.V1GetBridgrUserJobSearchProfile)
+		r.Get(options.BaseURL+"/v1/bridgr/users/{userID}/job-search-profiles", wrapper.V1ListBridgrUserJobSearchProfiles)
 	})
 	r.Group(func(r chi.Router) {
-		r.Put(options.BaseURL+"/v1/bridgr/users/{userID}/job-search-profile", wrapper.V1PutBridgrUserJobSearchProfile)
+		r.Post(options.BaseURL+"/v1/bridgr/users/{userID}/job-search-profiles", wrapper.V1CreateBridgrUserJobSearchProfile)
+	})
+	r.Group(func(r chi.Router) {
+		r.Delete(options.BaseURL+"/v1/bridgr/users/{userID}/job-search-profiles/{profileUUID}", wrapper.V1DeleteBridgrUserJobSearchProfile)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/v1/bridgr/users/{userID}/job-search-profiles/{profileUUID}", wrapper.V1GetBridgrUserJobSearchProfileByUUID)
+	})
+	r.Group(func(r chi.Router) {
+		r.Put(options.BaseURL+"/v1/bridgr/users/{userID}/job-search-profiles/{profileUUID}", wrapper.V1PutBridgrUserJobSearchProfileByUUID)
 	})
 
 	return r

@@ -2,22 +2,18 @@ package bridgr_worker
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"github.com/Kanishkmittal55/bridgr-api/internal/bridgr_worker/config"
 	"github.com/Kanishkmittal55/bridgr-api/internal/bridgr_worker/dependencies"
+	"github.com/Kanishkmittal55/bridgr-api/internal/cloud"
 	"github.com/Kanishkmittal55/bridgr-api/internal/logger"
-	"github.com/Kanishkmittal55/bridgr-api/internal/repository"
-	"github.com/Kanishkmittal55/bridgr-api/internal/repository/sqlc"
-	awssqs "github.com/aws/aws-sdk-go-v2/service/sqs"
-
-	"github.com/Kanishkmittal55/bridgr-api/internal/radar"
+	"github.com/aws/aws-sdk-go-v2/service/sqs"
 )
 
-// Worker polls the Bridgr skill-gap SQS queue.
+// Worker polls the Bridgr job-discovery SQS queue.
 type Worker struct {
-	sqsClient *awssqs.Client
+	sqsClient *sqs.Client
 	opts      config.WorkerOpts
 	proc      *Processor
 }
@@ -45,11 +41,7 @@ func (w *Worker) Run(ctx context.Context) error {
 		return ctx.Err()
 	}
 
-	log.Infow("bridgr-worker: polling",
-		"queue_url", w.opts.QueueURL,
-		"max_messages", w.opts.MaxMessages,
-		"wait_seconds", w.opts.WaitTimeSeconds,
-	)
+	log.Infow("bridgr-worker: polling", "queue_url", w.opts.QueueURL, "max_messages", w.opts.MaxMessages, "wait_seconds", w.opts.WaitTimeSeconds)
 
 	backoff := time.Duration(w.opts.PollErrorBackoffSec) * time.Second
 	if backoff <= 0 {
@@ -71,73 +63,21 @@ func (w *Worker) Run(ctx context.Context) error {
 }
 
 func (w *Worker) pollAndProcess(ctx context.Context) error {
-	out, err := w.sqsClient.ReceiveMessage(ctx, &awssqs.ReceiveMessageInput{
-		QueueUrl:            &w.opts.QueueURL,
-		MaxNumberOfMessages: w.opts.MaxMessages,
-		WaitTimeSeconds:     w.opts.WaitTimeSeconds,
-		VisibilityTimeout:   w.opts.VisibilityTimeout,
-	})
+	msgs, err := cloud.ReceiveQueueMessages(ctx, w.sqsClient, w.opts.QueueURL, w.opts.MaxMessages, w.opts.WaitTimeSeconds, w.opts.VisibilityTimeout)
 	if err != nil {
 		return err
 	}
-	if len(out.Messages) == 0 {
+	if len(msgs) == 0 {
 		return nil
 	}
 
 	log := logger.Get(ctx)
-	log.Infow("bridgr-worker: received messages", "count", len(out.Messages))
+	log.Infow("bridgr-worker: received messages", "count", len(msgs))
 
-	for _, sqsMsg := range out.Messages {
-		msg := &Message{
-			ID:            *sqsMsg.MessageId,
-			Body:          []byte(*sqsMsg.Body),
-			ReceiptHandle: *sqsMsg.ReceiptHandle,
-			sqsClient:     w.sqsClient,
-			queueURL:      w.opts.QueueURL,
-		}
+	for _, msg := range msgs {
 		if err := w.proc.Process(ctx, msg); err != nil {
 			log.Errorw("bridgr-worker: process failed", "message_id", msg.ID, "error", err)
 		}
 	}
 	return nil
-}
-
-// Message wraps SQS delivery for Ack.
-type Message struct {
-	ID            string
-	Body          []byte
-	ReceiptHandle string
-	sqsClient     *awssqs.Client
-	queueURL      string
-	acked         bool
-}
-
-// Ack deletes the message from the queue.
-func (m *Message) Ack() error {
-	if m.acked {
-		return nil
-	}
-	if m.sqsClient == nil {
-		m.acked = true
-		return nil
-	}
-	_, err := m.sqsClient.DeleteMessage(context.Background(), &awssqs.DeleteMessageInput{
-		QueueUrl:      &m.queueURL,
-		ReceiptHandle: &m.ReceiptHandle,
-	})
-	if err == nil {
-		m.acked = true
-	}
-	return err
-}
-
-// Nack leaves the message to retry after visibility timeout.
-func (m *Message) Nack() {}
-
-// ProcessLocalJSON runs one queue payload in-process (no SQS). For dev when BRIDGR_JOB_DISCOVERY_SYNC_IN_DEV is enabled.
-func ProcessLocalJSON(ctx context.Context, repo *repository.Repo, q sqlc.Querier, jobSearch *radar.JobSearchClient, body []byte) error {
-	if repo == nil || q == nil {
-		return fmt.Errorf("nil repo or querier")
-	}
-	return NewProcessor(repo, q, jobSearch).Process(ctx, &Message{Body: body})
 }

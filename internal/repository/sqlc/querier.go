@@ -53,7 +53,7 @@ type Querier interface {
 	CreateJobSearchDiscoveryRun(ctx context.Context, arg CreateJobSearchDiscoveryRunParams) (BridgrJobSearchDiscoveryRun, error)
 	// =============================================================================
 	// BRIDGR JOB DISCOVERY — JOB SEARCH PROFILES
-	// Per-user Radar/search preferences. user_id app-enforced FK to users.id.
+	// One row = one canonical Radar search slice. user_id app-enforced FK to users.id.
 	// =============================================================================
 	CreateJobSearchProfile(ctx context.Context, arg CreateJobSearchProfileParams) (BridgrJobSearchProfile, error)
 	// =============================================================================
@@ -114,6 +114,7 @@ type Querier interface {
 	DeleteJobSearchDiscoveryRunByID(ctx context.Context, id int64) error
 	DeleteJobSearchProfileByID(ctx context.Context, id int64) error
 	DeleteJobSearchProfileByUserID(ctx context.Context, userID int32) error
+	DeleteJobSearchProfileByUserIDAndUUID(ctx context.Context, arg DeleteJobSearchProfileByUserIDAndUUIDParams) error
 	DeleteSkillGapAnalysis(ctx context.Context, id int64) error
 	DeleteSkillGapAnalysisByUUID(ctx context.Context, uuid pgtype.UUID) error
 	DeleteSkillGapEdgesByGraph(ctx context.Context, graphUuid pgtype.UUID) error
@@ -148,7 +149,7 @@ type Querier interface {
 	GetJobSearchDiscoveryRunByUUID(ctx context.Context, uuid pgtype.UUID) (BridgrJobSearchDiscoveryRun, error)
 	GetJobSearchProfileByID(ctx context.Context, id int64) (BridgrJobSearchProfile, error)
 	GetJobSearchProfileByUUID(ctx context.Context, uuid pgtype.UUID) (BridgrJobSearchProfile, error)
-	GetJobSearchProfileByUserID(ctx context.Context, userID int32) (BridgrJobSearchProfile, error)
+	GetJobSearchProfileByUserIDAndUUID(ctx context.Context, arg GetJobSearchProfileByUserIDAndUUIDParams) (BridgrJobSearchProfile, error)
 	GetSkillGapAnalysis(ctx context.Context, id int64) (BridgrSkillGapAnalysis, error)
 	GetSkillGapAnalysisByFingerprint(ctx context.Context, arg GetSkillGapAnalysisByFingerprintParams) (BridgrSkillGapAnalysis, error)
 	GetSkillGapAnalysisByUUID(ctx context.Context, uuid pgtype.UUID) (BridgrSkillGapAnalysis, error)
@@ -199,6 +200,8 @@ type Querier interface {
 	ListJobNotificationsByUserFiltered(ctx context.Context, arg ListJobNotificationsByUserFilteredParams) ([]BridgrJobNotification, error)
 	ListJobScoresByUser(ctx context.Context, arg ListJobScoresByUserParams) ([]BridgrJobScore, error)
 	ListJobSearchDiscoveryRunsByUser(ctx context.Context, arg ListJobSearchDiscoveryRunsByUserParams) ([]BridgrJobSearchDiscoveryRun, error)
+	// $1 = user_id. Returns every saved job search profile row for that user (zero or more rows).
+	ListJobSearchProfilesByUserID(ctx context.Context, userID int32) ([]BridgrJobSearchProfile, error)
 	// Role-requirement nodes whose node_key also exists on the candidate graph for the same analysis.
 	ListMatchedNodes(ctx context.Context, analysisUuid pgtype.UUID) ([]BridgrSkillGapNode, error)
 	ListPendingJobNotificationsByUser(ctx context.Context, arg ListPendingJobNotificationsByUserParams) ([]BridgrJobNotification, error)
@@ -210,6 +213,9 @@ type Querier interface {
 	ListSupportedJobBoards(ctx context.Context) ([]BridgrSupportedJobBoard, error)
 	// Role-requirement nodes with no candidate node sharing the same node_key (skill gaps).
 	ListUnmatchedNodes(ctx context.Context, analysisUuid pgtype.UUID) ([]BridgrSkillGapNode, error)
+	// Sets all mutable execution fields; callers merge from an existing row for columns they do not intend to change.
+	PatchJobSearchDiscoveryRun(ctx context.Context, arg PatchJobSearchDiscoveryRunParams) (BridgrJobSearchDiscoveryRun, error)
+	SetJobSearchDiscoveryRunStatus(ctx context.Context, arg SetJobSearchDiscoveryRunStatusParams) (BridgrJobSearchDiscoveryRun, error)
 	UpdateAnalysisJobLinkKind(ctx context.Context, arg UpdateAnalysisJobLinkKindParams) (BridgrAnalysisJobLink, error)
 	UpdateFeedItemByID(ctx context.Context, arg UpdateFeedItemByIDParams) (BridgrFeedItem, error)
 	UpdateJobCandidateByID(ctx context.Context, arg UpdateJobCandidateByIDParams) (BridgrJobCandidate, error)
@@ -219,12 +225,9 @@ type Querier interface {
 	UpdateJobNotificationSeen(ctx context.Context, arg UpdateJobNotificationSeenParams) (BridgrJobNotification, error)
 	UpdateJobNotificationStatus(ctx context.Context, arg UpdateJobNotificationStatusParams) (BridgrJobNotification, error)
 	UpdateJobScoreByID(ctx context.Context, arg UpdateJobScoreByIDParams) (BridgrJobScore, error)
-	UpdateJobSearchDiscoveryRunFinished(ctx context.Context, arg UpdateJobSearchDiscoveryRunFinishedParams) (BridgrJobSearchDiscoveryRun, error)
-	UpdateJobSearchDiscoveryRunProgress(ctx context.Context, arg UpdateJobSearchDiscoveryRunProgressParams) (BridgrJobSearchDiscoveryRun, error)
-	UpdateJobSearchDiscoveryRunStarted(ctx context.Context, arg UpdateJobSearchDiscoveryRunStartedParams) (BridgrJobSearchDiscoveryRun, error)
-	UpdateJobSearchDiscoveryRunStatus(ctx context.Context, arg UpdateJobSearchDiscoveryRunStatusParams) (BridgrJobSearchDiscoveryRun, error)
 	UpdateJobSearchProfile(ctx context.Context, arg UpdateJobSearchProfileParams) (BridgrJobSearchProfile, error)
 	UpdateJobSearchProfileByUserID(ctx context.Context, arg UpdateJobSearchProfileByUserIDParams) (BridgrJobSearchProfile, error)
+	UpdateJobSearchProfileByUserIDAndUUID(ctx context.Context, arg UpdateJobSearchProfileByUserIDAndUUIDParams) (BridgrJobSearchProfile, error)
 	UpdateSkillGapAnalysisError(ctx context.Context, arg UpdateSkillGapAnalysisErrorParams) (BridgrSkillGapAnalysis, error)
 	UpdateSkillGapAnalysisStatus(ctx context.Context, arg UpdateSkillGapAnalysisStatusParams) (BridgrSkillGapAnalysis, error)
 	UpdateSkillGapAnalysisSummary(ctx context.Context, arg UpdateSkillGapAnalysisSummaryParams) (BridgrSkillGapAnalysis, error)

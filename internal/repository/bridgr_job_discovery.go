@@ -23,15 +23,6 @@ func (r *Repo) CreateJobSearchProfile(ctx context.Context, querier sqlc.Querier,
 	return &row, nil
 }
 
-// GetJobSearchProfileByUserID returns the profile for a user.
-func (r *Repo) GetJobSearchProfileByUserID(ctx context.Context, querier sqlc.Querier, userID int32) (*sqlc.BridgrJobSearchProfile, error) {
-	row, err := querier.GetJobSearchProfileByUserID(ctx, userID)
-	if err != nil {
-		return nil, fmt.Errorf("GetJobSearchProfileByUserID: %w", err)
-	}
-	return &row, nil
-}
-
 // GetJobSearchProfileByUUID loads a profile by primary UUID.
 func (r *Repo) GetJobSearchProfileByUUID(ctx context.Context, querier sqlc.Querier, uuid pgtype.UUID) (*sqlc.BridgrJobSearchProfile, error) {
 	row, err := querier.GetJobSearchProfileByUUID(ctx, uuid)
@@ -80,6 +71,41 @@ func (r *Repo) DeleteJobSearchProfileByUserID(ctx context.Context, querier sqlc.
 func (r *Repo) DeleteJobSearchProfileByID(ctx context.Context, querier sqlc.Querier, id int64) error {
 	if err := querier.DeleteJobSearchProfileByID(ctx, id); err != nil {
 		return fmt.Errorf("DeleteJobSearchProfileByID: %w", err)
+	}
+	return nil
+}
+
+// ListJobSearchProfilesByUserID returns profiles for a user (ordered by id).
+func (r *Repo) ListJobSearchProfilesByUserID(ctx context.Context, querier sqlc.Querier, userID int32) ([]sqlc.BridgrJobSearchProfile, error) {
+	rows, err := querier.ListJobSearchProfilesByUserID(ctx, userID)
+	if err != nil {
+		return nil, fmt.Errorf("ListJobSearchProfilesByUserID: %w", err)
+	}
+	return rows, nil
+}
+
+// GetJobSearchProfileByUserIDAndUUID loads a profile scoped to user_id + uuid.
+func (r *Repo) GetJobSearchProfileByUserIDAndUUID(ctx context.Context, querier sqlc.Querier, params sqlc.GetJobSearchProfileByUserIDAndUUIDParams) (*sqlc.BridgrJobSearchProfile, error) {
+	row, err := querier.GetJobSearchProfileByUserIDAndUUID(ctx, params)
+	if err != nil {
+		return nil, fmt.Errorf("GetJobSearchProfileByUserIDAndUUID: %w", err)
+	}
+	return &row, nil
+}
+
+// UpdateJobSearchProfileByUserIDAndUUID updates mutable columns for a user's profile row.
+func (r *Repo) UpdateJobSearchProfileByUserIDAndUUID(ctx context.Context, querier sqlc.Querier, params sqlc.UpdateJobSearchProfileByUserIDAndUUIDParams) (*sqlc.BridgrJobSearchProfile, error) {
+	row, err := querier.UpdateJobSearchProfileByUserIDAndUUID(ctx, params)
+	if err != nil {
+		return nil, fmt.Errorf("UpdateJobSearchProfileByUserIDAndUUID: %w", err)
+	}
+	return &row, nil
+}
+
+// DeleteJobSearchProfileByUserIDAndUUID deletes a profile scoped to user_id + uuid.
+func (r *Repo) DeleteJobSearchProfileByUserIDAndUUID(ctx context.Context, querier sqlc.Querier, params sqlc.DeleteJobSearchProfileByUserIDAndUUIDParams) error {
+	if err := querier.DeleteJobSearchProfileByUserIDAndUUID(ctx, params); err != nil {
+		return fmt.Errorf("DeleteJobSearchProfileByUserIDAndUUID: %w", err)
 	}
 	return nil
 }
@@ -133,38 +159,20 @@ func (r *Repo) CountJobSearchDiscoveryRunsByUserSince(ctx context.Context, queri
 	return n, nil
 }
 
-// UpdateJobSearchDiscoveryRunStatus sets status only.
-func (r *Repo) UpdateJobSearchDiscoveryRunStatus(ctx context.Context, querier sqlc.Querier, params sqlc.UpdateJobSearchDiscoveryRunStatusParams) (*sqlc.BridgrJobSearchDiscoveryRun, error) {
-	row, err := querier.UpdateJobSearchDiscoveryRunStatus(ctx, params)
+// SetJobSearchDiscoveryRunStatus updates status only (does not touch other columns).
+func (r *Repo) SetJobSearchDiscoveryRunStatus(ctx context.Context, querier sqlc.Querier, params sqlc.SetJobSearchDiscoveryRunStatusParams) (*sqlc.BridgrJobSearchDiscoveryRun, error) {
+	row, err := querier.SetJobSearchDiscoveryRunStatus(ctx, params)
 	if err != nil {
-		return nil, fmt.Errorf("UpdateJobSearchDiscoveryRunStatus: %w", err)
+		return nil, fmt.Errorf("SetJobSearchDiscoveryRunStatus: %w", err)
 	}
 	return &row, nil
 }
 
-// UpdateJobSearchDiscoveryRunProgress updates status and candidate counts / radar_meta.
-func (r *Repo) UpdateJobSearchDiscoveryRunProgress(ctx context.Context, querier sqlc.Querier, params sqlc.UpdateJobSearchDiscoveryRunProgressParams) (*sqlc.BridgrJobSearchDiscoveryRun, error) {
-	row, err := querier.UpdateJobSearchDiscoveryRunProgress(ctx, params)
+// PatchJobSearchDiscoveryRun sets all mutable execution fields; merge from an existing row for fields you are not changing.
+func (r *Repo) PatchJobSearchDiscoveryRun(ctx context.Context, querier sqlc.Querier, params sqlc.PatchJobSearchDiscoveryRunParams) (*sqlc.BridgrJobSearchDiscoveryRun, error) {
+	row, err := querier.PatchJobSearchDiscoveryRun(ctx, params)
 	if err != nil {
-		return nil, fmt.Errorf("UpdateJobSearchDiscoveryRunProgress: %w", err)
-	}
-	return &row, nil
-}
-
-// UpdateJobSearchDiscoveryRunStarted marks run as started with optional SQS id.
-func (r *Repo) UpdateJobSearchDiscoveryRunStarted(ctx context.Context, querier sqlc.Querier, params sqlc.UpdateJobSearchDiscoveryRunStartedParams) (*sqlc.BridgrJobSearchDiscoveryRun, error) {
-	row, err := querier.UpdateJobSearchDiscoveryRunStarted(ctx, params)
-	if err != nil {
-		return nil, fmt.Errorf("UpdateJobSearchDiscoveryRunStarted: %w", err)
-	}
-	return &row, nil
-}
-
-// UpdateJobSearchDiscoveryRunFinished sets terminal fields and counts.
-func (r *Repo) UpdateJobSearchDiscoveryRunFinished(ctx context.Context, querier sqlc.Querier, params sqlc.UpdateJobSearchDiscoveryRunFinishedParams) (*sqlc.BridgrJobSearchDiscoveryRun, error) {
-	row, err := querier.UpdateJobSearchDiscoveryRunFinished(ctx, params)
-	if err != nil {
-		return nil, fmt.Errorf("UpdateJobSearchDiscoveryRunFinished: %w", err)
+		return nil, fmt.Errorf("PatchJobSearchDiscoveryRun: %w", err)
 	}
 	return &row, nil
 }

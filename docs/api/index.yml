@@ -82,11 +82,18 @@ paths:
   /v1/bridgr/users/{userID}/coverage:
     get:
       $ref: "./resources/get-bridgr-user-coverage-v1.yml#/get"
-  /v1/bridgr/users/{userID}/job-search-profile:
+  /v1/bridgr/users/{userID}/job-search-profiles:
     get:
-      $ref: "./resources/get-bridgr-user-job-search-profile-v1.yml#/get"
+      $ref: "./resources/get-bridgr-user-job-search-profiles-v1.yml#/get"
+    post:
+      $ref: "./resources/post-bridgr-user-job-search-profiles-v1.yml#/post"
+  /v1/bridgr/users/{userID}/job-search-profiles/{profileUUID}:
+    get:
+      $ref: "./resources/get-bridgr-user-job-search-profile-by-uuid-v1.yml#/get"
     put:
-      $ref: "./resources/put-bridgr-user-job-search-profile-v1.yml#/put"
+      $ref: "./resources/put-bridgr-user-job-search-profile-by-uuid-v1.yml#/put"
+    delete:
+      $ref: "./resources/delete-bridgr-user-job-search-profile-by-uuid-v1.yml#/delete"
   /v1/bridgr/users/{userID}/job-discovery/runs:
     post:
       $ref: "./resources/post-bridgr-user-job-discovery-runs-v1.yml#/post"

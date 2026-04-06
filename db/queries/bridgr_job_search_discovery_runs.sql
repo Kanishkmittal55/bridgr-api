@@ -39,41 +39,25 @@ LIMIT $2 OFFSET $3;
 SELECT COUNT(*)::bigint AS count FROM bridgr.job_search_discovery_runs
 WHERE user_id = $1 AND created_at >= $2;
 
--- name: UpdateJobSearchDiscoveryRunStatus :one
+-- name: SetJobSearchDiscoveryRunStatus :one
 UPDATE bridgr.job_search_discovery_runs
 SET status = $2
 WHERE id = $1
 RETURNING *;
 
--- name: UpdateJobSearchDiscoveryRunProgress :one
-UPDATE bridgr.job_search_discovery_runs
-SET
-    status = $2,
-    raw_candidate_count = $3,
-    new_candidate_count = $4,
-    radar_meta = $5
-WHERE id = $1
-RETURNING *;
-
--- name: UpdateJobSearchDiscoveryRunStarted :one
+-- name: PatchJobSearchDiscoveryRun :one
+-- Sets all mutable execution fields; callers merge from an existing row for columns they do not intend to change.
 UPDATE bridgr.job_search_discovery_runs
 SET
     status = $2,
     started_at = $3,
-    sqs_message_id = $4
-WHERE id = $1
-RETURNING *;
-
--- name: UpdateJobSearchDiscoveryRunFinished :one
-UPDATE bridgr.job_search_discovery_runs
-SET
-    status = $2,
-    completed_at = $3,
-    raw_candidate_count = $4,
-    new_candidate_count = $5,
-    radar_meta = $6,
-    error_code = $7,
-    error_detail = $8
+    completed_at = $4,
+    raw_candidate_count = $5,
+    new_candidate_count = $6,
+    radar_meta = $7,
+    error_code = $8,
+    error_detail = $9,
+    sqs_message_id = $10
 WHERE id = $1
 RETURNING *;
 

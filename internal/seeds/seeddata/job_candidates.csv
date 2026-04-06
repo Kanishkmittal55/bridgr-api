@@ -1,0 +1,3 @@
+uuid,id,user_id,discovery_run_uuid,source_board,source_job_id,job_url,url_hash,content_hash,title,company,location,jd_text,jd_s3_uri,fetched_at,ingestion_status,radar_payload,application_url,created_at,updated_at
+550e8400-e29b-41d4-a716-446655440004,1,1,550e8400-e29b-41d4-a716-446655440003,linkedin,job-1,https://example.com/jobs/1,hash-url-001,ch-001,Senior Backend Engineer,Acme Corp,Remote US,Build APIs in Go.,,2026-01-10T11:01:00Z,fetched,{},,2026-01-10T12:00:00Z,2026-01-10T12:00:00Z
+550e8400-e29b-41d4-a716-446655440005,2,1,550e8400-e29b-41d4-a716-446655440003,linkedin,job-2,https://example.com/jobs/2,hash-url-002,ch-002,Platform Engineer,Beta LLC,SF,We use Kubernetes heavily.,,2026-01-10T11:02:00Z,fetched,{},,2026-01-10T12:00:00Z,2026-01-10T12:00:00Z

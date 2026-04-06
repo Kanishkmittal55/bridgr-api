@@ -7,6 +7,7 @@ import (
 
 var (
 	ErrBadRequest         = stderrors.New("bad request")
+	ErrConflict           = stderrors.New("conflict")
 	ErrForbidden          = stderrors.New("forbidden")
 	ErrNotFound           = stderrors.New("not found")
 	ErrTooManyRequests    = stderrors.New("too many requests")

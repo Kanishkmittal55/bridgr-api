@@ -1,0 +1,3 @@
+uuid,id,path_uuid,step_index,title,rationale,estimated_hours,resource_uri,resource_kind,founder_learning_item_uuid,course_lesson_uuid,linked_node_keys,metadata,created_at,updated_at
+550e8400-e29b-41d4-a716-446655440021,1,550e8400-e29b-41d4-a716-446655440020,0,Review CV vs role graph,,2.0,,,,,[],{},2026-01-10T12:00:00Z,2026-01-10T12:00:00Z
+550e8400-e29b-41d4-a716-446655440022,2,550e8400-e29b-41d4-a716-446655440020,1,Practice Kubernetes basics,,4.0,,,,,[],{},2026-01-10T12:00:00Z,2026-01-10T12:00:00Z

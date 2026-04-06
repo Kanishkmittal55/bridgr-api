@@ -1,0 +1,2 @@
+uuid,id,analysis_uuid,coverage_kind,role_skill_key,candidate_skill_key,match_status,summary,metrics,created_at,updated_at
+550e8400-e29b-41d4-a716-446655440019,1,550e8400-e29b-41d4-a716-446655440001,summary,,,unknown,Seed coverage rollup,{},2026-01-10T12:00:00Z,2026-01-10T12:00:00Z

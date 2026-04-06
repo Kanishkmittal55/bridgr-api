@@ -24,6 +24,37 @@ const (
 	Presigned BridgrAnalysisAssetReadUrlResponseAccess = "presigned"
 )
 
+// Defines values for BridgrJobSearchProfileCompanyStage.
+const (
+	BridgrJobSearchProfileCompanyStageAny        BridgrJobSearchProfileCompanyStage = "any"
+	BridgrJobSearchProfileCompanyStageEnterprise BridgrJobSearchProfileCompanyStage = "enterprise"
+	BridgrJobSearchProfileCompanyStageGrowth     BridgrJobSearchProfileCompanyStage = "growth"
+	BridgrJobSearchProfileCompanyStageStartup    BridgrJobSearchProfileCompanyStage = "startup"
+)
+
+// Defines values for BridgrJobSearchProfileCompensationGoal.
+const (
+	BridgrJobSearchProfileCompensationGoalAny     BridgrJobSearchProfileCompensationGoal = "any"
+	BridgrJobSearchProfileCompensationGoalDown    BridgrJobSearchProfileCompensationGoal = "down"
+	BridgrJobSearchProfileCompensationGoalLateral BridgrJobSearchProfileCompensationGoal = "lateral"
+	BridgrJobSearchProfileCompensationGoalUp      BridgrJobSearchProfileCompensationGoal = "up"
+)
+
+// Defines values for BridgrJobSearchProfileSeniorityGoal.
+const (
+	BridgrJobSearchProfileSeniorityGoalAny     BridgrJobSearchProfileSeniorityGoal = "any"
+	BridgrJobSearchProfileSeniorityGoalDown    BridgrJobSearchProfileSeniorityGoal = "down"
+	BridgrJobSearchProfileSeniorityGoalLateral BridgrJobSearchProfileSeniorityGoal = "lateral"
+	BridgrJobSearchProfileSeniorityGoalUp      BridgrJobSearchProfileSeniorityGoal = "up"
+)
+
+// Defines values for BridgrJobSearchProfileSourceBoard.
+const (
+	BridgrJobSearchProfileSourceBoardGlassdoor BridgrJobSearchProfileSourceBoard = "glassdoor"
+	BridgrJobSearchProfileSourceBoardIndeed    BridgrJobSearchProfileSourceBoard = "indeed"
+	BridgrJobSearchProfileSourceBoardLinkedin  BridgrJobSearchProfileSourceBoard = "linkedin"
+)
+
 // Defines values for BridgrSkillGapAnalysisStatus.
 const (
 	BridgrSkillGapPending BridgrSkillGapAnalysisStatus = "pending"
@@ -38,6 +69,37 @@ const (
 const (
 	Candidate       BridgrSkillGapGraphKind = "candidate"
 	RoleRequirement BridgrSkillGapGraphKind = "role_requirement"
+)
+
+// Defines values for UpsertBridgrJobSearchProfileRequestCompanyStage.
+const (
+	UpsertBridgrJobSearchProfileRequestCompanyStageAny        UpsertBridgrJobSearchProfileRequestCompanyStage = "any"
+	UpsertBridgrJobSearchProfileRequestCompanyStageEnterprise UpsertBridgrJobSearchProfileRequestCompanyStage = "enterprise"
+	UpsertBridgrJobSearchProfileRequestCompanyStageGrowth     UpsertBridgrJobSearchProfileRequestCompanyStage = "growth"
+	UpsertBridgrJobSearchProfileRequestCompanyStageStartup    UpsertBridgrJobSearchProfileRequestCompanyStage = "startup"
+)
+
+// Defines values for UpsertBridgrJobSearchProfileRequestCompensationGoal.
+const (
+	UpsertBridgrJobSearchProfileRequestCompensationGoalAny     UpsertBridgrJobSearchProfileRequestCompensationGoal = "any"
+	UpsertBridgrJobSearchProfileRequestCompensationGoalDown    UpsertBridgrJobSearchProfileRequestCompensationGoal = "down"
+	UpsertBridgrJobSearchProfileRequestCompensationGoalLateral UpsertBridgrJobSearchProfileRequestCompensationGoal = "lateral"
+	UpsertBridgrJobSearchProfileRequestCompensationGoalUp      UpsertBridgrJobSearchProfileRequestCompensationGoal = "up"
+)
+
+// Defines values for UpsertBridgrJobSearchProfileRequestSeniorityGoal.
+const (
+	UpsertBridgrJobSearchProfileRequestSeniorityGoalAny     UpsertBridgrJobSearchProfileRequestSeniorityGoal = "any"
+	UpsertBridgrJobSearchProfileRequestSeniorityGoalDown    UpsertBridgrJobSearchProfileRequestSeniorityGoal = "down"
+	UpsertBridgrJobSearchProfileRequestSeniorityGoalLateral UpsertBridgrJobSearchProfileRequestSeniorityGoal = "lateral"
+	UpsertBridgrJobSearchProfileRequestSeniorityGoalUp      UpsertBridgrJobSearchProfileRequestSeniorityGoal = "up"
+)
+
+// Defines values for UpsertBridgrJobSearchProfileRequestSourceBoard.
+const (
+	UpsertBridgrJobSearchProfileRequestSourceBoardGlassdoor UpsertBridgrJobSearchProfileRequestSourceBoard = "glassdoor"
+	UpsertBridgrJobSearchProfileRequestSourceBoardIndeed    UpsertBridgrJobSearchProfileRequestSourceBoard = "indeed"
+	UpsertBridgrJobSearchProfileRequestSourceBoardLinkedin  UpsertBridgrJobSearchProfileRequestSourceBoard = "linkedin"
 )
 
 // BridgrAnalysisAssetReadUrlResponse URL usable in the browser to display the CV or JD asset.
@@ -137,19 +199,53 @@ type BridgrJobSearchDiscoveryRunListResponse struct {
 	Runs []BridgrJobSearchDiscoveryRun `json:"runs"`
 }
 
-// BridgrJobSearchProfile Per-user job search / Radar preferences
+// BridgrJobSearchProfile One canonical Radar search slice per row (bridgr.job_search_profiles).
 type BridgrJobSearchProfile struct {
-	BoardsEnabled           *[]string                 `json:"boards_enabled,omitempty"`
-	CanonicalCvAnalysisUuid *openapi_types.UUID       `json:"canonical_cv_analysis_uuid"`
-	CreatedAt               time.Time                 `json:"created_at"`
-	Id                      int64                     `json:"id"`
-	Locations               *[]map[string]interface{} `json:"locations,omitempty"`
-	Matching                *map[string]interface{}   `json:"matching"`
-	MaxSurfacedJobs         int32                     `json:"max_surfaced_jobs"`
-	TargetRoles             *[]string                 `json:"target_roles,omitempty"`
-	UpdatedAt               time.Time                 `json:"updated_at"`
-	UserId                  int32                     `json:"user_id"`
-	Uuid                    openapi_types.UUID        `json:"uuid"`
+	CanonicalCvAnalysisUuid *openapi_types.UUID `json:"canonical_cv_analysis_uuid"`
+
+	// CareerSwitch True when seeking a career change / new domain
+	CareerSwitch bool `json:"career_switch"`
+
+	// CompanyStage Employer company stage filter
+	CompanyStage BridgrJobSearchProfileCompanyStage `json:"company_stage"`
+
+	// CompensationGoal Compensation direction for this slice
+	CompensationGoal BridgrJobSearchProfileCompensationGoal `json:"compensation_goal"`
+	CreatedAt        time.Time                              `json:"created_at"`
+	Id               int64                                  `json:"id"`
+	Location         string                                 `json:"location"`
+
+	// SeniorityGoal Seniority direction for this slice
+	SeniorityGoal BridgrJobSearchProfileSeniorityGoal `json:"seniority_goal"`
+
+	// SoftwareStackMustHave Technology tags that must appear in listings for this slice
+	SoftwareStackMustHave []string `json:"software_stack_must_have"`
+
+	// SourceBoard Job board id for this search slice (Radar source)
+	SourceBoard BridgrJobSearchProfileSourceBoard `json:"source_board"`
+
+	// TargetRole Primary role or search phrase for this slice
+	TargetRole string             `json:"target_role"`
+	UpdatedAt  time.Time          `json:"updated_at"`
+	UserId     int32              `json:"user_id"`
+	Uuid       openapi_types.UUID `json:"uuid"`
+}
+
+// BridgrJobSearchProfileCompanyStage Employer company stage filter
+type BridgrJobSearchProfileCompanyStage string
+
+// BridgrJobSearchProfileCompensationGoal Compensation direction for this slice
+type BridgrJobSearchProfileCompensationGoal string
+
+// BridgrJobSearchProfileSeniorityGoal Seniority direction for this slice
+type BridgrJobSearchProfileSeniorityGoal string
+
+// BridgrJobSearchProfileSourceBoard Job board id for this search slice (Radar source)
+type BridgrJobSearchProfileSourceBoard string
+
+// BridgrJobSearchProfileListResponse defines model for BridgrJobSearchProfileListResponse.
+type BridgrJobSearchProfileListResponse struct {
+	Items []BridgrJobSearchProfile `json:"items"`
 }
 
 // BridgrPingResponse defines model for BridgrPingResponse.
@@ -327,6 +423,10 @@ type CreateBridgrJobSearchDiscoveryRunRequest struct {
 	RequestParams *map[string]interface{} `json:"request_params"`
 }
 
+// CreateBridgrJobSearchProfileRequest Create or update a job search profile. Omitted keys leave existing DB values unchanged on update;
+// on create, server defaults apply for missing columns (e.g. indeed, any goals, empty stack).
+type CreateBridgrJobSearchProfileRequest = UpsertBridgrJobSearchProfileRequest
+
 // CreateBridgrSkillGapAnalysisRequest defines model for CreateBridgrSkillGapAnalysisRequest.
 type CreateBridgrSkillGapAnalysisRequest struct {
 	CvAssetUri         *string             `json:"cv_asset_uri"`
@@ -442,15 +542,39 @@ type UpdateBridgrSkillGapAnalysisStatusRequest struct {
 	Status BridgrSkillGapAnalysisStatus `json:"status"`
 }
 
-// UpsertBridgrJobSearchProfileRequest Fields to upsert; omitted keys leave existing DB values unchanged on update. On create, defaults apply for missing columns.
+// UpsertBridgrJobSearchProfileRequest Create or update a job search profile. Omitted keys leave existing DB values unchanged on update;
+// on create, server defaults apply for missing columns (e.g. indeed, any goals, empty stack).
 type UpsertBridgrJobSearchProfileRequest struct {
-	BoardsEnabled           *[]string                 `json:"boards_enabled"`
-	CanonicalCvAnalysisUuid *openapi_types.UUID       `json:"canonical_cv_analysis_uuid"`
-	Locations               *[]map[string]interface{} `json:"locations"`
-	Matching                *map[string]interface{}   `json:"matching"`
-	MaxSurfacedJobs         *int32                    `json:"max_surfaced_jobs"`
-	TargetRoles             *[]string                 `json:"target_roles"`
+	CanonicalCvAnalysisUuid *openapi_types.UUID `json:"canonical_cv_analysis_uuid"`
+	CareerSwitch            *bool               `json:"career_switch"`
+
+	// CompanyStage Employer company stage filter
+	CompanyStage *UpsertBridgrJobSearchProfileRequestCompanyStage `json:"company_stage"`
+
+	// CompensationGoal Compensation direction for this slice
+	CompensationGoal *UpsertBridgrJobSearchProfileRequestCompensationGoal `json:"compensation_goal"`
+	Location         *string                                              `json:"location"`
+
+	// SeniorityGoal Seniority direction for this slice
+	SeniorityGoal         *UpsertBridgrJobSearchProfileRequestSeniorityGoal `json:"seniority_goal"`
+	SoftwareStackMustHave *[]string                                         `json:"software_stack_must_have"`
+
+	// SourceBoard Job board id for this search slice
+	SourceBoard *UpsertBridgrJobSearchProfileRequestSourceBoard `json:"source_board"`
+	TargetRole  *string                                         `json:"target_role"`
 }
+
+// UpsertBridgrJobSearchProfileRequestCompanyStage Employer company stage filter
+type UpsertBridgrJobSearchProfileRequestCompanyStage string
+
+// UpsertBridgrJobSearchProfileRequestCompensationGoal Compensation direction for this slice
+type UpsertBridgrJobSearchProfileRequestCompensationGoal string
+
+// UpsertBridgrJobSearchProfileRequestSeniorityGoal Seniority direction for this slice
+type UpsertBridgrJobSearchProfileRequestSeniorityGoal string
+
+// UpsertBridgrJobSearchProfileRequestSourceBoard Job board id for this search slice
+type UpsertBridgrJobSearchProfileRequestSourceBoard string
 
 // V1PostGenerateUploadUrlParams defines parameters for V1PostGenerateUploadUrl.
 type V1PostGenerateUploadUrlParams struct {
@@ -674,14 +798,32 @@ type V1GetBridgrUserJobNotificationsParams struct {
 	XAPIKEY string `json:"X-API-KEY"`
 }
 
-// V1GetBridgrUserJobSearchProfileParams defines parameters for V1GetBridgrUserJobSearchProfile.
-type V1GetBridgrUserJobSearchProfileParams struct {
+// V1ListBridgrUserJobSearchProfilesParams defines parameters for V1ListBridgrUserJobSearchProfiles.
+type V1ListBridgrUserJobSearchProfilesParams struct {
 	// XAPIKEY API Key of the service making the request
 	XAPIKEY string `json:"X-API-KEY"`
 }
 
-// V1PutBridgrUserJobSearchProfileParams defines parameters for V1PutBridgrUserJobSearchProfile.
-type V1PutBridgrUserJobSearchProfileParams struct {
+// V1CreateBridgrUserJobSearchProfileParams defines parameters for V1CreateBridgrUserJobSearchProfile.
+type V1CreateBridgrUserJobSearchProfileParams struct {
+	// XAPIKEY API Key of the service making the request
+	XAPIKEY string `json:"X-API-KEY"`
+}
+
+// V1DeleteBridgrUserJobSearchProfileParams defines parameters for V1DeleteBridgrUserJobSearchProfile.
+type V1DeleteBridgrUserJobSearchProfileParams struct {
+	// XAPIKEY API Key of the service making the request
+	XAPIKEY string `json:"X-API-KEY"`
+}
+
+// V1GetBridgrUserJobSearchProfileByUUIDParams defines parameters for V1GetBridgrUserJobSearchProfileByUUID.
+type V1GetBridgrUserJobSearchProfileByUUIDParams struct {
+	// XAPIKEY API Key of the service making the request
+	XAPIKEY string `json:"X-API-KEY"`
+}
+
+// V1PutBridgrUserJobSearchProfileByUUIDParams defines parameters for V1PutBridgrUserJobSearchProfileByUUID.
+type V1PutBridgrUserJobSearchProfileByUUIDParams struct {
 	// XAPIKEY API Key of the service making the request
 	XAPIKEY string `json:"X-API-KEY"`
 }
@@ -713,8 +855,11 @@ type V1PatchBridgrJobNotificationJSONRequestBody = PatchBridgrJobNotificationReq
 // V1PostBridgrUserJobDiscoveryRunsJSONRequestBody defines body for V1PostBridgrUserJobDiscoveryRuns for application/json ContentType.
 type V1PostBridgrUserJobDiscoveryRunsJSONRequestBody = CreateBridgrJobSearchDiscoveryRunRequest
 
-// V1PutBridgrUserJobSearchProfileJSONRequestBody defines body for V1PutBridgrUserJobSearchProfile for application/json ContentType.
-type V1PutBridgrUserJobSearchProfileJSONRequestBody = UpsertBridgrJobSearchProfileRequest
+// V1CreateBridgrUserJobSearchProfileJSONRequestBody defines body for V1CreateBridgrUserJobSearchProfile for application/json ContentType.
+type V1CreateBridgrUserJobSearchProfileJSONRequestBody = CreateBridgrJobSearchProfileRequest
+
+// V1PutBridgrUserJobSearchProfileByUUIDJSONRequestBody defines body for V1PutBridgrUserJobSearchProfileByUUID for application/json ContentType.
+type V1PutBridgrUserJobSearchProfileByUUIDJSONRequestBody = UpsertBridgrJobSearchProfileRequest
 
 // RequestEditorFn  is the function signature for the RequestEditor callback function
 type RequestEditorFn func(ctx context.Context, req *http.Request) error
@@ -909,13 +1054,24 @@ type ClientInterface interface {
 	// V1GetBridgrUserJobNotifications request
 	V1GetBridgrUserJobNotifications(ctx context.Context, userID int32, params *V1GetBridgrUserJobNotificationsParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// V1GetBridgrUserJobSearchProfile request
-	V1GetBridgrUserJobSearchProfile(ctx context.Context, userID int32, params *V1GetBridgrUserJobSearchProfileParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// V1ListBridgrUserJobSearchProfiles request
+	V1ListBridgrUserJobSearchProfiles(ctx context.Context, userID int32, params *V1ListBridgrUserJobSearchProfilesParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// V1PutBridgrUserJobSearchProfileWithBody request with any body
-	V1PutBridgrUserJobSearchProfileWithBody(ctx context.Context, userID int32, params *V1PutBridgrUserJobSearchProfileParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// V1CreateBridgrUserJobSearchProfileWithBody request with any body
+	V1CreateBridgrUserJobSearchProfileWithBody(ctx context.Context, userID int32, params *V1CreateBridgrUserJobSearchProfileParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	V1PutBridgrUserJobSearchProfile(ctx context.Context, userID int32, params *V1PutBridgrUserJobSearchProfileParams, body V1PutBridgrUserJobSearchProfileJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+	V1CreateBridgrUserJobSearchProfile(ctx context.Context, userID int32, params *V1CreateBridgrUserJobSearchProfileParams, body V1CreateBridgrUserJobSearchProfileJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// V1DeleteBridgrUserJobSearchProfile request
+	V1DeleteBridgrUserJobSearchProfile(ctx context.Context, userID int32, profileUUID openapi_types.UUID, params *V1DeleteBridgrUserJobSearchProfileParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// V1GetBridgrUserJobSearchProfileByUUID request
+	V1GetBridgrUserJobSearchProfileByUUID(ctx context.Context, userID int32, profileUUID openapi_types.UUID, params *V1GetBridgrUserJobSearchProfileByUUIDParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// V1PutBridgrUserJobSearchProfileByUUIDWithBody request with any body
+	V1PutBridgrUserJobSearchProfileByUUIDWithBody(ctx context.Context, userID int32, profileUUID openapi_types.UUID, params *V1PutBridgrUserJobSearchProfileByUUIDParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	V1PutBridgrUserJobSearchProfileByUUID(ctx context.Context, userID int32, profileUUID openapi_types.UUID, params *V1PutBridgrUserJobSearchProfileByUUIDParams, body V1PutBridgrUserJobSearchProfileByUUIDJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 }
 
 func (c *Client) V1PostGenerateUploadUrlWithBody(ctx context.Context, params *V1PostGenerateUploadUrlParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
@@ -1434,8 +1590,8 @@ func (c *Client) V1GetBridgrUserJobNotifications(ctx context.Context, userID int
 	return c.Client.Do(req)
 }
 
-func (c *Client) V1GetBridgrUserJobSearchProfile(ctx context.Context, userID int32, params *V1GetBridgrUserJobSearchProfileParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewV1GetBridgrUserJobSearchProfileRequest(c.Server, userID, params)
+func (c *Client) V1ListBridgrUserJobSearchProfiles(ctx context.Context, userID int32, params *V1ListBridgrUserJobSearchProfilesParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewV1ListBridgrUserJobSearchProfilesRequest(c.Server, userID, params)
 	if err != nil {
 		return nil, err
 	}
@@ -1446,8 +1602,8 @@ func (c *Client) V1GetBridgrUserJobSearchProfile(ctx context.Context, userID int
 	return c.Client.Do(req)
 }
 
-func (c *Client) V1PutBridgrUserJobSearchProfileWithBody(ctx context.Context, userID int32, params *V1PutBridgrUserJobSearchProfileParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewV1PutBridgrUserJobSearchProfileRequestWithBody(c.Server, userID, params, contentType, body)
+func (c *Client) V1CreateBridgrUserJobSearchProfileWithBody(ctx context.Context, userID int32, params *V1CreateBridgrUserJobSearchProfileParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewV1CreateBridgrUserJobSearchProfileRequestWithBody(c.Server, userID, params, contentType, body)
 	if err != nil {
 		return nil, err
 	}
@@ -1458,8 +1614,56 @@ func (c *Client) V1PutBridgrUserJobSearchProfileWithBody(ctx context.Context, us
 	return c.Client.Do(req)
 }
 
-func (c *Client) V1PutBridgrUserJobSearchProfile(ctx context.Context, userID int32, params *V1PutBridgrUserJobSearchProfileParams, body V1PutBridgrUserJobSearchProfileJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewV1PutBridgrUserJobSearchProfileRequest(c.Server, userID, params, body)
+func (c *Client) V1CreateBridgrUserJobSearchProfile(ctx context.Context, userID int32, params *V1CreateBridgrUserJobSearchProfileParams, body V1CreateBridgrUserJobSearchProfileJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewV1CreateBridgrUserJobSearchProfileRequest(c.Server, userID, params, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) V1DeleteBridgrUserJobSearchProfile(ctx context.Context, userID int32, profileUUID openapi_types.UUID, params *V1DeleteBridgrUserJobSearchProfileParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewV1DeleteBridgrUserJobSearchProfileRequest(c.Server, userID, profileUUID, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) V1GetBridgrUserJobSearchProfileByUUID(ctx context.Context, userID int32, profileUUID openapi_types.UUID, params *V1GetBridgrUserJobSearchProfileByUUIDParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewV1GetBridgrUserJobSearchProfileByUUIDRequest(c.Server, userID, profileUUID, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) V1PutBridgrUserJobSearchProfileByUUIDWithBody(ctx context.Context, userID int32, profileUUID openapi_types.UUID, params *V1PutBridgrUserJobSearchProfileByUUIDParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewV1PutBridgrUserJobSearchProfileByUUIDRequestWithBody(c.Server, userID, profileUUID, params, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) V1PutBridgrUserJobSearchProfileByUUID(ctx context.Context, userID int32, profileUUID openapi_types.UUID, params *V1PutBridgrUserJobSearchProfileByUUIDParams, body V1PutBridgrUserJobSearchProfileByUUIDJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewV1PutBridgrUserJobSearchProfileByUUIDRequest(c.Server, userID, profileUUID, params, body)
 	if err != nil {
 		return nil, err
 	}
@@ -3442,8 +3646,8 @@ func NewV1GetBridgrUserJobNotificationsRequest(server string, userID int32, para
 	return req, nil
 }
 
-// NewV1GetBridgrUserJobSearchProfileRequest generates requests for V1GetBridgrUserJobSearchProfile
-func NewV1GetBridgrUserJobSearchProfileRequest(server string, userID int32, params *V1GetBridgrUserJobSearchProfileParams) (*http.Request, error) {
+// NewV1ListBridgrUserJobSearchProfilesRequest generates requests for V1ListBridgrUserJobSearchProfiles
+func NewV1ListBridgrUserJobSearchProfilesRequest(server string, userID int32, params *V1ListBridgrUserJobSearchProfilesParams) (*http.Request, error) {
 	var err error
 
 	var pathParam0 string
@@ -3458,7 +3662,7 @@ func NewV1GetBridgrUserJobSearchProfileRequest(server string, userID int32, para
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/v1/bridgr/users/%s/job-search-profile", pathParam0)
+	operationPath := fmt.Sprintf("/v1/bridgr/users/%s/job-search-profiles", pathParam0)
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -3489,19 +3693,19 @@ func NewV1GetBridgrUserJobSearchProfileRequest(server string, userID int32, para
 	return req, nil
 }
 
-// NewV1PutBridgrUserJobSearchProfileRequest calls the generic V1PutBridgrUserJobSearchProfile builder with application/json body
-func NewV1PutBridgrUserJobSearchProfileRequest(server string, userID int32, params *V1PutBridgrUserJobSearchProfileParams, body V1PutBridgrUserJobSearchProfileJSONRequestBody) (*http.Request, error) {
+// NewV1CreateBridgrUserJobSearchProfileRequest calls the generic V1CreateBridgrUserJobSearchProfile builder with application/json body
+func NewV1CreateBridgrUserJobSearchProfileRequest(server string, userID int32, params *V1CreateBridgrUserJobSearchProfileParams, body V1CreateBridgrUserJobSearchProfileJSONRequestBody) (*http.Request, error) {
 	var bodyReader io.Reader
 	buf, err := json.Marshal(body)
 	if err != nil {
 		return nil, err
 	}
 	bodyReader = bytes.NewReader(buf)
-	return NewV1PutBridgrUserJobSearchProfileRequestWithBody(server, userID, params, "application/json", bodyReader)
+	return NewV1CreateBridgrUserJobSearchProfileRequestWithBody(server, userID, params, "application/json", bodyReader)
 }
 
-// NewV1PutBridgrUserJobSearchProfileRequestWithBody generates requests for V1PutBridgrUserJobSearchProfile with any type of body
-func NewV1PutBridgrUserJobSearchProfileRequestWithBody(server string, userID int32, params *V1PutBridgrUserJobSearchProfileParams, contentType string, body io.Reader) (*http.Request, error) {
+// NewV1CreateBridgrUserJobSearchProfileRequestWithBody generates requests for V1CreateBridgrUserJobSearchProfile with any type of body
+func NewV1CreateBridgrUserJobSearchProfileRequestWithBody(server string, userID int32, params *V1CreateBridgrUserJobSearchProfileParams, contentType string, body io.Reader) (*http.Request, error) {
 	var err error
 
 	var pathParam0 string
@@ -3516,7 +3720,182 @@ func NewV1PutBridgrUserJobSearchProfileRequestWithBody(server string, userID int
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/v1/bridgr/users/%s/job-search-profile", pathParam0)
+	operationPath := fmt.Sprintf("/v1/bridgr/users/%s/job-search-profiles", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	if params != nil {
+
+		var headerParam0 string
+
+		headerParam0, err = runtime.StyleParamWithLocation("simple", false, "X-API-KEY", runtime.ParamLocationHeader, params.XAPIKEY)
+		if err != nil {
+			return nil, err
+		}
+
+		req.Header.Set("X-API-KEY", headerParam0)
+
+	}
+
+	return req, nil
+}
+
+// NewV1DeleteBridgrUserJobSearchProfileRequest generates requests for V1DeleteBridgrUserJobSearchProfile
+func NewV1DeleteBridgrUserJobSearchProfileRequest(server string, userID int32, profileUUID openapi_types.UUID, params *V1DeleteBridgrUserJobSearchProfileParams) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "userID", runtime.ParamLocationPath, userID)
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithLocation("simple", false, "profileUUID", runtime.ParamLocationPath, profileUUID)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/v1/bridgr/users/%s/job-search-profiles/%s", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("DELETE", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+
+		var headerParam0 string
+
+		headerParam0, err = runtime.StyleParamWithLocation("simple", false, "X-API-KEY", runtime.ParamLocationHeader, params.XAPIKEY)
+		if err != nil {
+			return nil, err
+		}
+
+		req.Header.Set("X-API-KEY", headerParam0)
+
+	}
+
+	return req, nil
+}
+
+// NewV1GetBridgrUserJobSearchProfileByUUIDRequest generates requests for V1GetBridgrUserJobSearchProfileByUUID
+func NewV1GetBridgrUserJobSearchProfileByUUIDRequest(server string, userID int32, profileUUID openapi_types.UUID, params *V1GetBridgrUserJobSearchProfileByUUIDParams) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "userID", runtime.ParamLocationPath, userID)
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithLocation("simple", false, "profileUUID", runtime.ParamLocationPath, profileUUID)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/v1/bridgr/users/%s/job-search-profiles/%s", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+
+		var headerParam0 string
+
+		headerParam0, err = runtime.StyleParamWithLocation("simple", false, "X-API-KEY", runtime.ParamLocationHeader, params.XAPIKEY)
+		if err != nil {
+			return nil, err
+		}
+
+		req.Header.Set("X-API-KEY", headerParam0)
+
+	}
+
+	return req, nil
+}
+
+// NewV1PutBridgrUserJobSearchProfileByUUIDRequest calls the generic V1PutBridgrUserJobSearchProfileByUUID builder with application/json body
+func NewV1PutBridgrUserJobSearchProfileByUUIDRequest(server string, userID int32, profileUUID openapi_types.UUID, params *V1PutBridgrUserJobSearchProfileByUUIDParams, body V1PutBridgrUserJobSearchProfileByUUIDJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewV1PutBridgrUserJobSearchProfileByUUIDRequestWithBody(server, userID, profileUUID, params, "application/json", bodyReader)
+}
+
+// NewV1PutBridgrUserJobSearchProfileByUUIDRequestWithBody generates requests for V1PutBridgrUserJobSearchProfileByUUID with any type of body
+func NewV1PutBridgrUserJobSearchProfileByUUIDRequestWithBody(server string, userID int32, profileUUID openapi_types.UUID, params *V1PutBridgrUserJobSearchProfileByUUIDParams, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "userID", runtime.ParamLocationPath, userID)
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithLocation("simple", false, "profileUUID", runtime.ParamLocationPath, profileUUID)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/v1/bridgr/users/%s/job-search-profiles/%s", pathParam0, pathParam1)
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -3712,13 +4091,24 @@ type ClientWithResponsesInterface interface {
 	// V1GetBridgrUserJobNotificationsWithResponse request
 	V1GetBridgrUserJobNotificationsWithResponse(ctx context.Context, userID int32, params *V1GetBridgrUserJobNotificationsParams, reqEditors ...RequestEditorFn) (*V1GetBridgrUserJobNotificationsResponse, error)
 
-	// V1GetBridgrUserJobSearchProfileWithResponse request
-	V1GetBridgrUserJobSearchProfileWithResponse(ctx context.Context, userID int32, params *V1GetBridgrUserJobSearchProfileParams, reqEditors ...RequestEditorFn) (*V1GetBridgrUserJobSearchProfileResponse, error)
+	// V1ListBridgrUserJobSearchProfilesWithResponse request
+	V1ListBridgrUserJobSearchProfilesWithResponse(ctx context.Context, userID int32, params *V1ListBridgrUserJobSearchProfilesParams, reqEditors ...RequestEditorFn) (*V1ListBridgrUserJobSearchProfilesResponse, error)
 
-	// V1PutBridgrUserJobSearchProfileWithBodyWithResponse request with any body
-	V1PutBridgrUserJobSearchProfileWithBodyWithResponse(ctx context.Context, userID int32, params *V1PutBridgrUserJobSearchProfileParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*V1PutBridgrUserJobSearchProfileResponse, error)
+	// V1CreateBridgrUserJobSearchProfileWithBodyWithResponse request with any body
+	V1CreateBridgrUserJobSearchProfileWithBodyWithResponse(ctx context.Context, userID int32, params *V1CreateBridgrUserJobSearchProfileParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*V1CreateBridgrUserJobSearchProfileResponse, error)
 
-	V1PutBridgrUserJobSearchProfileWithResponse(ctx context.Context, userID int32, params *V1PutBridgrUserJobSearchProfileParams, body V1PutBridgrUserJobSearchProfileJSONRequestBody, reqEditors ...RequestEditorFn) (*V1PutBridgrUserJobSearchProfileResponse, error)
+	V1CreateBridgrUserJobSearchProfileWithResponse(ctx context.Context, userID int32, params *V1CreateBridgrUserJobSearchProfileParams, body V1CreateBridgrUserJobSearchProfileJSONRequestBody, reqEditors ...RequestEditorFn) (*V1CreateBridgrUserJobSearchProfileResponse, error)
+
+	// V1DeleteBridgrUserJobSearchProfileWithResponse request
+	V1DeleteBridgrUserJobSearchProfileWithResponse(ctx context.Context, userID int32, profileUUID openapi_types.UUID, params *V1DeleteBridgrUserJobSearchProfileParams, reqEditors ...RequestEditorFn) (*V1DeleteBridgrUserJobSearchProfileResponse, error)
+
+	// V1GetBridgrUserJobSearchProfileByUUIDWithResponse request
+	V1GetBridgrUserJobSearchProfileByUUIDWithResponse(ctx context.Context, userID int32, profileUUID openapi_types.UUID, params *V1GetBridgrUserJobSearchProfileByUUIDParams, reqEditors ...RequestEditorFn) (*V1GetBridgrUserJobSearchProfileByUUIDResponse, error)
+
+	// V1PutBridgrUserJobSearchProfileByUUIDWithBodyWithResponse request with any body
+	V1PutBridgrUserJobSearchProfileByUUIDWithBodyWithResponse(ctx context.Context, userID int32, profileUUID openapi_types.UUID, params *V1PutBridgrUserJobSearchProfileByUUIDParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*V1PutBridgrUserJobSearchProfileByUUIDResponse, error)
+
+	V1PutBridgrUserJobSearchProfileByUUIDWithResponse(ctx context.Context, userID int32, profileUUID openapi_types.UUID, params *V1PutBridgrUserJobSearchProfileByUUIDParams, body V1PutBridgrUserJobSearchProfileByUUIDJSONRequestBody, reqEditors ...RequestEditorFn) (*V1PutBridgrUserJobSearchProfileByUUIDResponse, error)
 }
 
 type V1PostGenerateUploadUrlResponse struct {
@@ -4587,7 +4977,81 @@ func (r V1GetBridgrUserJobNotificationsResponse) StatusCode() int {
 	return 0
 }
 
-type V1GetBridgrUserJobSearchProfileResponse struct {
+type V1ListBridgrUserJobSearchProfilesResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *BridgrJobSearchProfileListResponse
+	JSON401      *ErrorResponse
+	JSON500      *ErrorResponse
+}
+
+// Status returns HTTPResponse.Status
+func (r V1ListBridgrUserJobSearchProfilesResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r V1ListBridgrUserJobSearchProfilesResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type V1CreateBridgrUserJobSearchProfileResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON201      *BridgrJobSearchProfile
+	JSON400      *ErrorResponse
+	JSON401      *ErrorResponse
+	JSON409      *ErrorResponse
+	JSON500      *ErrorResponse
+}
+
+// Status returns HTTPResponse.Status
+func (r V1CreateBridgrUserJobSearchProfileResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r V1CreateBridgrUserJobSearchProfileResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type V1DeleteBridgrUserJobSearchProfileResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON401      *ErrorResponse
+	JSON404      *NotFoundErrorResponse
+	JSON500      *ErrorResponse
+}
+
+// Status returns HTTPResponse.Status
+func (r V1DeleteBridgrUserJobSearchProfileResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r V1DeleteBridgrUserJobSearchProfileResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type V1GetBridgrUserJobSearchProfileByUUIDResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON200      *BridgrJobSearchProfile
@@ -4597,7 +5061,7 @@ type V1GetBridgrUserJobSearchProfileResponse struct {
 }
 
 // Status returns HTTPResponse.Status
-func (r V1GetBridgrUserJobSearchProfileResponse) Status() string {
+func (r V1GetBridgrUserJobSearchProfileByUUIDResponse) Status() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Status
 	}
@@ -4605,25 +5069,26 @@ func (r V1GetBridgrUserJobSearchProfileResponse) Status() string {
 }
 
 // StatusCode returns HTTPResponse.StatusCode
-func (r V1GetBridgrUserJobSearchProfileResponse) StatusCode() int {
+func (r V1GetBridgrUserJobSearchProfileByUUIDResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
 	return 0
 }
 
-type V1PutBridgrUserJobSearchProfileResponse struct {
+type V1PutBridgrUserJobSearchProfileByUUIDResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON200      *BridgrJobSearchProfile
-	JSON201      *BridgrJobSearchProfile
 	JSON400      *ErrorResponse
 	JSON401      *ErrorResponse
+	JSON404      *NotFoundErrorResponse
+	JSON409      *ErrorResponse
 	JSON500      *ErrorResponse
 }
 
 // Status returns HTTPResponse.Status
-func (r V1PutBridgrUserJobSearchProfileResponse) Status() string {
+func (r V1PutBridgrUserJobSearchProfileByUUIDResponse) Status() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Status
 	}
@@ -4631,7 +5096,7 @@ func (r V1PutBridgrUserJobSearchProfileResponse) Status() string {
 }
 
 // StatusCode returns HTTPResponse.StatusCode
-func (r V1PutBridgrUserJobSearchProfileResponse) StatusCode() int {
+func (r V1PutBridgrUserJobSearchProfileByUUIDResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -5016,30 +5481,65 @@ func (c *ClientWithResponses) V1GetBridgrUserJobNotificationsWithResponse(ctx co
 	return ParseV1GetBridgrUserJobNotificationsResponse(rsp)
 }
 
-// V1GetBridgrUserJobSearchProfileWithResponse request returning *V1GetBridgrUserJobSearchProfileResponse
-func (c *ClientWithResponses) V1GetBridgrUserJobSearchProfileWithResponse(ctx context.Context, userID int32, params *V1GetBridgrUserJobSearchProfileParams, reqEditors ...RequestEditorFn) (*V1GetBridgrUserJobSearchProfileResponse, error) {
-	rsp, err := c.V1GetBridgrUserJobSearchProfile(ctx, userID, params, reqEditors...)
+// V1ListBridgrUserJobSearchProfilesWithResponse request returning *V1ListBridgrUserJobSearchProfilesResponse
+func (c *ClientWithResponses) V1ListBridgrUserJobSearchProfilesWithResponse(ctx context.Context, userID int32, params *V1ListBridgrUserJobSearchProfilesParams, reqEditors ...RequestEditorFn) (*V1ListBridgrUserJobSearchProfilesResponse, error) {
+	rsp, err := c.V1ListBridgrUserJobSearchProfiles(ctx, userID, params, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParseV1GetBridgrUserJobSearchProfileResponse(rsp)
+	return ParseV1ListBridgrUserJobSearchProfilesResponse(rsp)
 }
 
-// V1PutBridgrUserJobSearchProfileWithBodyWithResponse request with arbitrary body returning *V1PutBridgrUserJobSearchProfileResponse
-func (c *ClientWithResponses) V1PutBridgrUserJobSearchProfileWithBodyWithResponse(ctx context.Context, userID int32, params *V1PutBridgrUserJobSearchProfileParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*V1PutBridgrUserJobSearchProfileResponse, error) {
-	rsp, err := c.V1PutBridgrUserJobSearchProfileWithBody(ctx, userID, params, contentType, body, reqEditors...)
+// V1CreateBridgrUserJobSearchProfileWithBodyWithResponse request with arbitrary body returning *V1CreateBridgrUserJobSearchProfileResponse
+func (c *ClientWithResponses) V1CreateBridgrUserJobSearchProfileWithBodyWithResponse(ctx context.Context, userID int32, params *V1CreateBridgrUserJobSearchProfileParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*V1CreateBridgrUserJobSearchProfileResponse, error) {
+	rsp, err := c.V1CreateBridgrUserJobSearchProfileWithBody(ctx, userID, params, contentType, body, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParseV1PutBridgrUserJobSearchProfileResponse(rsp)
+	return ParseV1CreateBridgrUserJobSearchProfileResponse(rsp)
 }
 
-func (c *ClientWithResponses) V1PutBridgrUserJobSearchProfileWithResponse(ctx context.Context, userID int32, params *V1PutBridgrUserJobSearchProfileParams, body V1PutBridgrUserJobSearchProfileJSONRequestBody, reqEditors ...RequestEditorFn) (*V1PutBridgrUserJobSearchProfileResponse, error) {
-	rsp, err := c.V1PutBridgrUserJobSearchProfile(ctx, userID, params, body, reqEditors...)
+func (c *ClientWithResponses) V1CreateBridgrUserJobSearchProfileWithResponse(ctx context.Context, userID int32, params *V1CreateBridgrUserJobSearchProfileParams, body V1CreateBridgrUserJobSearchProfileJSONRequestBody, reqEditors ...RequestEditorFn) (*V1CreateBridgrUserJobSearchProfileResponse, error) {
+	rsp, err := c.V1CreateBridgrUserJobSearchProfile(ctx, userID, params, body, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParseV1PutBridgrUserJobSearchProfileResponse(rsp)
+	return ParseV1CreateBridgrUserJobSearchProfileResponse(rsp)
+}
+
+// V1DeleteBridgrUserJobSearchProfileWithResponse request returning *V1DeleteBridgrUserJobSearchProfileResponse
+func (c *ClientWithResponses) V1DeleteBridgrUserJobSearchProfileWithResponse(ctx context.Context, userID int32, profileUUID openapi_types.UUID, params *V1DeleteBridgrUserJobSearchProfileParams, reqEditors ...RequestEditorFn) (*V1DeleteBridgrUserJobSearchProfileResponse, error) {
+	rsp, err := c.V1DeleteBridgrUserJobSearchProfile(ctx, userID, profileUUID, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseV1DeleteBridgrUserJobSearchProfileResponse(rsp)
+}
+
+// V1GetBridgrUserJobSearchProfileByUUIDWithResponse request returning *V1GetBridgrUserJobSearchProfileByUUIDResponse
+func (c *ClientWithResponses) V1GetBridgrUserJobSearchProfileByUUIDWithResponse(ctx context.Context, userID int32, profileUUID openapi_types.UUID, params *V1GetBridgrUserJobSearchProfileByUUIDParams, reqEditors ...RequestEditorFn) (*V1GetBridgrUserJobSearchProfileByUUIDResponse, error) {
+	rsp, err := c.V1GetBridgrUserJobSearchProfileByUUID(ctx, userID, profileUUID, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseV1GetBridgrUserJobSearchProfileByUUIDResponse(rsp)
+}
+
+// V1PutBridgrUserJobSearchProfileByUUIDWithBodyWithResponse request with arbitrary body returning *V1PutBridgrUserJobSearchProfileByUUIDResponse
+func (c *ClientWithResponses) V1PutBridgrUserJobSearchProfileByUUIDWithBodyWithResponse(ctx context.Context, userID int32, profileUUID openapi_types.UUID, params *V1PutBridgrUserJobSearchProfileByUUIDParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*V1PutBridgrUserJobSearchProfileByUUIDResponse, error) {
+	rsp, err := c.V1PutBridgrUserJobSearchProfileByUUIDWithBody(ctx, userID, profileUUID, params, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseV1PutBridgrUserJobSearchProfileByUUIDResponse(rsp)
+}
+
+func (c *ClientWithResponses) V1PutBridgrUserJobSearchProfileByUUIDWithResponse(ctx context.Context, userID int32, profileUUID openapi_types.UUID, params *V1PutBridgrUserJobSearchProfileByUUIDParams, body V1PutBridgrUserJobSearchProfileByUUIDJSONRequestBody, reqEditors ...RequestEditorFn) (*V1PutBridgrUserJobSearchProfileByUUIDResponse, error) {
+	rsp, err := c.V1PutBridgrUserJobSearchProfileByUUID(ctx, userID, profileUUID, params, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseV1PutBridgrUserJobSearchProfileByUUIDResponse(rsp)
 }
 
 // ParseV1PostGenerateUploadUrlResponse parses an HTTP response from a V1PostGenerateUploadUrlWithResponse call
@@ -6752,15 +7252,149 @@ func ParseV1GetBridgrUserJobNotificationsResponse(rsp *http.Response) (*V1GetBri
 	return response, nil
 }
 
-// ParseV1GetBridgrUserJobSearchProfileResponse parses an HTTP response from a V1GetBridgrUserJobSearchProfileWithResponse call
-func ParseV1GetBridgrUserJobSearchProfileResponse(rsp *http.Response) (*V1GetBridgrUserJobSearchProfileResponse, error) {
+// ParseV1ListBridgrUserJobSearchProfilesResponse parses an HTTP response from a V1ListBridgrUserJobSearchProfilesWithResponse call
+func ParseV1ListBridgrUserJobSearchProfilesResponse(rsp *http.Response) (*V1ListBridgrUserJobSearchProfilesResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
 	defer func() { _ = rsp.Body.Close() }()
 	if err != nil {
 		return nil, err
 	}
 
-	response := &V1GetBridgrUserJobSearchProfileResponse{
+	response := &V1ListBridgrUserJobSearchProfilesResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest BridgrJobSearchProfileListResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseV1CreateBridgrUserJobSearchProfileResponse parses an HTTP response from a V1CreateBridgrUserJobSearchProfileWithResponse call
+func ParseV1CreateBridgrUserJobSearchProfileResponse(rsp *http.Response) (*V1CreateBridgrUserJobSearchProfileResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &V1CreateBridgrUserJobSearchProfileResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 201:
+		var dest BridgrJobSearchProfile
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON201 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON409 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseV1DeleteBridgrUserJobSearchProfileResponse parses an HTTP response from a V1DeleteBridgrUserJobSearchProfileWithResponse call
+func ParseV1DeleteBridgrUserJobSearchProfileResponse(rsp *http.Response) (*V1DeleteBridgrUserJobSearchProfileResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &V1DeleteBridgrUserJobSearchProfileResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest NotFoundErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseV1GetBridgrUserJobSearchProfileByUUIDResponse parses an HTTP response from a V1GetBridgrUserJobSearchProfileByUUIDWithResponse call
+func ParseV1GetBridgrUserJobSearchProfileByUUIDResponse(rsp *http.Response) (*V1GetBridgrUserJobSearchProfileByUUIDResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &V1GetBridgrUserJobSearchProfileByUUIDResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}
@@ -6799,15 +7433,15 @@ func ParseV1GetBridgrUserJobSearchProfileResponse(rsp *http.Response) (*V1GetBri
 	return response, nil
 }
 
-// ParseV1PutBridgrUserJobSearchProfileResponse parses an HTTP response from a V1PutBridgrUserJobSearchProfileWithResponse call
-func ParseV1PutBridgrUserJobSearchProfileResponse(rsp *http.Response) (*V1PutBridgrUserJobSearchProfileResponse, error) {
+// ParseV1PutBridgrUserJobSearchProfileByUUIDResponse parses an HTTP response from a V1PutBridgrUserJobSearchProfileByUUIDWithResponse call
+func ParseV1PutBridgrUserJobSearchProfileByUUIDResponse(rsp *http.Response) (*V1PutBridgrUserJobSearchProfileByUUIDResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
 	defer func() { _ = rsp.Body.Close() }()
 	if err != nil {
 		return nil, err
 	}
 
-	response := &V1PutBridgrUserJobSearchProfileResponse{
+	response := &V1PutBridgrUserJobSearchProfileByUUIDResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}
@@ -6819,13 +7453,6 @@ func ParseV1PutBridgrUserJobSearchProfileResponse(rsp *http.Response) (*V1PutBri
 			return nil, err
 		}
 		response.JSON200 = &dest
-
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 201:
-		var dest BridgrJobSearchProfile
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON201 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
 		var dest ErrorResponse
@@ -6840,6 +7467,20 @@ func ParseV1PutBridgrUserJobSearchProfileResponse(rsp *http.Response) (*V1PutBri
 			return nil, err
 		}
 		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest NotFoundErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON409 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
 		var dest ErrorResponse

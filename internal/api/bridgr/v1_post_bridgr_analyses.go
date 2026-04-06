@@ -9,12 +9,9 @@ import (
 	"strings"
 
 	apierrors "github.com/Kanishkmittal55/bridgr-api/internal/errors"
-	"github.com/Kanishkmittal55/bridgr-api/internal/bridgr_worker"
-	"github.com/Kanishkmittal55/bridgr-api/internal/config"
 	"github.com/Kanishkmittal55/bridgr-api/internal/repository/sqlc"
 	"github.com/Kanishkmittal55/bridgr-api/internal/uuid"
 	types "github.com/Kanishkmittal55/bridgr-api/pkg/types"
-	guuid "github.com/gofrs/uuid/v5"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgtype"
@@ -118,17 +115,6 @@ func (s *server) v1PostBridgrAnalyses(ctx context.Context, payload types.CreateB
 	row, err := s.deps.Repo.CreateSkillGapAnalysis(ctx, s.querier(), params)
 	if err != nil {
 		return nil, fmt.Errorf("%w: create analysis: %w", apierrors.ErrInternal, err)
-	}
-
-	cfg := config.Get()
-	if cfg.BridgrQueueURL != "" && s.deps.SQSClient != nil {
-		uid, uerr := guuid.FromBytes(row.Uuid.Bytes[:])
-		if uerr != nil {
-			return nil, fmt.Errorf("%w: analysis uuid: %w", apierrors.ErrInternal, uerr)
-		}
-		if err := bridgr_worker.EnqueueSkillGapAnalysis(ctx, s.deps.SQSClient, cfg.BridgrQueueURL, uid); err != nil {
-			return nil, fmt.Errorf("%w: enqueue skill-gap job: %w", apierrors.ErrInternal, err)
-		}
 	}
 
 	if haveCand {

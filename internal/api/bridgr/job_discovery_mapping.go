@@ -1,9 +1,10 @@
 package bridgr
 
 import (
+	"bytes"
 	"encoding/json"
-	"fmt"
-	"time"
+	"sort"
+	"strings"
 
 	"github.com/Kanishkmittal55/bridgr-api/internal/repository/sqlc"
 	"github.com/Kanishkmittal55/bridgr-api/internal/uuid"
@@ -17,12 +18,19 @@ func jobSearchProfileFromRow(row *sqlc.BridgrJobSearchProfile) (types.BridgrJobS
 		return types.BridgrJobSearchProfile{}, err
 	}
 	out := types.BridgrJobSearchProfile{
-		Uuid:            uid,
-		Id:              row.ID,
-		UserId:          row.UserID,
-		MaxSurfacedJobs: row.MaxSurfacedJobs,
-		CreatedAt:       pgTimestampToTime(row.CreatedAt),
-		UpdatedAt:       pgTimestampToTime(row.UpdatedAt),
+		Uuid:                  uid,
+		Id:                    row.ID,
+		UserId:                row.UserID,
+		TargetRole:            row.TargetRole,
+		Location:              row.Location,
+		SourceBoard:           types.BridgrJobSearchProfileSourceBoard(row.SourceBoard),
+		CareerSwitch:          row.CareerSwitch,
+		CompanyStage:          types.BridgrJobSearchProfileCompanyStage(row.CompanyStage),
+		SeniorityGoal:         types.BridgrJobSearchProfileSeniorityGoal(row.SeniorityGoal),
+		CompensationGoal:      types.BridgrJobSearchProfileCompensationGoal(row.CompensationGoal),
+		SoftwareStackMustHave: cloneStringSlice(row.SoftwareStackMustHave),
+		CreatedAt:             pgTimestampToTime(row.CreatedAt),
+		UpdatedAt:             pgTimestampToTime(row.UpdatedAt),
 	}
 	if row.CanonicalCvAnalysisUuid.Valid {
 		o, err := uuid.ConvertPgUUIDToOapiUUID(row.CanonicalCvAnalysisUuid)
@@ -31,49 +39,7 @@ func jobSearchProfileFromRow(row *sqlc.BridgrJobSearchProfile) (types.BridgrJobS
 		}
 		out.CanonicalCvAnalysisUuid = &o
 	}
-	if tr, ok := decodeStringSlice(row.TargetRoles); ok {
-		out.TargetRoles = &tr
-	}
-	if loc, ok := decodeLocationSlice(row.Locations); ok {
-		out.Locations = &loc
-	}
-	if be, ok := decodeStringSlice(row.BoardsEnabled); ok {
-		out.BoardsEnabled = &be
-	}
-	if m := jsonBytesToMap(row.Matching); m != nil {
-		out.Matching = m
-	}
 	return out, nil
-}
-
-func decodeStringSlice(b []byte) ([]string, bool) {
-	if len(b) == 0 {
-		return nil, false
-	}
-	var s []string
-	if err := json.Unmarshal(b, &s); err != nil {
-		return nil, false
-	}
-	return s, true
-}
-
-func decodeLocationSlice(b []byte) ([]map[string]interface{}, bool) {
-	if len(b) == 0 {
-		return nil, false
-	}
-	var raw []json.RawMessage
-	if err := json.Unmarshal(b, &raw); err != nil {
-		return nil, false
-	}
-	out := make([]map[string]interface{}, 0, len(raw))
-	for _, r := range raw {
-		var m map[string]interface{}
-		if err := json.Unmarshal(r, &m); err != nil {
-			continue
-		}
-		out = append(out, m)
-	}
-	return out, true
 }
 
 func mustJSONBytes(v interface{}) []byte {
@@ -200,28 +166,39 @@ func jobNotificationFromRow(row *sqlc.BridgrJobNotification) (types.BridgrJobNot
 
 func profileToCreateParams(userID int32, req types.UpsertBridgrJobSearchProfileRequest) (sqlc.CreateJobSearchProfileParams, error) {
 	p := sqlc.CreateJobSearchProfileParams{
-		UserID:          userID,
-		TargetRoles:     []byte("[]"),
-		Locations:       []byte("[]"),
-		BoardsEnabled:   []byte("[]"),
-		Matching:        []byte("{}"),
-		MaxSurfacedJobs: 3,
+		UserID:                userID,
+		TargetRole:            "",
+		Location:              "",
+		SourceBoard:           "indeed",
+		CareerSwitch:          false,
+		CompanyStage:          "any",
+		SeniorityGoal:         "any",
+		CompensationGoal:      "any",
+		SoftwareStackMustHave: []string{},
 	}
-	if req.TargetRoles != nil {
-		p.TargetRoles = mustJSONBytes(*req.TargetRoles)
+	if req.TargetRole != nil {
+		p.TargetRole = *req.TargetRole
 	}
-	if req.Locations != nil {
-		p.Locations = mustJSONBytes(*req.Locations)
+	if req.Location != nil {
+		p.Location = *req.Location
 	}
-	if req.BoardsEnabled != nil {
-		p.BoardsEnabled = mustJSONBytes(*req.BoardsEnabled)
+	if req.SourceBoard != nil {
+		p.SourceBoard = string(*req.SourceBoard)
 	}
-	if req.Matching != nil {
-		b, err := json.Marshal(*req.Matching)
-		if err != nil {
-			return p, fmt.Errorf("matching: %w", err)
-		}
-		p.Matching = b
+	if req.CareerSwitch != nil {
+		p.CareerSwitch = *req.CareerSwitch
+	}
+	if req.CompanyStage != nil {
+		p.CompanyStage = string(*req.CompanyStage)
+	}
+	if req.SeniorityGoal != nil {
+		p.SeniorityGoal = string(*req.SeniorityGoal)
+	}
+	if req.CompensationGoal != nil {
+		p.CompensationGoal = string(*req.CompensationGoal)
+	}
+	if req.SoftwareStackMustHave != nil {
+		p.SoftwareStackMustHave = cloneStringSlice(*req.SoftwareStackMustHave)
 	}
 	if req.CanonicalCvAnalysisUuid != nil {
 		pg, err := uuid.ConvertOapiUUIDToPgUUID(*req.CanonicalCvAnalysisUuid)
@@ -229,9 +206,6 @@ func profileToCreateParams(userID int32, req types.UpsertBridgrJobSearchProfileR
 			return p, err
 		}
 		p.CanonicalCvAnalysisUuid = pg
-	}
-	if req.MaxSurfacedJobs != nil {
-		p.MaxSurfacedJobs = *req.MaxSurfacedJobs
 	}
 	return p, nil
 }
@@ -239,28 +213,39 @@ func profileToCreateParams(userID int32, req types.UpsertBridgrJobSearchProfileR
 func profileToUpdateByUserParams(existing *sqlc.BridgrJobSearchProfile, req types.UpsertBridgrJobSearchProfileRequest) (sqlc.UpdateJobSearchProfileByUserIDParams, error) {
 	p := sqlc.UpdateJobSearchProfileByUserIDParams{
 		UserID:                  existing.UserID,
-		TargetRoles:             existing.TargetRoles,
-		Locations:               existing.Locations,
-		BoardsEnabled:           existing.BoardsEnabled,
-		Matching:                existing.Matching,
+		TargetRole:              existing.TargetRole,
+		Location:                existing.Location,
+		SourceBoard:             existing.SourceBoard,
+		CareerSwitch:            existing.CareerSwitch,
+		CompanyStage:            existing.CompanyStage,
+		SeniorityGoal:           existing.SeniorityGoal,
+		CompensationGoal:        existing.CompensationGoal,
+		SoftwareStackMustHave:   cloneStringSlice(existing.SoftwareStackMustHave),
 		CanonicalCvAnalysisUuid: existing.CanonicalCvAnalysisUuid,
-		MaxSurfacedJobs:         existing.MaxSurfacedJobs,
 	}
-	if req.TargetRoles != nil {
-		p.TargetRoles = mustJSONBytes(*req.TargetRoles)
+	if req.TargetRole != nil {
+		p.TargetRole = *req.TargetRole
 	}
-	if req.Locations != nil {
-		p.Locations = mustJSONBytes(*req.Locations)
+	if req.Location != nil {
+		p.Location = *req.Location
 	}
-	if req.BoardsEnabled != nil {
-		p.BoardsEnabled = mustJSONBytes(*req.BoardsEnabled)
+	if req.SourceBoard != nil {
+		p.SourceBoard = string(*req.SourceBoard)
 	}
-	if req.Matching != nil {
-		b, err := json.Marshal(*req.Matching)
-		if err != nil {
-			return p, fmt.Errorf("matching: %w", err)
-		}
-		p.Matching = b
+	if req.CareerSwitch != nil {
+		p.CareerSwitch = *req.CareerSwitch
+	}
+	if req.CompanyStage != nil {
+		p.CompanyStage = string(*req.CompanyStage)
+	}
+	if req.SeniorityGoal != nil {
+		p.SeniorityGoal = string(*req.SeniorityGoal)
+	}
+	if req.CompensationGoal != nil {
+		p.CompensationGoal = string(*req.CompensationGoal)
+	}
+	if req.SoftwareStackMustHave != nil {
+		p.SoftwareStackMustHave = cloneStringSlice(*req.SoftwareStackMustHave)
 	}
 	if req.CanonicalCvAnalysisUuid != nil {
 		pg, err := uuid.ConvertOapiUUIDToPgUUID(*req.CanonicalCvAnalysisUuid)
@@ -268,15 +253,169 @@ func profileToUpdateByUserParams(existing *sqlc.BridgrJobSearchProfile, req type
 			return p, err
 		}
 		p.CanonicalCvAnalysisUuid = pg
-	} else {
-		// explicit null in JSON omitted — keep existing
-	}
-	if req.MaxSurfacedJobs != nil {
-		p.MaxSurfacedJobs = *req.MaxSurfacedJobs
 	}
 	return p, nil
 }
 
-func discoveryRateWindowStart() pgtype.Timestamp {
-	return pgtype.Timestamp{Time: time.Now().UTC().Add(-1 * time.Hour), Valid: true}
+func profileToUpdateByUserIDAndUUIDParams(existing *sqlc.BridgrJobSearchProfile, req types.UpsertBridgrJobSearchProfileRequest) (sqlc.UpdateJobSearchProfileByUserIDAndUUIDParams, error) {
+	p := sqlc.UpdateJobSearchProfileByUserIDAndUUIDParams{
+		UserID:                  existing.UserID,
+		Uuid:                    existing.Uuid,
+		TargetRole:              existing.TargetRole,
+		Location:                existing.Location,
+		SourceBoard:             existing.SourceBoard,
+		CareerSwitch:            existing.CareerSwitch,
+		CompanyStage:            existing.CompanyStage,
+		SeniorityGoal:           existing.SeniorityGoal,
+		CompensationGoal:        existing.CompensationGoal,
+		SoftwareStackMustHave:   cloneStringSlice(existing.SoftwareStackMustHave),
+		CanonicalCvAnalysisUuid: existing.CanonicalCvAnalysisUuid,
+	}
+	if req.TargetRole != nil {
+		p.TargetRole = *req.TargetRole
+	}
+	if req.Location != nil {
+		p.Location = *req.Location
+	}
+	if req.SourceBoard != nil {
+		p.SourceBoard = string(*req.SourceBoard)
+	}
+	if req.CareerSwitch != nil {
+		p.CareerSwitch = *req.CareerSwitch
+	}
+	if req.CompanyStage != nil {
+		p.CompanyStage = string(*req.CompanyStage)
+	}
+	if req.SeniorityGoal != nil {
+		p.SeniorityGoal = string(*req.SeniorityGoal)
+	}
+	if req.CompensationGoal != nil {
+		p.CompensationGoal = string(*req.CompensationGoal)
+	}
+	if req.SoftwareStackMustHave != nil {
+		p.SoftwareStackMustHave = cloneStringSlice(*req.SoftwareStackMustHave)
+	}
+	if req.CanonicalCvAnalysisUuid != nil {
+		pg, err := uuid.ConvertOapiUUIDToPgUUID(*req.CanonicalCvAnalysisUuid)
+		if err != nil {
+			return p, err
+		}
+		p.CanonicalCvAnalysisUuid = pg
+	}
+	return p, nil
+}
+
+func cloneStringSlice(s []string) []string {
+	if len(s) == 0 {
+		return []string{}
+	}
+	out := make([]string, len(s))
+	copy(out, s)
+	return out
+}
+
+// jobSearchProfileNaturalKey is the per-user uniqueness key for job search profiles.
+type jobSearchProfileNaturalKey struct {
+	TargetRole              string
+	Location                string
+	SourceBoard             string
+	CareerSwitch            bool
+	CompanyStage            string
+	SeniorityGoal           string
+	CompensationGoal        string
+	SoftwareStackMustHave   []string
+	CanonicalCvAnalysisUuid pgtype.UUID
+}
+
+func naturalKeyFromRow(row *sqlc.BridgrJobSearchProfile) jobSearchProfileNaturalKey {
+	return jobSearchProfileNaturalKey{
+		TargetRole:              row.TargetRole,
+		Location:                row.Location,
+		SourceBoard:             row.SourceBoard,
+		CareerSwitch:            row.CareerSwitch,
+		CompanyStage:            row.CompanyStage,
+		SeniorityGoal:           row.SeniorityGoal,
+		CompensationGoal:        row.CompensationGoal,
+		SoftwareStackMustHave:   cloneStringSlice(row.SoftwareStackMustHave),
+		CanonicalCvAnalysisUuid: row.CanonicalCvAnalysisUuid,
+	}
+}
+
+func naturalKeyFromCreate(p sqlc.CreateJobSearchProfileParams) jobSearchProfileNaturalKey {
+	return jobSearchProfileNaturalKey{
+		TargetRole:              p.TargetRole,
+		Location:                p.Location,
+		SourceBoard:             p.SourceBoard,
+		CareerSwitch:            p.CareerSwitch,
+		CompanyStage:            p.CompanyStage,
+		SeniorityGoal:           p.SeniorityGoal,
+		CompensationGoal:        p.CompensationGoal,
+		SoftwareStackMustHave:   cloneStringSlice(p.SoftwareStackMustHave),
+		CanonicalCvAnalysisUuid: p.CanonicalCvAnalysisUuid,
+	}
+}
+
+func naturalKeyFromUpdate(p sqlc.UpdateJobSearchProfileByUserIDAndUUIDParams) jobSearchProfileNaturalKey {
+	return jobSearchProfileNaturalKey{
+		TargetRole:              p.TargetRole,
+		Location:                p.Location,
+		SourceBoard:             p.SourceBoard,
+		CareerSwitch:            p.CareerSwitch,
+		CompanyStage:            p.CompanyStage,
+		SeniorityGoal:           p.SeniorityGoal,
+		CompensationGoal:        p.CompensationGoal,
+		SoftwareStackMustHave:   cloneStringSlice(p.SoftwareStackMustHave),
+		CanonicalCvAnalysisUuid: p.CanonicalCvAnalysisUuid,
+	}
+}
+
+func (a jobSearchProfileNaturalKey) equals(b jobSearchProfileNaturalKey) bool {
+	if strings.TrimSpace(a.TargetRole) != strings.TrimSpace(b.TargetRole) {
+		return false
+	}
+	if strings.TrimSpace(a.Location) != strings.TrimSpace(b.Location) {
+		return false
+	}
+	if strings.TrimSpace(a.SourceBoard) != strings.TrimSpace(b.SourceBoard) {
+		return false
+	}
+	if a.CareerSwitch != b.CareerSwitch {
+		return false
+	}
+	if strings.TrimSpace(a.CompanyStage) != strings.TrimSpace(b.CompanyStage) {
+		return false
+	}
+	if strings.TrimSpace(a.SeniorityGoal) != strings.TrimSpace(b.SeniorityGoal) {
+		return false
+	}
+	if strings.TrimSpace(a.CompensationGoal) != strings.TrimSpace(b.CompensationGoal) {
+		return false
+	}
+	if !stringSlicesEqualSorted(a.SoftwareStackMustHave, b.SoftwareStackMustHave) {
+		return false
+	}
+	x, y := a.CanonicalCvAnalysisUuid, b.CanonicalCvAnalysisUuid
+	if !x.Valid && !y.Valid {
+		return true
+	}
+	if !x.Valid || !y.Valid {
+		return false
+	}
+	return bytes.Equal(x.Bytes[:], y.Bytes[:])
+}
+
+func stringSlicesEqualSorted(a, b []string) bool {
+	if len(a) != len(b) {
+		return false
+	}
+	aa := append([]string(nil), a...)
+	bb := append([]string(nil), b...)
+	sort.Strings(aa)
+	sort.Strings(bb)
+	for i := range aa {
+		if aa[i] != bb[i] {
+			return false
+		}
+	}
+	return true
 }

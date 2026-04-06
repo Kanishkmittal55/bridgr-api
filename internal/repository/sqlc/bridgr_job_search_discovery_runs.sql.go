@@ -216,133 +216,47 @@ func (q *Queries) ListJobSearchDiscoveryRunsByUser(ctx context.Context, arg List
 	return items, nil
 }
 
-const updateJobSearchDiscoveryRunFinished = `-- name: UpdateJobSearchDiscoveryRunFinished :one
+const patchJobSearchDiscoveryRun = `-- name: PatchJobSearchDiscoveryRun :one
 UPDATE bridgr.job_search_discovery_runs
 SET
     status = $2,
-    completed_at = $3,
-    raw_candidate_count = $4,
-    new_candidate_count = $5,
-    radar_meta = $6,
-    error_code = $7,
-    error_detail = $8
+    started_at = $3,
+    completed_at = $4,
+    raw_candidate_count = $5,
+    new_candidate_count = $6,
+    radar_meta = $7,
+    error_code = $8,
+    error_detail = $9,
+    sqs_message_id = $10
 WHERE id = $1
 RETURNING uuid, id, user_id, status, request_params, radar_meta, raw_candidate_count, new_candidate_count, started_at, completed_at, error_code, error_detail, sqs_message_id, created_at, updated_at
 `
 
-type UpdateJobSearchDiscoveryRunFinishedParams struct {
+type PatchJobSearchDiscoveryRunParams struct {
 	ID                int64            `db:"id"`
 	Status            string           `db:"status"`
+	StartedAt         pgtype.Timestamp `db:"started_at"`
 	CompletedAt       pgtype.Timestamp `db:"completed_at"`
 	RawCandidateCount int32            `db:"raw_candidate_count"`
 	NewCandidateCount int32            `db:"new_candidate_count"`
 	RadarMeta         []byte           `db:"radar_meta"`
 	ErrorCode         pgtype.Text      `db:"error_code"`
 	ErrorDetail       pgtype.Text      `db:"error_detail"`
+	SqsMessageID      pgtype.Text      `db:"sqs_message_id"`
 }
 
-func (q *Queries) UpdateJobSearchDiscoveryRunFinished(ctx context.Context, arg UpdateJobSearchDiscoveryRunFinishedParams) (BridgrJobSearchDiscoveryRun, error) {
-	row := q.db.QueryRow(ctx, updateJobSearchDiscoveryRunFinished,
+// Sets all mutable execution fields; callers merge from an existing row for columns they do not intend to change.
+func (q *Queries) PatchJobSearchDiscoveryRun(ctx context.Context, arg PatchJobSearchDiscoveryRunParams) (BridgrJobSearchDiscoveryRun, error) {
+	row := q.db.QueryRow(ctx, patchJobSearchDiscoveryRun,
 		arg.ID,
 		arg.Status,
+		arg.StartedAt,
 		arg.CompletedAt,
 		arg.RawCandidateCount,
 		arg.NewCandidateCount,
 		arg.RadarMeta,
 		arg.ErrorCode,
 		arg.ErrorDetail,
-	)
-	var i BridgrJobSearchDiscoveryRun
-	err := row.Scan(
-		&i.Uuid,
-		&i.ID,
-		&i.UserID,
-		&i.Status,
-		&i.RequestParams,
-		&i.RadarMeta,
-		&i.RawCandidateCount,
-		&i.NewCandidateCount,
-		&i.StartedAt,
-		&i.CompletedAt,
-		&i.ErrorCode,
-		&i.ErrorDetail,
-		&i.SqsMessageID,
-		&i.CreatedAt,
-		&i.UpdatedAt,
-	)
-	return i, err
-}
-
-const updateJobSearchDiscoveryRunProgress = `-- name: UpdateJobSearchDiscoveryRunProgress :one
-UPDATE bridgr.job_search_discovery_runs
-SET
-    status = $2,
-    raw_candidate_count = $3,
-    new_candidate_count = $4,
-    radar_meta = $5
-WHERE id = $1
-RETURNING uuid, id, user_id, status, request_params, radar_meta, raw_candidate_count, new_candidate_count, started_at, completed_at, error_code, error_detail, sqs_message_id, created_at, updated_at
-`
-
-type UpdateJobSearchDiscoveryRunProgressParams struct {
-	ID                int64  `db:"id"`
-	Status            string `db:"status"`
-	RawCandidateCount int32  `db:"raw_candidate_count"`
-	NewCandidateCount int32  `db:"new_candidate_count"`
-	RadarMeta         []byte `db:"radar_meta"`
-}
-
-func (q *Queries) UpdateJobSearchDiscoveryRunProgress(ctx context.Context, arg UpdateJobSearchDiscoveryRunProgressParams) (BridgrJobSearchDiscoveryRun, error) {
-	row := q.db.QueryRow(ctx, updateJobSearchDiscoveryRunProgress,
-		arg.ID,
-		arg.Status,
-		arg.RawCandidateCount,
-		arg.NewCandidateCount,
-		arg.RadarMeta,
-	)
-	var i BridgrJobSearchDiscoveryRun
-	err := row.Scan(
-		&i.Uuid,
-		&i.ID,
-		&i.UserID,
-		&i.Status,
-		&i.RequestParams,
-		&i.RadarMeta,
-		&i.RawCandidateCount,
-		&i.NewCandidateCount,
-		&i.StartedAt,
-		&i.CompletedAt,
-		&i.ErrorCode,
-		&i.ErrorDetail,
-		&i.SqsMessageID,
-		&i.CreatedAt,
-		&i.UpdatedAt,
-	)
-	return i, err
-}
-
-const updateJobSearchDiscoveryRunStarted = `-- name: UpdateJobSearchDiscoveryRunStarted :one
-UPDATE bridgr.job_search_discovery_runs
-SET
-    status = $2,
-    started_at = $3,
-    sqs_message_id = $4
-WHERE id = $1
-RETURNING uuid, id, user_id, status, request_params, radar_meta, raw_candidate_count, new_candidate_count, started_at, completed_at, error_code, error_detail, sqs_message_id, created_at, updated_at
-`
-
-type UpdateJobSearchDiscoveryRunStartedParams struct {
-	ID           int64            `db:"id"`
-	Status       string           `db:"status"`
-	StartedAt    pgtype.Timestamp `db:"started_at"`
-	SqsMessageID pgtype.Text      `db:"sqs_message_id"`
-}
-
-func (q *Queries) UpdateJobSearchDiscoveryRunStarted(ctx context.Context, arg UpdateJobSearchDiscoveryRunStartedParams) (BridgrJobSearchDiscoveryRun, error) {
-	row := q.db.QueryRow(ctx, updateJobSearchDiscoveryRunStarted,
-		arg.ID,
-		arg.Status,
-		arg.StartedAt,
 		arg.SqsMessageID,
 	)
 	var i BridgrJobSearchDiscoveryRun
@@ -366,20 +280,20 @@ func (q *Queries) UpdateJobSearchDiscoveryRunStarted(ctx context.Context, arg Up
 	return i, err
 }
 
-const updateJobSearchDiscoveryRunStatus = `-- name: UpdateJobSearchDiscoveryRunStatus :one
+const setJobSearchDiscoveryRunStatus = `-- name: SetJobSearchDiscoveryRunStatus :one
 UPDATE bridgr.job_search_discovery_runs
 SET status = $2
 WHERE id = $1
 RETURNING uuid, id, user_id, status, request_params, radar_meta, raw_candidate_count, new_candidate_count, started_at, completed_at, error_code, error_detail, sqs_message_id, created_at, updated_at
 `
 
-type UpdateJobSearchDiscoveryRunStatusParams struct {
+type SetJobSearchDiscoveryRunStatusParams struct {
 	ID     int64  `db:"id"`
 	Status string `db:"status"`
 }
 
-func (q *Queries) UpdateJobSearchDiscoveryRunStatus(ctx context.Context, arg UpdateJobSearchDiscoveryRunStatusParams) (BridgrJobSearchDiscoveryRun, error) {
-	row := q.db.QueryRow(ctx, updateJobSearchDiscoveryRunStatus, arg.ID, arg.Status)
+func (q *Queries) SetJobSearchDiscoveryRunStatus(ctx context.Context, arg SetJobSearchDiscoveryRunStatusParams) (BridgrJobSearchDiscoveryRun, error) {
+	row := q.db.QueryRow(ctx, setJobSearchDiscoveryRunStatus, arg.ID, arg.Status)
 	var i BridgrJobSearchDiscoveryRun
 	err := row.Scan(
 		&i.Uuid,

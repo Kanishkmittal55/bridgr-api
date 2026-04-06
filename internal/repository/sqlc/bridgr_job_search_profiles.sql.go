@@ -15,53 +15,65 @@ const createJobSearchProfile = `-- name: CreateJobSearchProfile :one
 
 INSERT INTO bridgr.job_search_profiles (
     user_id,
-    target_roles,
-    locations,
-    boards_enabled,
-    matching,
-    canonical_cv_analysis_uuid,
-    max_surfaced_jobs
+    target_role,
+    location,
+    source_board,
+    career_switch,
+    company_stage,
+    seniority_goal,
+    compensation_goal,
+    software_stack_must_have,
+    canonical_cv_analysis_uuid
 ) VALUES (
-    $1, $2, $3, $4, $5, $6, $7
+    $1, $2, $3, $4, $5, $6, $7, $8, $9, $10
 )
-RETURNING uuid, id, user_id, target_roles, locations, boards_enabled, matching, canonical_cv_analysis_uuid, max_surfaced_jobs, created_at, updated_at
+RETURNING uuid, id, user_id, target_role, location, source_board, career_switch, company_stage, seniority_goal, compensation_goal, software_stack_must_have, canonical_cv_analysis_uuid, created_at, updated_at
 `
 
 type CreateJobSearchProfileParams struct {
 	UserID                  int32       `db:"user_id"`
-	TargetRoles             []byte      `db:"target_roles"`
-	Locations               []byte      `db:"locations"`
-	BoardsEnabled           []byte      `db:"boards_enabled"`
-	Matching                []byte      `db:"matching"`
+	TargetRole              string      `db:"target_role"`
+	Location                string      `db:"location"`
+	SourceBoard             string      `db:"source_board"`
+	CareerSwitch            bool        `db:"career_switch"`
+	CompanyStage            string      `db:"company_stage"`
+	SeniorityGoal           string      `db:"seniority_goal"`
+	CompensationGoal        string      `db:"compensation_goal"`
+	SoftwareStackMustHave   []string    `db:"software_stack_must_have"`
 	CanonicalCvAnalysisUuid pgtype.UUID `db:"canonical_cv_analysis_uuid"`
-	MaxSurfacedJobs         int32       `db:"max_surfaced_jobs"`
 }
 
 // =============================================================================
 // BRIDGR JOB DISCOVERY — JOB SEARCH PROFILES
-// Per-user Radar/search preferences. user_id app-enforced FK to users.id.
+// One row = one canonical Radar search slice. user_id app-enforced FK to users.id.
 // =============================================================================
 func (q *Queries) CreateJobSearchProfile(ctx context.Context, arg CreateJobSearchProfileParams) (BridgrJobSearchProfile, error) {
 	row := q.db.QueryRow(ctx, createJobSearchProfile,
 		arg.UserID,
-		arg.TargetRoles,
-		arg.Locations,
-		arg.BoardsEnabled,
-		arg.Matching,
+		arg.TargetRole,
+		arg.Location,
+		arg.SourceBoard,
+		arg.CareerSwitch,
+		arg.CompanyStage,
+		arg.SeniorityGoal,
+		arg.CompensationGoal,
+		arg.SoftwareStackMustHave,
 		arg.CanonicalCvAnalysisUuid,
-		arg.MaxSurfacedJobs,
 	)
 	var i BridgrJobSearchProfile
 	err := row.Scan(
 		&i.Uuid,
 		&i.ID,
 		&i.UserID,
-		&i.TargetRoles,
-		&i.Locations,
-		&i.BoardsEnabled,
-		&i.Matching,
+		&i.TargetRole,
+		&i.Location,
+		&i.SourceBoard,
+		&i.CareerSwitch,
+		&i.CompanyStage,
+		&i.SeniorityGoal,
+		&i.CompensationGoal,
+		&i.SoftwareStackMustHave,
 		&i.CanonicalCvAnalysisUuid,
-		&i.MaxSurfacedJobs,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
@@ -88,8 +100,23 @@ func (q *Queries) DeleteJobSearchProfileByUserID(ctx context.Context, userID int
 	return err
 }
 
+const deleteJobSearchProfileByUserIDAndUUID = `-- name: DeleteJobSearchProfileByUserIDAndUUID :exec
+DELETE FROM bridgr.job_search_profiles
+WHERE user_id = $1 AND uuid = $2
+`
+
+type DeleteJobSearchProfileByUserIDAndUUIDParams struct {
+	UserID int32       `db:"user_id"`
+	Uuid   pgtype.UUID `db:"uuid"`
+}
+
+func (q *Queries) DeleteJobSearchProfileByUserIDAndUUID(ctx context.Context, arg DeleteJobSearchProfileByUserIDAndUUIDParams) error {
+	_, err := q.db.Exec(ctx, deleteJobSearchProfileByUserIDAndUUID, arg.UserID, arg.Uuid)
+	return err
+}
+
 const getJobSearchProfileByID = `-- name: GetJobSearchProfileByID :one
-SELECT uuid, id, user_id, target_roles, locations, boards_enabled, matching, canonical_cv_analysis_uuid, max_surfaced_jobs, created_at, updated_at FROM bridgr.job_search_profiles
+SELECT uuid, id, user_id, target_role, location, source_board, career_switch, company_stage, seniority_goal, compensation_goal, software_stack_must_have, canonical_cv_analysis_uuid, created_at, updated_at FROM bridgr.job_search_profiles
 WHERE id = $1
 `
 
@@ -100,12 +127,15 @@ func (q *Queries) GetJobSearchProfileByID(ctx context.Context, id int64) (Bridgr
 		&i.Uuid,
 		&i.ID,
 		&i.UserID,
-		&i.TargetRoles,
-		&i.Locations,
-		&i.BoardsEnabled,
-		&i.Matching,
+		&i.TargetRole,
+		&i.Location,
+		&i.SourceBoard,
+		&i.CareerSwitch,
+		&i.CompanyStage,
+		&i.SeniorityGoal,
+		&i.CompensationGoal,
+		&i.SoftwareStackMustHave,
 		&i.CanonicalCvAnalysisUuid,
-		&i.MaxSurfacedJobs,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
@@ -113,7 +143,7 @@ func (q *Queries) GetJobSearchProfileByID(ctx context.Context, id int64) (Bridgr
 }
 
 const getJobSearchProfileByUUID = `-- name: GetJobSearchProfileByUUID :one
-SELECT uuid, id, user_id, target_roles, locations, boards_enabled, matching, canonical_cv_analysis_uuid, max_surfaced_jobs, created_at, updated_at FROM bridgr.job_search_profiles
+SELECT uuid, id, user_id, target_role, location, source_board, career_switch, company_stage, seniority_goal, compensation_goal, software_stack_must_have, canonical_cv_analysis_uuid, created_at, updated_at FROM bridgr.job_search_profiles
 WHERE uuid = $1
 `
 
@@ -124,86 +154,151 @@ func (q *Queries) GetJobSearchProfileByUUID(ctx context.Context, uuid pgtype.UUI
 		&i.Uuid,
 		&i.ID,
 		&i.UserID,
-		&i.TargetRoles,
-		&i.Locations,
-		&i.BoardsEnabled,
-		&i.Matching,
+		&i.TargetRole,
+		&i.Location,
+		&i.SourceBoard,
+		&i.CareerSwitch,
+		&i.CompanyStage,
+		&i.SeniorityGoal,
+		&i.CompensationGoal,
+		&i.SoftwareStackMustHave,
 		&i.CanonicalCvAnalysisUuid,
-		&i.MaxSurfacedJobs,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
 	return i, err
 }
 
-const getJobSearchProfileByUserID = `-- name: GetJobSearchProfileByUserID :one
-SELECT uuid, id, user_id, target_roles, locations, boards_enabled, matching, canonical_cv_analysis_uuid, max_surfaced_jobs, created_at, updated_at FROM bridgr.job_search_profiles
-WHERE user_id = $1
+const getJobSearchProfileByUserIDAndUUID = `-- name: GetJobSearchProfileByUserIDAndUUID :one
+SELECT uuid, id, user_id, target_role, location, source_board, career_switch, company_stage, seniority_goal, compensation_goal, software_stack_must_have, canonical_cv_analysis_uuid, created_at, updated_at FROM bridgr.job_search_profiles
+WHERE user_id = $1 AND uuid = $2
 `
 
-func (q *Queries) GetJobSearchProfileByUserID(ctx context.Context, userID int32) (BridgrJobSearchProfile, error) {
-	row := q.db.QueryRow(ctx, getJobSearchProfileByUserID, userID)
+type GetJobSearchProfileByUserIDAndUUIDParams struct {
+	UserID int32       `db:"user_id"`
+	Uuid   pgtype.UUID `db:"uuid"`
+}
+
+func (q *Queries) GetJobSearchProfileByUserIDAndUUID(ctx context.Context, arg GetJobSearchProfileByUserIDAndUUIDParams) (BridgrJobSearchProfile, error) {
+	row := q.db.QueryRow(ctx, getJobSearchProfileByUserIDAndUUID, arg.UserID, arg.Uuid)
 	var i BridgrJobSearchProfile
 	err := row.Scan(
 		&i.Uuid,
 		&i.ID,
 		&i.UserID,
-		&i.TargetRoles,
-		&i.Locations,
-		&i.BoardsEnabled,
-		&i.Matching,
+		&i.TargetRole,
+		&i.Location,
+		&i.SourceBoard,
+		&i.CareerSwitch,
+		&i.CompanyStage,
+		&i.SeniorityGoal,
+		&i.CompensationGoal,
+		&i.SoftwareStackMustHave,
 		&i.CanonicalCvAnalysisUuid,
-		&i.MaxSurfacedJobs,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
 	return i, err
+}
+
+const listJobSearchProfilesByUserID = `-- name: ListJobSearchProfilesByUserID :many
+SELECT uuid, id, user_id, target_role, location, source_board, career_switch, company_stage, seniority_goal, compensation_goal, software_stack_must_have, canonical_cv_analysis_uuid, created_at, updated_at FROM bridgr.job_search_profiles
+WHERE user_id = $1
+ORDER BY id ASC
+`
+
+// $1 = user_id. Returns every saved job search profile row for that user (zero or more rows).
+func (q *Queries) ListJobSearchProfilesByUserID(ctx context.Context, userID int32) ([]BridgrJobSearchProfile, error) {
+	rows, err := q.db.Query(ctx, listJobSearchProfilesByUserID, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []BridgrJobSearchProfile
+	for rows.Next() {
+		var i BridgrJobSearchProfile
+		if err := rows.Scan(
+			&i.Uuid,
+			&i.ID,
+			&i.UserID,
+			&i.TargetRole,
+			&i.Location,
+			&i.SourceBoard,
+			&i.CareerSwitch,
+			&i.CompanyStage,
+			&i.SeniorityGoal,
+			&i.CompensationGoal,
+			&i.SoftwareStackMustHave,
+			&i.CanonicalCvAnalysisUuid,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const updateJobSearchProfile = `-- name: UpdateJobSearchProfile :one
 UPDATE bridgr.job_search_profiles
 SET
-    target_roles = $2,
-    locations = $3,
-    boards_enabled = $4,
-    matching = $5,
-    canonical_cv_analysis_uuid = $6,
-    max_surfaced_jobs = $7
+    target_role = $2,
+    location = $3,
+    source_board = $4,
+    career_switch = $5,
+    company_stage = $6,
+    seniority_goal = $7,
+    compensation_goal = $8,
+    software_stack_must_have = $9,
+    canonical_cv_analysis_uuid = $10
 WHERE id = $1
-RETURNING uuid, id, user_id, target_roles, locations, boards_enabled, matching, canonical_cv_analysis_uuid, max_surfaced_jobs, created_at, updated_at
+RETURNING uuid, id, user_id, target_role, location, source_board, career_switch, company_stage, seniority_goal, compensation_goal, software_stack_must_have, canonical_cv_analysis_uuid, created_at, updated_at
 `
 
 type UpdateJobSearchProfileParams struct {
 	ID                      int64       `db:"id"`
-	TargetRoles             []byte      `db:"target_roles"`
-	Locations               []byte      `db:"locations"`
-	BoardsEnabled           []byte      `db:"boards_enabled"`
-	Matching                []byte      `db:"matching"`
+	TargetRole              string      `db:"target_role"`
+	Location                string      `db:"location"`
+	SourceBoard             string      `db:"source_board"`
+	CareerSwitch            bool        `db:"career_switch"`
+	CompanyStage            string      `db:"company_stage"`
+	SeniorityGoal           string      `db:"seniority_goal"`
+	CompensationGoal        string      `db:"compensation_goal"`
+	SoftwareStackMustHave   []string    `db:"software_stack_must_have"`
 	CanonicalCvAnalysisUuid pgtype.UUID `db:"canonical_cv_analysis_uuid"`
-	MaxSurfacedJobs         int32       `db:"max_surfaced_jobs"`
 }
 
 func (q *Queries) UpdateJobSearchProfile(ctx context.Context, arg UpdateJobSearchProfileParams) (BridgrJobSearchProfile, error) {
 	row := q.db.QueryRow(ctx, updateJobSearchProfile,
 		arg.ID,
-		arg.TargetRoles,
-		arg.Locations,
-		arg.BoardsEnabled,
-		arg.Matching,
+		arg.TargetRole,
+		arg.Location,
+		arg.SourceBoard,
+		arg.CareerSwitch,
+		arg.CompanyStage,
+		arg.SeniorityGoal,
+		arg.CompensationGoal,
+		arg.SoftwareStackMustHave,
 		arg.CanonicalCvAnalysisUuid,
-		arg.MaxSurfacedJobs,
 	)
 	var i BridgrJobSearchProfile
 	err := row.Scan(
 		&i.Uuid,
 		&i.ID,
 		&i.UserID,
-		&i.TargetRoles,
-		&i.Locations,
-		&i.BoardsEnabled,
-		&i.Matching,
+		&i.TargetRole,
+		&i.Location,
+		&i.SourceBoard,
+		&i.CareerSwitch,
+		&i.CompanyStage,
+		&i.SeniorityGoal,
+		&i.CompensationGoal,
+		&i.SoftwareStackMustHave,
 		&i.CanonicalCvAnalysisUuid,
-		&i.MaxSurfacedJobs,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
@@ -213,47 +308,123 @@ func (q *Queries) UpdateJobSearchProfile(ctx context.Context, arg UpdateJobSearc
 const updateJobSearchProfileByUserID = `-- name: UpdateJobSearchProfileByUserID :one
 UPDATE bridgr.job_search_profiles
 SET
-    target_roles = $2,
-    locations = $3,
-    boards_enabled = $4,
-    matching = $5,
-    canonical_cv_analysis_uuid = $6,
-    max_surfaced_jobs = $7
+    target_role = $2,
+    location = $3,
+    source_board = $4,
+    career_switch = $5,
+    company_stage = $6,
+    seniority_goal = $7,
+    compensation_goal = $8,
+    software_stack_must_have = $9,
+    canonical_cv_analysis_uuid = $10
 WHERE user_id = $1
-RETURNING uuid, id, user_id, target_roles, locations, boards_enabled, matching, canonical_cv_analysis_uuid, max_surfaced_jobs, created_at, updated_at
+RETURNING uuid, id, user_id, target_role, location, source_board, career_switch, company_stage, seniority_goal, compensation_goal, software_stack_must_have, canonical_cv_analysis_uuid, created_at, updated_at
 `
 
 type UpdateJobSearchProfileByUserIDParams struct {
 	UserID                  int32       `db:"user_id"`
-	TargetRoles             []byte      `db:"target_roles"`
-	Locations               []byte      `db:"locations"`
-	BoardsEnabled           []byte      `db:"boards_enabled"`
-	Matching                []byte      `db:"matching"`
+	TargetRole              string      `db:"target_role"`
+	Location                string      `db:"location"`
+	SourceBoard             string      `db:"source_board"`
+	CareerSwitch            bool        `db:"career_switch"`
+	CompanyStage            string      `db:"company_stage"`
+	SeniorityGoal           string      `db:"seniority_goal"`
+	CompensationGoal        string      `db:"compensation_goal"`
+	SoftwareStackMustHave   []string    `db:"software_stack_must_have"`
 	CanonicalCvAnalysisUuid pgtype.UUID `db:"canonical_cv_analysis_uuid"`
-	MaxSurfacedJobs         int32       `db:"max_surfaced_jobs"`
 }
 
 func (q *Queries) UpdateJobSearchProfileByUserID(ctx context.Context, arg UpdateJobSearchProfileByUserIDParams) (BridgrJobSearchProfile, error) {
 	row := q.db.QueryRow(ctx, updateJobSearchProfileByUserID,
 		arg.UserID,
-		arg.TargetRoles,
-		arg.Locations,
-		arg.BoardsEnabled,
-		arg.Matching,
+		arg.TargetRole,
+		arg.Location,
+		arg.SourceBoard,
+		arg.CareerSwitch,
+		arg.CompanyStage,
+		arg.SeniorityGoal,
+		arg.CompensationGoal,
+		arg.SoftwareStackMustHave,
 		arg.CanonicalCvAnalysisUuid,
-		arg.MaxSurfacedJobs,
 	)
 	var i BridgrJobSearchProfile
 	err := row.Scan(
 		&i.Uuid,
 		&i.ID,
 		&i.UserID,
-		&i.TargetRoles,
-		&i.Locations,
-		&i.BoardsEnabled,
-		&i.Matching,
+		&i.TargetRole,
+		&i.Location,
+		&i.SourceBoard,
+		&i.CareerSwitch,
+		&i.CompanyStage,
+		&i.SeniorityGoal,
+		&i.CompensationGoal,
+		&i.SoftwareStackMustHave,
 		&i.CanonicalCvAnalysisUuid,
-		&i.MaxSurfacedJobs,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
+const updateJobSearchProfileByUserIDAndUUID = `-- name: UpdateJobSearchProfileByUserIDAndUUID :one
+UPDATE bridgr.job_search_profiles
+SET
+    target_role = $3,
+    location = $4,
+    source_board = $5,
+    career_switch = $6,
+    company_stage = $7,
+    seniority_goal = $8,
+    compensation_goal = $9,
+    software_stack_must_have = $10,
+    canonical_cv_analysis_uuid = $11
+WHERE user_id = $1 AND uuid = $2
+RETURNING uuid, id, user_id, target_role, location, source_board, career_switch, company_stage, seniority_goal, compensation_goal, software_stack_must_have, canonical_cv_analysis_uuid, created_at, updated_at
+`
+
+type UpdateJobSearchProfileByUserIDAndUUIDParams struct {
+	UserID                  int32       `db:"user_id"`
+	Uuid                    pgtype.UUID `db:"uuid"`
+	TargetRole              string      `db:"target_role"`
+	Location                string      `db:"location"`
+	SourceBoard             string      `db:"source_board"`
+	CareerSwitch            bool        `db:"career_switch"`
+	CompanyStage            string      `db:"company_stage"`
+	SeniorityGoal           string      `db:"seniority_goal"`
+	CompensationGoal        string      `db:"compensation_goal"`
+	SoftwareStackMustHave   []string    `db:"software_stack_must_have"`
+	CanonicalCvAnalysisUuid pgtype.UUID `db:"canonical_cv_analysis_uuid"`
+}
+
+func (q *Queries) UpdateJobSearchProfileByUserIDAndUUID(ctx context.Context, arg UpdateJobSearchProfileByUserIDAndUUIDParams) (BridgrJobSearchProfile, error) {
+	row := q.db.QueryRow(ctx, updateJobSearchProfileByUserIDAndUUID,
+		arg.UserID,
+		arg.Uuid,
+		arg.TargetRole,
+		arg.Location,
+		arg.SourceBoard,
+		arg.CareerSwitch,
+		arg.CompanyStage,
+		arg.SeniorityGoal,
+		arg.CompensationGoal,
+		arg.SoftwareStackMustHave,
+		arg.CanonicalCvAnalysisUuid,
+	)
+	var i BridgrJobSearchProfile
+	err := row.Scan(
+		&i.Uuid,
+		&i.ID,
+		&i.UserID,
+		&i.TargetRole,
+		&i.Location,
+		&i.SourceBoard,
+		&i.CareerSwitch,
+		&i.CompanyStage,
+		&i.SeniorityGoal,
+		&i.CompensationGoal,
+		&i.SoftwareStackMustHave,
+		&i.CanonicalCvAnalysisUuid,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)

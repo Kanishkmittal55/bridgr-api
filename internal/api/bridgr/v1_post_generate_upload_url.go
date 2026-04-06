@@ -8,8 +8,8 @@ import (
 	"path/filepath"
 	"time"
 
-	apierrors "github.com/Kanishkmittal55/bridgr-api/internal/errors"
 	"github.com/Kanishkmittal55/bridgr-api/internal/config"
+	apierrors "github.com/Kanishkmittal55/bridgr-api/internal/errors"
 	"github.com/Kanishkmittal55/bridgr-api/internal/uuid"
 	types "github.com/Kanishkmittal55/bridgr-api/pkg/types"
 )

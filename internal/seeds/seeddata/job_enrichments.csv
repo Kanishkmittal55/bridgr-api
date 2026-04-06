@@ -1,0 +1,2 @@
+uuid,id,user_id,job_candidate_uuid,status,required_skills,experience_range,salary_range,remote_policy,visa_sponsorship,company_size,industry,application_deadline,structured_jd,llm_model,prompt_version,error_detail,created_at,updated_at
+550e8400-e29b-41d4-a716-446655440006,1,1,550e8400-e29b-41d4-a716-446655440004,completed,[],{},{},remote,,,,,{},gpt-4o-seed,v1,,2026-01-10T12:00:00Z,2026-01-10T12:00:00Z

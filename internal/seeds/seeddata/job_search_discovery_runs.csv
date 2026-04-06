@@ -1,0 +1,2 @@
+uuid,id,user_id,status,request_params,radar_meta,raw_candidate_count,new_candidate_count,started_at,completed_at,error_code,error_detail,sqs_message_id,created_at,updated_at
+550e8400-e29b-41d4-a716-446655440003,1,1,completed,"{}","{}",2,2,2026-01-10T11:00:00Z,2026-01-10T11:05:00Z,,,,2026-01-10T12:00:00Z,2026-01-10T12:00:00Z

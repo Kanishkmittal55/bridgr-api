@@ -4,5 +4,7 @@ max_messages: 10
 wait_time_seconds: 20
 visibility_timeout: 420
 poll_error_backoff_sec: 10
+
+## "Job" Discovery Schdueler Config
 discovery_scheduler_enabled: false
 discovery_scheduler_trigger_interval: 60
