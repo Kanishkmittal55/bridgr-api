@@ -24,6 +24,37 @@ type BridgrAnalysisJobLink struct {
 	UpdatedAt pgtype.Timestamp `db:"updated_at"`
 }
 
+// Bridgr feed: user-facing rows for high-quality job matches (denormalized for fast reads).
+type BridgrFeedItem struct {
+	Uuid pgtype.UUID `db:"uuid"`
+	ID   int64       `db:"id"`
+	// App-enforced FK to users.id
+	UserID int32 `db:"user_id"`
+	// App-enforced FK to job_candidates.uuid
+	JobCandidateUuid pgtype.UUID `db:"job_candidate_uuid"`
+	// App-enforced FK to job_scores.uuid
+	ScoreUuid pgtype.UUID `db:"score_uuid"`
+	// Optional future link to a verification record; app-enforced when set
+	VerificationUuid pgtype.UUID `db:"verification_uuid"`
+	CompositeScore   float32     `db:"composite_score"`
+	GapSeverity      pgtype.Text `db:"gap_severity"`
+	Title            pgtype.Text `db:"title"`
+	Company          pgtype.Text `db:"company"`
+	Location         pgtype.Text `db:"location"`
+	JobUrl           pgtype.Text `db:"job_url"`
+	// Short human-readable why this job matches
+	MatchSummary pgtype.Text `db:"match_summary"`
+	// Short human-readable skill-gap note
+	GapSummary pgtype.Text `db:"gap_summary"`
+	// new, seen, saved, dismissed, applied
+	FeedStatus string `db:"feed_status"`
+	// When this item entered the feed
+	SurfacedAt pgtype.Timestamp `db:"surfaced_at"`
+	SeenAt     pgtype.Timestamp `db:"seen_at"`
+	CreatedAt  pgtype.Timestamp `db:"created_at"`
+	UpdatedAt  pgtype.Timestamp `db:"updated_at"`
+}
+
 // Bridgr job discovery: one row per unique posting per user (dedupe by url_hash).
 type BridgrJobCandidate struct {
 	Uuid pgtype.UUID `db:"uuid"`
@@ -56,6 +87,56 @@ type BridgrJobCandidate struct {
 	UpdatedAt      pgtype.Timestamp `db:"updated_at"`
 }
 
+// Bridgr feed: LLM- or rules-based structured fields extracted from a job posting for matching.
+type BridgrJobEnrichment struct {
+	Uuid pgtype.UUID `db:"uuid"`
+	ID   int64       `db:"id"`
+	// App-enforced FK to users.id
+	UserID int32 `db:"user_id"`
+	// App-enforced FK to job_candidates.uuid
+	JobCandidateUuid pgtype.UUID `db:"job_candidate_uuid"`
+	Status           string      `db:"status"`
+	// JSON array of {skill, level, mandatory} or similar
+	RequiredSkills []byte `db:"required_skills"`
+	// JSON {min_years, max_years, seniority}
+	ExperienceRange []byte `db:"experience_range"`
+	// JSON {min, max, currency, period}
+	SalaryRange         []byte           `db:"salary_range"`
+	RemotePolicy        pgtype.Text      `db:"remote_policy"`
+	VisaSponsorship     pgtype.Bool      `db:"visa_sponsorship"`
+	CompanySize         pgtype.Text      `db:"company_size"`
+	Industry            pgtype.Text      `db:"industry"`
+	ApplicationDeadline pgtype.Timestamp `db:"application_deadline"`
+	// Full normalized job description blob for scoring
+	StructuredJd  []byte           `db:"structured_jd"`
+	LlmModel      pgtype.Text      `db:"llm_model"`
+	PromptVersion pgtype.Text      `db:"prompt_version"`
+	ErrorDetail   pgtype.Text      `db:"error_detail"`
+	CreatedAt     pgtype.Timestamp `db:"created_at"`
+	UpdatedAt     pgtype.Timestamp `db:"updated_at"`
+}
+
+// Bridgr feed: when and how to re-run discovery for a job_search_profile.
+type BridgrJobHarvestSchedule struct {
+	Uuid pgtype.UUID `db:"uuid"`
+	ID   int64       `db:"id"`
+	// App-enforced FK to users.id
+	UserID int32 `db:"user_id"`
+	// App-enforced FK to job_search_profiles.uuid
+	ProfileUuid pgtype.UUID `db:"profile_uuid"`
+	Enabled     bool        `db:"enabled"`
+	// Minimum interval between automated harvest runs
+	CadenceMinutes int32 `db:"cadence_minutes"`
+	// JSON array of board ids to rotate through on successive runs
+	BoardsRotation []byte `db:"boards_rotation"`
+	// When the last scheduled harvest started or completed
+	LastRunAt pgtype.Timestamp `db:"last_run_at"`
+	// When the scheduler should enqueue the next harvest
+	NextRunAt pgtype.Timestamp `db:"next_run_at"`
+	CreatedAt pgtype.Timestamp `db:"created_at"`
+	UpdatedAt pgtype.Timestamp `db:"updated_at"`
+}
+
 // Bridgr job discovery: notification rows for new surfaced or relevant jobs.
 type BridgrJobNotification struct {
 	Uuid pgtype.UUID `db:"uuid"`
@@ -77,13 +158,42 @@ type BridgrJobNotification struct {
 	UpdatedAt   pgtype.Timestamp `db:"updated_at"`
 }
 
+// Bridgr feed: per-user relevance and skill-gap scores for a discovered job.
+type BridgrJobScore struct {
+	Uuid pgtype.UUID `db:"uuid"`
+	ID   int64       `db:"id"`
+	// App-enforced FK to users.id
+	UserID int32 `db:"user_id"`
+	// App-enforced FK to job_candidates.uuid
+	JobCandidateUuid pgtype.UUID `db:"job_candidate_uuid"`
+	// Optional app-enforced FK to job_enrichments.uuid used for this score
+	EnrichmentUuid       pgtype.UUID `db:"enrichment_uuid"`
+	SkillMatchScore      float32     `db:"skill_match_score"`
+	ExperienceMatchScore float32     `db:"experience_match_score"`
+	LocationMatchScore   float32     `db:"location_match_score"`
+	RecencyScore         float32     `db:"recency_score"`
+	BoardQualityScore    float32     `db:"board_quality_score"`
+	// Weighted blend of dimension scores; primary feed sort key
+	CompositeScore float32 `db:"composite_score"`
+	// JSON: skills the user satisfies for this role
+	MatchedSkills []byte `db:"matched_skills"`
+	// JSON: required skills still missing for the user
+	GapSkills []byte `db:"gap_skills"`
+	// none, minor, moderate, major
+	GapSeverity    pgtype.Text      `db:"gap_severity"`
+	ScoringModel   pgtype.Text      `db:"scoring_model"`
+	ScoringVersion pgtype.Text      `db:"scoring_version"`
+	CreatedAt      pgtype.Timestamp `db:"created_at"`
+	UpdatedAt      pgtype.Timestamp `db:"updated_at"`
+}
+
 // Bridgr job discovery: audit trail for one Radar-backed discovery execution.
 type BridgrJobSearchDiscoveryRun struct {
 	Uuid pgtype.UUID `db:"uuid"`
 	ID   int64       `db:"id"`
 	// App-enforced FK to users.id
 	UserID int32 `db:"user_id"`
-	// pending, running, completed, failed, cancelled
+	// pending, queued, running, completed, failed, cancelled
 	Status string `db:"status"`
 	// Resolved query/location/boards caps sent to worker/Radar
 	RequestParams []byte `db:"request_params"`
@@ -285,4 +395,28 @@ type BridgrSkillGapPathStepDep struct {
 	DependsOnStepUuid pgtype.UUID      `db:"depends_on_step_uuid"`
 	CreatedAt         pgtype.Timestamp `db:"created_at"`
 	UpdatedAt         pgtype.Timestamp `db:"updated_at"`
+}
+
+// Bridgr/Radar: canonical list of supported job boards (CRUD via API; seeds from former supported_boards.yaml).
+type BridgrSupportedJobBoard struct {
+	Uuid pgtype.UUID `db:"uuid"`
+	ID   int64       `db:"id"`
+	// Stable slug (e.g. linkedin, indeed); matches Discovery source_site / JobSpy site key
+	BoardID string `db:"board_id"`
+	// Human-readable label for UI
+	DisplayName string `db:"display_name"`
+	// Radar engine: jobspy, smartextract, crawl4ai, workday, indeed, etc.
+	Engine string `db:"engine"`
+	// How the board is crawled: search (query+location URL), static (fixed career pages), etc.
+	SiteType string `db:"site_type"`
+	// Primary region: global, us, uk, eu, …
+	Region string `db:"region"`
+	// When false, board is hidden from selection and not used for new crawls
+	IsActive bool `db:"is_active"`
+	// Engine-specific options (e.g. fetch_description, proxy hints); extensible JSON
+	Config []byte `db:"config"`
+	// Lower values list first in admin and user pickers
+	SortOrder int32            `db:"sort_order"`
+	CreatedAt pgtype.Timestamp `db:"created_at"`
+	UpdatedAt pgtype.Timestamp `db:"updated_at"`
 }

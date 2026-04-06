@@ -22,10 +22,30 @@ type Querier interface {
 	// =============================================================================
 	CreateAnalysisJobLink(ctx context.Context, arg CreateAnalysisJobLinkParams) (BridgrAnalysisJobLink, error)
 	// =============================================================================
+	// BRIDGR — FEED ITEMS
+	// Denormalized feed rows per (user, job_candidate). Unique (job_candidate_uuid, user_id).
+	// =============================================================================
+	CreateFeedItem(ctx context.Context, arg CreateFeedItemParams) (BridgrFeedItem, error)
+	// =============================================================================
+	// BRIDGR — JOB ENRICHMENTS
+	// Structured JD extraction per (user, job_candidate). Unique (job_candidate_uuid, user_id).
+	// =============================================================================
+	CreateJobEnrichment(ctx context.Context, arg CreateJobEnrichmentParams) (BridgrJobEnrichment, error)
+	// =============================================================================
+	// BRIDGR — JOB HARVEST SCHEDULES
+	// Per-user cadence + board rotation for a job_search_profile.
+	// =============================================================================
+	CreateJobHarvestSchedule(ctx context.Context, arg CreateJobHarvestScheduleParams) (BridgrJobHarvestSchedule, error)
+	// =============================================================================
 	// BRIDGR JOB DISCOVERY — NOTIFICATIONS
 	// Outbox for in-app / email / push. user_id and job_candidate_uuid app-enforced.
 	// =============================================================================
 	CreateJobNotification(ctx context.Context, arg CreateJobNotificationParams) (BridgrJobNotification, error)
+	// =============================================================================
+	// BRIDGR — JOB SCORES
+	// Relevance + gap summary per (user, job_candidate). Unique (job_candidate_uuid, user_id).
+	// =============================================================================
+	CreateJobScore(ctx context.Context, arg CreateJobScoreParams) (BridgrJobScore, error)
 	// =============================================================================
 	// BRIDGR JOB DISCOVERY — DISCOVERY RUNS
 	// One Radar sweep audit row per execution. user_id app-enforced FK to users.id.
@@ -71,13 +91,26 @@ type Querier interface {
 	// DAG edges between path steps (prerequisites).
 	// =============================================================================
 	CreateSkillGapPathStepDep(ctx context.Context, arg CreateSkillGapPathStepDepParams) (BridgrSkillGapPathStepDep, error)
+	// =============================================================================
+	// BRIDGR — SUPPORTED JOB BOARDS
+	// Canonical Radar board catalog. Unique board_id.
+	// =============================================================================
+	CreateSupportedJobBoard(ctx context.Context, arg CreateSupportedJobBoardParams) (BridgrSupportedJobBoard, error)
 	DeleteAnalysisJobLinkByID(ctx context.Context, id int64) error
 	DeleteAnalysisJobLinkByPair(ctx context.Context, arg DeleteAnalysisJobLinkByPairParams) error
 	DeleteAnalysisJobLinkByUUID(ctx context.Context, uuid pgtype.UUID) error
+	DeleteFeedItemByID(ctx context.Context, id int64) error
+	DeleteFeedItemByUUID(ctx context.Context, uuid pgtype.UUID) error
 	DeleteJobCandidateByID(ctx context.Context, id int64) error
 	DeleteJobCandidateByUUID(ctx context.Context, uuid pgtype.UUID) error
+	DeleteJobEnrichmentByID(ctx context.Context, id int64) error
+	DeleteJobEnrichmentByUUID(ctx context.Context, uuid pgtype.UUID) error
+	DeleteJobHarvestScheduleByID(ctx context.Context, id int64) error
+	DeleteJobHarvestScheduleByUUID(ctx context.Context, uuid pgtype.UUID) error
 	DeleteJobNotificationByID(ctx context.Context, id int64) error
 	DeleteJobNotificationByUUID(ctx context.Context, uuid pgtype.UUID) error
+	DeleteJobScoreByID(ctx context.Context, id int64) error
+	DeleteJobScoreByUUID(ctx context.Context, uuid pgtype.UUID) error
 	DeleteJobSearchDiscoveryRunByID(ctx context.Context, id int64) error
 	DeleteJobSearchProfileByID(ctx context.Context, id int64) error
 	DeleteJobSearchProfileByUserID(ctx context.Context, userID int32) error
@@ -89,14 +122,28 @@ type Querier interface {
 	DeleteSkillGapNodesByGraph(ctx context.Context, graphUuid pgtype.UUID) error
 	DeleteSkillGapPathStepDepsByPath(ctx context.Context, pathUuid pgtype.UUID) error
 	DeleteSkillGapPathStepsByPath(ctx context.Context, pathUuid pgtype.UUID) error
+	DeleteSupportedJobBoardByID(ctx context.Context, id int64) error
+	DeleteSupportedJobBoardByUUID(ctx context.Context, uuid pgtype.UUID) error
 	GetAnalysisJobLinkByID(ctx context.Context, id int64) (BridgrAnalysisJobLink, error)
 	GetAnalysisJobLinkByPair(ctx context.Context, arg GetAnalysisJobLinkByPairParams) (BridgrAnalysisJobLink, error)
 	GetAnalysisJobLinkByUUID(ctx context.Context, uuid pgtype.UUID) (BridgrAnalysisJobLink, error)
+	GetFeedItemByID(ctx context.Context, id int64) (BridgrFeedItem, error)
+	GetFeedItemByUUID(ctx context.Context, uuid pgtype.UUID) (BridgrFeedItem, error)
+	GetFeedItemByUserAndCandidateUUID(ctx context.Context, arg GetFeedItemByUserAndCandidateUUIDParams) (BridgrFeedItem, error)
 	GetJobCandidateByID(ctx context.Context, id int64) (BridgrJobCandidate, error)
 	GetJobCandidateByUUID(ctx context.Context, uuid pgtype.UUID) (BridgrJobCandidate, error)
 	GetJobCandidateByUserAndURLHash(ctx context.Context, arg GetJobCandidateByUserAndURLHashParams) (BridgrJobCandidate, error)
+	GetJobEnrichmentByID(ctx context.Context, id int64) (BridgrJobEnrichment, error)
+	GetJobEnrichmentByUUID(ctx context.Context, uuid pgtype.UUID) (BridgrJobEnrichment, error)
+	GetJobEnrichmentByUserAndCandidateUUID(ctx context.Context, arg GetJobEnrichmentByUserAndCandidateUUIDParams) (BridgrJobEnrichment, error)
+	GetJobHarvestScheduleByID(ctx context.Context, id int64) (BridgrJobHarvestSchedule, error)
+	GetJobHarvestScheduleByUUID(ctx context.Context, uuid pgtype.UUID) (BridgrJobHarvestSchedule, error)
+	GetJobHarvestScheduleByUserAndProfileUUID(ctx context.Context, arg GetJobHarvestScheduleByUserAndProfileUUIDParams) (BridgrJobHarvestSchedule, error)
 	GetJobNotificationByID(ctx context.Context, id int64) (BridgrJobNotification, error)
 	GetJobNotificationByUUID(ctx context.Context, uuid pgtype.UUID) (BridgrJobNotification, error)
+	GetJobScoreByID(ctx context.Context, id int64) (BridgrJobScore, error)
+	GetJobScoreByUUID(ctx context.Context, uuid pgtype.UUID) (BridgrJobScore, error)
+	GetJobScoreByUserAndCandidateUUID(ctx context.Context, arg GetJobScoreByUserAndCandidateUUIDParams) (BridgrJobScore, error)
 	GetJobSearchDiscoveryRunByID(ctx context.Context, id int64) (BridgrJobSearchDiscoveryRun, error)
 	GetJobSearchDiscoveryRunByUUID(ctx context.Context, uuid pgtype.UUID) (BridgrJobSearchDiscoveryRun, error)
 	GetJobSearchProfileByID(ctx context.Context, id int64) (BridgrJobSearchProfile, error)
@@ -122,11 +169,15 @@ type Querier interface {
 	GetSkillGapNode(ctx context.Context, id int64) (BridgrSkillGapNode, error)
 	GetSkillGapNodeByKey(ctx context.Context, arg GetSkillGapNodeByKeyParams) (BridgrSkillGapNode, error)
 	GetSkillGapPathStep(ctx context.Context, id int64) (BridgrSkillGapPathStep, error)
+	GetSupportedJobBoardByBoardID(ctx context.Context, boardID string) (BridgrSupportedJobBoard, error)
+	GetSupportedJobBoardByID(ctx context.Context, id int64) (BridgrSupportedJobBoard, error)
+	GetSupportedJobBoardByUUID(ctx context.Context, uuid pgtype.UUID) (BridgrSupportedJobBoard, error)
 	// =============================================================================
 	// BRIDGR JOB DISCOVERY — JOB CANDIDATES
 	// Deduped postings per user. (user_id, url_hash) unique.
 	// =============================================================================
 	InsertJobCandidate(ctx context.Context, arg InsertJobCandidateParams) (BridgrJobCandidate, error)
+	ListActiveSupportedJobBoards(ctx context.Context) ([]BridgrSupportedJobBoard, error)
 	ListAllDepsByPath(ctx context.Context, pathUuid pgtype.UUID) ([]BridgrSkillGapPathStepDep, error)
 	ListAnalysisJobLinksByAnalysisUUID(ctx context.Context, analysisUuid pgtype.UUID) ([]BridgrAnalysisJobLink, error)
 	ListAnalysisJobLinksByCandidateUUID(ctx context.Context, jobCandidateUuid pgtype.UUID) ([]BridgrAnalysisJobLink, error)
@@ -135,12 +186,18 @@ type Querier interface {
 	ListDependenciesByStep(ctx context.Context, arg ListDependenciesByStepParams) ([]BridgrSkillGapPathStepDep, error)
 	// Steps in this path that depend on depends_on_step_uuid.
 	ListDependentsByStep(ctx context.Context, arg ListDependentsByStepParams) ([]BridgrSkillGapPathStepDep, error)
+	ListFeedItemsByUser(ctx context.Context, arg ListFeedItemsByUserParams) ([]BridgrFeedItem, error)
 	ListJobCandidatesByDiscoveryRunUUID(ctx context.Context, discoveryRunUuid pgtype.UUID) ([]BridgrJobCandidate, error)
 	ListJobCandidatesByUser(ctx context.Context, arg ListJobCandidatesByUserParams) ([]BridgrJobCandidate, error)
 	ListJobCandidatesByUserFiltered(ctx context.Context, arg ListJobCandidatesByUserFilteredParams) ([]BridgrJobCandidate, error)
+	ListJobEnrichmentsByUser(ctx context.Context, arg ListJobEnrichmentsByUserParams) ([]BridgrJobEnrichment, error)
+	ListJobHarvestSchedulesByUser(ctx context.Context, userID int32) ([]BridgrJobHarvestSchedule, error)
+	// Scheduler: enabled schedules whose next_run_at is set and not in the future.
+	ListJobHarvestSchedulesDue(ctx context.Context) ([]BridgrJobHarvestSchedule, error)
 	ListJobNotificationsByUser(ctx context.Context, arg ListJobNotificationsByUserParams) ([]BridgrJobNotification, error)
 	ListJobNotificationsByUserAndStatus(ctx context.Context, arg ListJobNotificationsByUserAndStatusParams) ([]BridgrJobNotification, error)
 	ListJobNotificationsByUserFiltered(ctx context.Context, arg ListJobNotificationsByUserFilteredParams) ([]BridgrJobNotification, error)
+	ListJobScoresByUser(ctx context.Context, arg ListJobScoresByUserParams) ([]BridgrJobScore, error)
 	ListJobSearchDiscoveryRunsByUser(ctx context.Context, arg ListJobSearchDiscoveryRunsByUserParams) ([]BridgrJobSearchDiscoveryRun, error)
 	// Role-requirement nodes whose node_key also exists on the candidate graph for the same analysis.
 	ListMatchedNodes(ctx context.Context, analysisUuid pgtype.UUID) ([]BridgrSkillGapNode, error)
@@ -150,13 +207,18 @@ type Querier interface {
 	ListSkillGapEdgesByNode(ctx context.Context, arg ListSkillGapEdgesByNodeParams) ([]BridgrSkillGapEdge, error)
 	ListSkillGapNodesByGraph(ctx context.Context, graphUuid pgtype.UUID) ([]BridgrSkillGapNode, error)
 	ListSkillGapPathStepsByPath(ctx context.Context, pathUuid pgtype.UUID) ([]BridgrSkillGapPathStep, error)
+	ListSupportedJobBoards(ctx context.Context) ([]BridgrSupportedJobBoard, error)
 	// Role-requirement nodes with no candidate node sharing the same node_key (skill gaps).
 	ListUnmatchedNodes(ctx context.Context, analysisUuid pgtype.UUID) ([]BridgrSkillGapNode, error)
 	UpdateAnalysisJobLinkKind(ctx context.Context, arg UpdateAnalysisJobLinkKindParams) (BridgrAnalysisJobLink, error)
+	UpdateFeedItemByID(ctx context.Context, arg UpdateFeedItemByIDParams) (BridgrFeedItem, error)
 	UpdateJobCandidateByID(ctx context.Context, arg UpdateJobCandidateByIDParams) (BridgrJobCandidate, error)
 	UpdateJobCandidateIngestion(ctx context.Context, arg UpdateJobCandidateIngestionParams) (BridgrJobCandidate, error)
+	UpdateJobEnrichmentByID(ctx context.Context, arg UpdateJobEnrichmentByIDParams) (BridgrJobEnrichment, error)
+	UpdateJobHarvestScheduleByID(ctx context.Context, arg UpdateJobHarvestScheduleByIDParams) (BridgrJobHarvestSchedule, error)
 	UpdateJobNotificationSeen(ctx context.Context, arg UpdateJobNotificationSeenParams) (BridgrJobNotification, error)
 	UpdateJobNotificationStatus(ctx context.Context, arg UpdateJobNotificationStatusParams) (BridgrJobNotification, error)
+	UpdateJobScoreByID(ctx context.Context, arg UpdateJobScoreByIDParams) (BridgrJobScore, error)
 	UpdateJobSearchDiscoveryRunFinished(ctx context.Context, arg UpdateJobSearchDiscoveryRunFinishedParams) (BridgrJobSearchDiscoveryRun, error)
 	UpdateJobSearchDiscoveryRunProgress(ctx context.Context, arg UpdateJobSearchDiscoveryRunProgressParams) (BridgrJobSearchDiscoveryRun, error)
 	UpdateJobSearchDiscoveryRunStarted(ctx context.Context, arg UpdateJobSearchDiscoveryRunStartedParams) (BridgrJobSearchDiscoveryRun, error)
@@ -168,7 +230,11 @@ type Querier interface {
 	UpdateSkillGapAnalysisSummary(ctx context.Context, arg UpdateSkillGapAnalysisSummaryParams) (BridgrSkillGapAnalysis, error)
 	UpdateSkillGapLearningPathMetadata(ctx context.Context, arg UpdateSkillGapLearningPathMetadataParams) (BridgrSkillGapLearningPath, error)
 	UpdateSkillGapPathStep(ctx context.Context, arg UpdateSkillGapPathStepParams) (BridgrSkillGapPathStep, error)
+	UpdateSupportedJobBoardByID(ctx context.Context, arg UpdateSupportedJobBoardByIDParams) (BridgrSupportedJobBoard, error)
+	UpsertFeedItem(ctx context.Context, arg UpsertFeedItemParams) (BridgrFeedItem, error)
 	UpsertJobCandidate(ctx context.Context, arg UpsertJobCandidateParams) (BridgrJobCandidate, error)
+	UpsertJobEnrichment(ctx context.Context, arg UpsertJobEnrichmentParams) (BridgrJobEnrichment, error)
+	UpsertJobScore(ctx context.Context, arg UpsertJobScoreParams) (BridgrJobScore, error)
 }
 
 var _ Querier = (*Queries)(nil)

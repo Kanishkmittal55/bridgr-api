@@ -13,14 +13,17 @@ x-bridgr-env: &bridgr-env
   networks:
     - bridgrApi
 
-x-bridgr-go-service: &bridgr-go-service
+# Go + Air at /src (repo bind-mount). Used by api and worker for live reload.
+x-bridgr-air-service: &bridgr-air-service
   <<: *bridgr-env
-  image: bridgr-api:${VERSION:-latest}
+  image: bridgr-api-air:${VERSION:-latest}
   build:
     context: .
-    dockerfile: Dockerfile
+    dockerfile: docker/api/Dockerfile.air
   environment:
     ENV: development
+  volumes:
+    - ${PWD:-.}:/src
 
 services:
   postgres:
@@ -143,15 +146,7 @@ services:
 
   # HTTP API — Air live-reload on .go changes (repo mounted at /src).
   api:
-    <<: *bridgr-env
-    image: bridgr-api-air:${VERSION:-latest}
-    build:
-      context: .
-      dockerfile: docker/api/Dockerfile.air
-    environment:
-      ENV: development
-    volumes:
-      - ${PWD:-.}:/src
+    <<: *bridgr-air-service
     command: ["air", "-c", ".air.toml"]
     ports:
       - "8080:8080"
@@ -167,10 +162,10 @@ services:
       radar:
         condition: service_healthy
 
+  # Bridgr SQS worker — same Air image as api; .air.worker.toml writes build output under /tmp/bridgr-air-worker.
   worker:
-    <<: *bridgr-go-service
-    # Image ENTRYPOINT is bridgr-api; `command` alone becomes extra argv to the API. Run worker binary explicitly.
-    entrypoint: ["/usr/local/bin/bridgr-worker"]
+    <<: *bridgr-air-service
+    command: ["air", "-c", ".air.worker.toml"]
     depends_on:
       postgres:
         condition: service_healthy

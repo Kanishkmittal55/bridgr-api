@@ -8,7 +8,7 @@ import (
 	"net/http"
 	"strings"
 
-	apierrors "github.com/Kanishkmittal55/bridgr-api/internal/apierrors"
+	apierrors "github.com/Kanishkmittal55/bridgr-api/internal/errors"
 	"github.com/Kanishkmittal55/bridgr-api/internal/bridgr_worker"
 	"github.com/Kanishkmittal55/bridgr-api/internal/config"
 	"github.com/Kanishkmittal55/bridgr-api/internal/repository/sqlc"

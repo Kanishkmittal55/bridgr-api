@@ -5,7 +5,7 @@ import (
 	"errors"
 	"fmt"
 
-	apierrors "github.com/Kanishkmittal55/bridgr-api/internal/apierrors"
+	apierrors "github.com/Kanishkmittal55/bridgr-api/internal/errors"
 	"github.com/Kanishkmittal55/bridgr-api/internal/repository/sqlc"
 	"github.com/Kanishkmittal55/bridgr-api/internal/uuid"
 	"github.com/jackc/pgx/v5"

@@ -3,7 +3,7 @@ package response
 import (
 	"net/http"
 
-	"github.com/Kanishkmittal55/bridgr-api/internal/apierrors"
+	apierrors "github.com/Kanishkmittal55/bridgr-api/internal/errors"
 	"github.com/Kanishkmittal55/bridgr-api/internal/httpx"
 	"github.com/Kanishkmittal55/bridgr-api/internal/logger"
 	"github.com/Kanishkmittal55/bridgr-api/pkg/types"

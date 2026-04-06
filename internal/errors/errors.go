@@ -1,18 +1,18 @@
-package apierrors
+package errors
 
 import (
-	"errors"
+	stderrors "errors"
 	"net/http"
 )
 
 var (
-	ErrBadRequest         = errors.New("bad request")
-	ErrForbidden          = errors.New("forbidden")
-	ErrNotFound           = errors.New("not found")
-	ErrTooManyRequests    = errors.New("too many requests")
-	ErrInternal           = errors.New("internal error")
-	ErrNotImplemented     = errors.New("not implemented")
-	ErrServiceUnavailable = errors.New("service unavailable")
+	ErrBadRequest         = stderrors.New("bad request")
+	ErrForbidden          = stderrors.New("forbidden")
+	ErrNotFound           = stderrors.New("not found")
+	ErrTooManyRequests    = stderrors.New("too many requests")
+	ErrInternal           = stderrors.New("internal error")
+	ErrNotImplemented     = stderrors.New("not implemented")
+	ErrServiceUnavailable = stderrors.New("service unavailable")
 )
 
 const InternalErrorString = "internal server error"

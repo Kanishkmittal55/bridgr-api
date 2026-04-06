@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"net/http"
 
-	apierrors "github.com/Kanishkmittal55/bridgr-api/internal/apierrors"
+	apierrors "github.com/Kanishkmittal55/bridgr-api/internal/errors"
 	"github.com/Kanishkmittal55/bridgr-api/internal/repository/sqlc"
 	"github.com/Kanishkmittal55/bridgr-api/internal/uuid"
 	types "github.com/Kanishkmittal55/bridgr-api/pkg/types"

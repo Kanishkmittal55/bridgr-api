@@ -1,14 +1,16 @@
 # Live reload for the HTTP API: https://github.com/air-verse/air
 # Used by the default `api` service in docker-compose (WORKDIR /src, repo bind-mounted).
 #
-# For worker hot reload, copy to `.air.worker.toml` and point cmd/bin at `./cmd/worker`.
+# Worker: use `.air.worker.toml` (second terminal: `air -c .air.worker.toml`).
 
 root = "."
-tmp_dir = "tmp"
+# Under /tmp (not ./tmp/...): Air mkdirs tmp_dir in one shot; nested paths fail if ./tmp is missing.
+# Distinct path from .air.worker.toml so api + worker Compose services never clash.
+tmp_dir = "/tmp/bridgr-air-api"
 
 [build]
-cmd           = "go mod download && go build -buildvcs=false -o ./tmp/main ./cmd/api"
-bin           = "tmp/main"
+cmd           = "go mod download && go build -buildvcs=false -o /tmp/bridgr-air-api/main ./cmd/api"
+bin           = "/tmp/bridgr-air-api/main"
 include_ext   = ["go", "tpl", "tmpl", "html", "sum"]
 exclude_dir   = ["assets", "tmp", "vendor", "terraform", "radar", "bin", "node_modules", "dist", ".git"]
 delay         = 1000

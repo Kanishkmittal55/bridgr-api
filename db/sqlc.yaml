@@ -3,10 +3,15 @@ sql:
   - engine: postgresql
     queries:
       - queries/bridgr_analysis_job_link.sql
+      - queries/bridgr_feed_items.sql
       - queries/bridgr_job_candidates.sql
+      - queries/bridgr_job_enrichments.sql
+      - queries/bridgr_job_harvest_schedules.sql
+      - queries/bridgr_job_scores.sql
       - queries/bridgr_job_notifications.sql
       - queries/bridgr_job_search_discovery_runs.sql
       - queries/bridgr_job_search_profiles.sql
+      - queries/bridgr_supported_job_boards.sql
       - queries/bridgr_skill_gap_analyses.sql
       - queries/bridgr_skill_gap_coverage.sql
       - queries/bridgr_skill_gap_edges.sql

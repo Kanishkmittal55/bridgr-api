@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1
-# Dev-only: run `air` with repo bind-mounted to /src (see docker-compose.air.yaml).
+# Dev-only: Go + air at /src. Compose `api` uses `.air.toml`; `worker` uses `.air.worker.toml`.
 FROM golang:1.24-alpine
 RUN apk add --no-cache git ca-certificates
 ENV CGO_ENABLED=0

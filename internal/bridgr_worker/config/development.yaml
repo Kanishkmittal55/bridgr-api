@@ -1,0 +1,8 @@
+# Bridgr worker — local / default (ENV unset or development)
+polling_enabled: true
+max_messages: 5
+wait_time_seconds: 20
+visibility_timeout: 300
+poll_error_backoff_sec: 5
+discovery_scheduler_enabled: true
+discovery_scheduler_trigger_interval: 10  # seconds 

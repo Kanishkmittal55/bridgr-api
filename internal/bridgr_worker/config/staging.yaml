@@ -1,0 +1,8 @@
+# Bridgr worker — staging
+polling_enabled: true
+max_messages: 8
+wait_time_seconds: 20
+visibility_timeout: 300
+poll_error_backoff_sec: 5
+discovery_scheduler_enabled: false
+discovery_scheduler_trigger_interval: 60

@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/Kanishkmittal55/bridgr-api/internal/bridgr_worker/config"
+	"github.com/Kanishkmittal55/bridgr-api/internal/bridgr_worker/dependencies"
 	"github.com/Kanishkmittal55/bridgr-api/internal/logger"
 	"github.com/Kanishkmittal55/bridgr-api/internal/repository"
 	"github.com/Kanishkmittal55/bridgr-api/internal/repository/sqlc"
@@ -16,16 +18,16 @@ import (
 // Worker polls the Bridgr skill-gap SQS queue.
 type Worker struct {
 	sqsClient *awssqs.Client
-	opts      WorkerOpts
+	opts      config.WorkerOpts
 	proc      *Processor
 }
 
-// NewWorker constructs a worker. jobSearch may be nil if RADAR_ADDR is unset (discovery stub only).
-func NewWorker(sqsClient *awssqs.Client, repo *repository.Repo, q sqlc.Querier, opts WorkerOpts, jobSearch *radar.JobSearchClient) *Worker {
+// NewWorker constructs a worker. d.JobSearch may be nil if RADAR_ADDR is unset (discovery stub only).
+func NewWorker(d *dependencies.Deps, opts config.WorkerOpts) *Worker {
 	return &Worker{
-		sqsClient: sqsClient,
+		sqsClient: d.SQSClient,
 		opts:      opts,
-		proc:      NewProcessor(repo, q, jobSearch),
+		proc:      NewProcessor(d.Repo, d.HsQuerier, d.JobSearch),
 	}
 }
 

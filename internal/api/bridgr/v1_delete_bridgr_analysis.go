@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"net/http"
 
-	apierrors "github.com/Kanishkmittal55/bridgr-api/internal/apierrors"
+	apierrors "github.com/Kanishkmittal55/bridgr-api/internal/errors"
 	types "github.com/Kanishkmittal55/bridgr-api/pkg/types"
 	openapi_types "github.com/oapi-codegen/runtime/types"
 )

@@ -3,7 +3,7 @@ package httpx
 import (
 	"context"
 	"encoding/json"
-	"errors"
+	stderrors "errors"
 	"net/http"
 	"net/url"
 	"os"
@@ -11,8 +11,8 @@ import (
 
 	"github.com/go-chi/render"
 
-	"github.com/Kanishkmittal55/bridgr-api/internal/apierrors"
 	"github.com/Kanishkmittal55/bridgr-api/internal/ctxlog"
+	apierrors "github.com/Kanishkmittal55/bridgr-api/internal/errors"
 	"github.com/Kanishkmittal55/bridgr-api/pkg/types"
 )
 
@@ -92,26 +92,26 @@ func (rw *ResponseWriter) writeResponse(ctx context.Context, w http.ResponseWrit
 
 	var httpStatus int
 	switch {
-	case errors.Is(err, apierrors.ErrBadRequest):
+	case stderrors.Is(err, apierrors.ErrBadRequest):
 		httpStatus = http.StatusBadRequest
 		WriteResponse(w, r, httpStatus, types.NewErrorResponse(err.Error()))
-	case errors.Is(err, apierrors.ErrNotFound):
+	case stderrors.Is(err, apierrors.ErrNotFound):
 		httpStatus = http.StatusNotFound
 		WriteResponse(w, r, httpStatus, types.NewNotFoundErrorResponse(err.Error()))
-	case errors.Is(err, apierrors.ErrForbidden):
+	case stderrors.Is(err, apierrors.ErrForbidden):
 		httpStatus = http.StatusForbidden
 		WriteResponse(w, r, httpStatus, types.NewErrorResponse(err.Error()))
-	case errors.Is(err, apierrors.ErrTooManyRequests):
+	case stderrors.Is(err, apierrors.ErrTooManyRequests):
 		httpStatus = http.StatusTooManyRequests
 		WriteResponse(w, r, httpStatus, types.NewErrorResponse(err.Error()))
-	case errors.Is(err, apierrors.ErrInternal):
+	case stderrors.Is(err, apierrors.ErrInternal):
 		httpStatus = http.StatusInternalServerError
 		rw.getLogger(ctx).Errorw("error handling response", "error", err)
 		WriteResponse(w, r, httpStatus, types.NewErrorResponse(err.Error()))
-	case errors.Is(err, apierrors.ErrNotImplemented):
+	case stderrors.Is(err, apierrors.ErrNotImplemented):
 		httpStatus = http.StatusNotImplemented
 		WriteResponse(w, r, httpStatus, types.NewErrorResponse(err.Error()))
-	case errors.Is(err, apierrors.ErrServiceUnavailable):
+	case stderrors.Is(err, apierrors.ErrServiceUnavailable):
 		httpStatus = http.StatusServiceUnavailable
 		WriteResponse(w, r, httpStatus, types.NewErrorResponse(err.Error()))
 	default:
