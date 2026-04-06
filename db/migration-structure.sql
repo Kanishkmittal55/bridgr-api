@@ -1738,6 +1738,88 @@ ALTER SEQUENCE bridgr.supported_job_boards_id_seq OWNED BY bridgr.supported_job_
 
 
 --
+-- Name: user_job_discovery_exclusions; Type: TABLE; Schema: bridgr; Owner: bridgr
+--
+
+CREATE TABLE bridgr.user_job_discovery_exclusions (
+    uuid uuid DEFAULT gen_random_uuid() NOT NULL,
+    id bigint NOT NULL,
+    user_id integer NOT NULL,
+    url_hash character varying(64) NOT NULL,
+    source_board character varying(64),
+    reason character varying(32),
+    discovery_run_uuid uuid,
+    created_at timestamp without time zone DEFAULT now() NOT NULL,
+    updated_at timestamp without time zone DEFAULT now() NOT NULL
+);
+
+
+ALTER TABLE bridgr.user_job_discovery_exclusions OWNER TO bridgr;
+
+--
+-- Name: TABLE user_job_discovery_exclusions; Type: COMMENT; Schema: bridgr; Owner: bridgr
+--
+
+COMMENT ON TABLE bridgr.user_job_discovery_exclusions IS 'Per-user URL hashes excluded from re-processing in job discovery (prefilter reject, low score, etc.); supports batch EXISTS lookups.';
+
+
+--
+-- Name: COLUMN user_job_discovery_exclusions.user_id; Type: COMMENT; Schema: bridgr; Owner: bridgr
+--
+
+COMMENT ON COLUMN bridgr.user_job_discovery_exclusions.user_id IS 'App-enforced FK to users.id';
+
+
+--
+-- Name: COLUMN user_job_discovery_exclusions.url_hash; Type: COMMENT; Schema: bridgr; Owner: bridgr
+--
+
+COMMENT ON COLUMN bridgr.user_job_discovery_exclusions.url_hash IS 'Hex SHA-256 of normalized job URL (same canonicalization as job_candidates.url_hash)';
+
+
+--
+-- Name: COLUMN user_job_discovery_exclusions.source_board; Type: COMMENT; Schema: bridgr; Owner: bridgr
+--
+
+COMMENT ON COLUMN bridgr.user_job_discovery_exclusions.source_board IS 'Optional board slug when exclusion is board-scoped in app logic';
+
+
+--
+-- Name: COLUMN user_job_discovery_exclusions.reason; Type: COMMENT; Schema: bridgr; Owner: bridgr
+--
+
+COMMENT ON COLUMN bridgr.user_job_discovery_exclusions.reason IS 'Short code e.g. prefilter, low_score, duplicate';
+
+
+--
+-- Name: COLUMN user_job_discovery_exclusions.discovery_run_uuid; Type: COMMENT; Schema: bridgr; Owner: bridgr
+--
+
+COMMENT ON COLUMN bridgr.user_job_discovery_exclusions.discovery_run_uuid IS 'Optional app-enforced FK to job_search_discovery_runs.uuid for traceability';
+
+
+--
+-- Name: user_job_discovery_exclusions_id_seq; Type: SEQUENCE; Schema: bridgr; Owner: bridgr
+--
+
+CREATE SEQUENCE bridgr.user_job_discovery_exclusions_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER SEQUENCE bridgr.user_job_discovery_exclusions_id_seq OWNER TO bridgr;
+
+--
+-- Name: user_job_discovery_exclusions_id_seq; Type: SEQUENCE OWNED BY; Schema: bridgr; Owner: bridgr
+--
+
+ALTER SEQUENCE bridgr.user_job_discovery_exclusions_id_seq OWNED BY bridgr.user_job_discovery_exclusions.id;
+
+
+--
 -- Name: analysis_job_link id; Type: DEFAULT; Schema: bridgr; Owner: bridgr
 --
 
@@ -1861,6 +1943,13 @@ ALTER TABLE ONLY bridgr.skill_gap_path_steps ALTER COLUMN id SET DEFAULT nextval
 --
 
 ALTER TABLE ONLY bridgr.supported_job_boards ALTER COLUMN id SET DEFAULT nextval('bridgr.supported_job_boards_id_seq'::regclass);
+
+
+--
+-- Name: user_job_discovery_exclusions id; Type: DEFAULT; Schema: bridgr; Owner: bridgr
+--
+
+ALTER TABLE ONLY bridgr.user_job_discovery_exclusions ALTER COLUMN id SET DEFAULT nextval('bridgr.user_job_discovery_exclusions_id_seq'::regclass);
 
 
 --
@@ -2253,6 +2342,30 @@ ALTER TABLE ONLY bridgr.skill_gap_graphs
 
 ALTER TABLE ONLY bridgr.supported_job_boards
     ADD CONSTRAINT uq_supported_job_boards_board_id UNIQUE (board_id);
+
+
+--
+-- Name: user_job_discovery_exclusions uq_user_job_discovery_exclusions_user_url; Type: CONSTRAINT; Schema: bridgr; Owner: bridgr
+--
+
+ALTER TABLE ONLY bridgr.user_job_discovery_exclusions
+    ADD CONSTRAINT uq_user_job_discovery_exclusions_user_url UNIQUE (user_id, url_hash);
+
+
+--
+-- Name: user_job_discovery_exclusions user_job_discovery_exclusions_id_key; Type: CONSTRAINT; Schema: bridgr; Owner: bridgr
+--
+
+ALTER TABLE ONLY bridgr.user_job_discovery_exclusions
+    ADD CONSTRAINT user_job_discovery_exclusions_id_key UNIQUE (id);
+
+
+--
+-- Name: user_job_discovery_exclusions user_job_discovery_exclusions_pkey; Type: CONSTRAINT; Schema: bridgr; Owner: bridgr
+--
+
+ALTER TABLE ONLY bridgr.user_job_discovery_exclusions
+    ADD CONSTRAINT user_job_discovery_exclusions_pkey PRIMARY KEY (uuid);
 
 
 --
@@ -2652,6 +2765,13 @@ CREATE TRIGGER tr_skill_gap_path_steps_control_time BEFORE INSERT OR UPDATE ON b
 --
 
 CREATE TRIGGER tr_supported_job_boards_control_time BEFORE INSERT OR UPDATE ON bridgr.supported_job_boards FOR EACH ROW EXECUTE FUNCTION bridgr.tr_control_time();
+
+
+--
+-- Name: user_job_discovery_exclusions tr_user_job_discovery_exclusions_control_time; Type: TRIGGER; Schema: bridgr; Owner: bridgr
+--
+
+CREATE TRIGGER tr_user_job_discovery_exclusions_control_time BEFORE INSERT OR UPDATE ON bridgr.user_job_discovery_exclusions FOR EACH ROW EXECUTE FUNCTION bridgr.tr_control_time();
 
 
 --

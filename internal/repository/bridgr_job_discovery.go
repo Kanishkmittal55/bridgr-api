@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/Kanishkmittal55/bridgr-api/internal/repository/sqlc"
 	"github.com/jackc/pgx/v5/pgtype"
@@ -492,6 +493,84 @@ func (r *Repo) DeleteAnalysisJobLinkByID(ctx context.Context, querier sqlc.Queri
 func (r *Repo) DeleteAnalysisJobLinkByPair(ctx context.Context, querier sqlc.Querier, params sqlc.DeleteAnalysisJobLinkByPairParams) error {
 	if err := querier.DeleteAnalysisJobLinkByPair(ctx, params); err != nil {
 		return fmt.Errorf("DeleteAnalysisJobLinkByPair: %w", err)
+	}
+	return nil
+}
+
+// =============================================================================
+// User job discovery exclusions (URL hash batch lookup)
+// =============================================================================
+
+// ListUserJobDiscoveryExclusionsByURLHashes returns each url_hash in urlHashes that already has an exclusion row for this user (indexed batch lookup).
+func (r *Repo) ListUserJobDiscoveryExclusionsByURLHashes(ctx context.Context, querier sqlc.Querier, userID int32, urlHashes []string) ([]string, error) {
+	if len(urlHashes) == 0 {
+		return nil, nil
+	}
+	rows, err := querier.ListUserJobDiscoveryExclusionsByURLHashes(ctx, sqlc.ListUserJobDiscoveryExclusionsByURLHashesParams{
+		UserID:    userID,
+		UrlHashes: urlHashes,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("ListUserJobDiscoveryExclusionsByURLHashes: %w", err)
+	}
+	return rows, nil
+}
+
+// UserJobDiscoveryExcludedURLHashSet is a convenience for filtering FindJobs results: keys are excluded url_hash values present in urlHashes.
+func (r *Repo) UserJobDiscoveryExcludedURLHashSet(ctx context.Context, querier sqlc.Querier, userID int32, urlHashes []string) (map[string]struct{}, error) {
+	existing, err := r.ListUserJobDiscoveryExclusionsByURLHashes(ctx, querier, userID, urlHashes)
+	if err != nil {
+		return nil, err
+	}
+	out := make(map[string]struct{}, len(existing))
+	for _, h := range existing {
+		out[h] = struct{}{}
+	}
+	return out, nil
+}
+
+// BatchExcludedURLHashes is an alias for UserJobDiscoveryExcludedURLHashSet (one indexed batch lookup per call).
+func (r *Repo) BatchExcludedURLHashes(ctx context.Context, querier sqlc.Querier, userID int32, urlHashes []string) (map[string]struct{}, error) {
+	return r.UserJobDiscoveryExcludedURLHashSet(ctx, querier, userID, urlHashes)
+}
+
+// AddJobDiscoveryExclusion inserts user_job_discovery_exclusions (ON CONFLICT DO NOTHING). reason and discoveryRunUuid are optional.
+func (r *Repo) AddJobDiscoveryExclusion(ctx context.Context, querier sqlc.Querier, userID int32, urlHash, reason string, discoveryRunUuid pgtype.UUID) error {
+	reason = strings.TrimSpace(reason)
+	reas := pgtype.Text{}
+	if reason != "" {
+		reas = pgtype.Text{String: reason, Valid: true}
+	}
+	return r.AddUserJobDiscoveryExclusion(ctx, querier, sqlc.AddUserJobDiscoveryExclusionParams{
+		UserID:           userID,
+		UrlHash:          urlHash,
+		SourceBoard:      pgtype.Text{},
+		Reason:           reas,
+		DiscoveryRunUuid: discoveryRunUuid,
+	})
+}
+
+// AddUserJobDiscoveryExclusion records an excluded URL hash for a user. Idempotent on (user_id, url_hash).
+func (r *Repo) AddUserJobDiscoveryExclusion(ctx context.Context, querier sqlc.Querier, params sqlc.AddUserJobDiscoveryExclusionParams) error {
+	if err := querier.AddUserJobDiscoveryExclusion(ctx, params); err != nil {
+		return fmt.Errorf("AddUserJobDiscoveryExclusion: %w", err)
+	}
+	return nil
+}
+
+// GetUserJobDiscoveryExclusionByUserAndURLHash loads one exclusion row when present.
+func (r *Repo) GetUserJobDiscoveryExclusionByUserAndURLHash(ctx context.Context, querier sqlc.Querier, params sqlc.GetUserJobDiscoveryExclusionByUserAndURLHashParams) (*sqlc.BridgrUserJobDiscoveryExclusion, error) {
+	row, err := querier.GetUserJobDiscoveryExclusionByUserAndURLHash(ctx, params)
+	if err != nil {
+		return nil, fmt.Errorf("GetUserJobDiscoveryExclusionByUserAndURLHash: %w", err)
+	}
+	return &row, nil
+}
+
+// DeleteUserJobDiscoveryExclusionByUserAndURLHash removes an exclusion row (e.g. tooling, tests).
+func (r *Repo) DeleteUserJobDiscoveryExclusionByUserAndURLHash(ctx context.Context, querier sqlc.Querier, params sqlc.DeleteUserJobDiscoveryExclusionByUserAndURLHashParams) error {
+	if err := querier.DeleteUserJobDiscoveryExclusionByUserAndURLHash(ctx, params); err != nil {
+		return fmt.Errorf("DeleteUserJobDiscoveryExclusionByUserAndURLHash: %w", err)
 	}
 	return nil
 }

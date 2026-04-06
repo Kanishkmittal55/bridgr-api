@@ -20,5 +20,23 @@ func validate(o *WorkerOpts) error {
 	if o.DiscoverySchedulerEnabled && o.DiscoverySchedulerTriggerInterval < 1 {
 		return fmt.Errorf("discovery_scheduler_trigger_interval must be at least 1 when discovery scheduler is enabled, got %d", o.DiscoverySchedulerTriggerInterval)
 	}
+	if o.DiscoveryScoreThreshold < 0 || o.DiscoveryScoreThreshold > 1 {
+		return fmt.Errorf("discovery_score_threshold must be in [0,1], got %v", o.DiscoveryScoreThreshold)
+	}
+	if o.DiscoveryPrefilterMinScore < 0 || o.DiscoveryPrefilterMinScore > 1 {
+		return fmt.Errorf("discovery_prefilter_min_score must be in [0,1], got %v", o.DiscoveryPrefilterMinScore)
+	}
+	if o.DiscoveryMaxIterations < 1 {
+		return fmt.Errorf("discovery_max_iterations must be at least 1, got %d", o.DiscoveryMaxIterations)
+	}
+	if o.DiscoveryMaxLLMCallsPerRun < 0 {
+		return fmt.Errorf("discovery_max_llm_calls_per_run must be non-negative, got %d", o.DiscoveryMaxLLMCallsPerRun)
+	}
+	if o.DiscoveryIterationTimeBudgetSec < 0 {
+		return fmt.Errorf("discovery_iteration_time_budget_sec must be non-negative, got %d", o.DiscoveryIterationTimeBudgetSec)
+	}
+	if o.DiscoveryFindJobsPageCap < 0 {
+		return fmt.Errorf("discovery_findjobs_page_cap must be non-negative, got %d", o.DiscoveryFindJobsPageCap)
+	}
 	return nil
 }

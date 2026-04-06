@@ -450,3 +450,102 @@ func (q *Queries) UpsertFeedItem(ctx context.Context, arg UpsertFeedItemParams) 
 	)
 	return i, err
 }
+
+const upsertFeedItemFromDiscovery = `-- name: UpsertFeedItemFromDiscovery :one
+INSERT INTO bridgr.feed_items (
+    user_id,
+    job_candidate_uuid,
+    score_uuid,
+    verification_uuid,
+    composite_score,
+    gap_severity,
+    title,
+    company,
+    location,
+    job_url,
+    match_summary,
+    gap_summary,
+    feed_status,
+    surfaced_at,
+    seen_at
+) VALUES (
+    $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15
+)
+ON CONFLICT (job_candidate_uuid, user_id) DO UPDATE SET
+    score_uuid = EXCLUDED.score_uuid,
+    verification_uuid = COALESCE(bridgr.feed_items.verification_uuid, EXCLUDED.verification_uuid),
+    composite_score = EXCLUDED.composite_score,
+    gap_severity = EXCLUDED.gap_severity,
+    title = EXCLUDED.title,
+    company = EXCLUDED.company,
+    location = EXCLUDED.location,
+    job_url = EXCLUDED.job_url,
+    match_summary = EXCLUDED.match_summary,
+    gap_summary = EXCLUDED.gap_summary,
+    feed_status = bridgr.feed_items.feed_status,
+    surfaced_at = bridgr.feed_items.surfaced_at,
+    seen_at = bridgr.feed_items.seen_at
+RETURNING uuid, id, user_id, job_candidate_uuid, score_uuid, verification_uuid, composite_score, gap_severity, title, company, location, job_url, match_summary, gap_summary, feed_status, surfaced_at, seen_at, created_at, updated_at
+`
+
+type UpsertFeedItemFromDiscoveryParams struct {
+	UserID           int32            `db:"user_id"`
+	JobCandidateUuid pgtype.UUID      `db:"job_candidate_uuid"`
+	ScoreUuid        pgtype.UUID      `db:"score_uuid"`
+	VerificationUuid pgtype.UUID      `db:"verification_uuid"`
+	CompositeScore   float32          `db:"composite_score"`
+	GapSeverity      pgtype.Text      `db:"gap_severity"`
+	Title            pgtype.Text      `db:"title"`
+	Company          pgtype.Text      `db:"company"`
+	Location         pgtype.Text      `db:"location"`
+	JobUrl           pgtype.Text      `db:"job_url"`
+	MatchSummary     pgtype.Text      `db:"match_summary"`
+	GapSummary       pgtype.Text      `db:"gap_summary"`
+	FeedStatus       string           `db:"feed_status"`
+	SurfacedAt       pgtype.Timestamp `db:"surfaced_at"`
+	SeenAt           pgtype.Timestamp `db:"seen_at"`
+}
+
+// Upsert used by discovery worker: refresh score/summaries on retry but preserve user feed state and first surfaced time.
+func (q *Queries) UpsertFeedItemFromDiscovery(ctx context.Context, arg UpsertFeedItemFromDiscoveryParams) (BridgrFeedItem, error) {
+	row := q.db.QueryRow(ctx, upsertFeedItemFromDiscovery,
+		arg.UserID,
+		arg.JobCandidateUuid,
+		arg.ScoreUuid,
+		arg.VerificationUuid,
+		arg.CompositeScore,
+		arg.GapSeverity,
+		arg.Title,
+		arg.Company,
+		arg.Location,
+		arg.JobUrl,
+		arg.MatchSummary,
+		arg.GapSummary,
+		arg.FeedStatus,
+		arg.SurfacedAt,
+		arg.SeenAt,
+	)
+	var i BridgrFeedItem
+	err := row.Scan(
+		&i.Uuid,
+		&i.ID,
+		&i.UserID,
+		&i.JobCandidateUuid,
+		&i.ScoreUuid,
+		&i.VerificationUuid,
+		&i.CompositeScore,
+		&i.GapSeverity,
+		&i.Title,
+		&i.Company,
+		&i.Location,
+		&i.JobUrl,
+		&i.MatchSummary,
+		&i.GapSummary,
+		&i.FeedStatus,
+		&i.SurfacedAt,
+		&i.SeenAt,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}

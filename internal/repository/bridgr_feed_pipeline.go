@@ -281,6 +281,15 @@ func (r *Repo) UpsertFeedItem(ctx context.Context, querier sqlc.Querier, params 
 	return &row, nil
 }
 
+// UpsertFeedItemFromDiscovery upserts a feed row for the discovery worker; on conflict it refreshes score and copy but keeps feed_status, seen_at, and first surfaced_at.
+func (r *Repo) UpsertFeedItemFromDiscovery(ctx context.Context, querier sqlc.Querier, params sqlc.UpsertFeedItemFromDiscoveryParams) (*sqlc.BridgrFeedItem, error) {
+	row, err := querier.UpsertFeedItemFromDiscovery(ctx, params)
+	if err != nil {
+		return nil, fmt.Errorf("UpsertFeedItemFromDiscovery: %w", err)
+	}
+	return &row, nil
+}
+
 // GetFeedItemByUUID loads a feed item by UUID.
 func (r *Repo) GetFeedItemByUUID(ctx context.Context, querier sqlc.Querier, uuid pgtype.UUID) (*sqlc.BridgrFeedItem, error) {
 	row, err := querier.GetFeedItemByUUID(ctx, uuid)

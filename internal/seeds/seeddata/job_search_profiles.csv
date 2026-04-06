@@ -1,5 +1,4 @@
 uuid,id,user_id,target_role,location,source_board,career_switch,company_stage,seniority_goal,compensation_goal,software_stack,canonical_cv_analysis_uuid,created_at,updated_at
-550e8400-e29b-41d4-a716-446655440002,1,1,Backend Engineer,Remote,linkedin,true,any,any,any,,550e8400-e29b-41d4-a716-446655440001,2026-01-10T12:00:00Z,2026-01-10T12:00:00Z
-550e8400-e29b-41d4-a716-446655440030,2,1,Backend Engineer,Remote,linkedin,false,any,up,any,,550e8400-e29b-41d4-a716-446655440001,2026-01-10T12:00:00Z,2026-01-10T12:00:00Z
-550e8400-e29b-41d4-a716-446655440031,3,1,Backend Engineer,Remote,linkedin,false,any,any,up,,550e8400-e29b-41d4-a716-446655440001,2026-01-10T12:00:00Z,2026-01-10T12:00:00Z
-550e8400-e29b-41d4-a716-446655440032,4,1,Platform Engineer,San Francisco CA,indeed,false,any,any,any,,550e8400-e29b-41d4-a716-446655440001,2026-01-10T12:00:00Z,2026-01-10T12:00:00Z
+550e8400-e29b-41d4-a716-4466554400b1,1,1,Senior Backend Engineer (Go microservices),Remote United States,linkedin,false,startup,up,up,Go;PostgreSQL;Redis;AWS;Docker;gRPC,550e8400-e29b-41d4-a716-446655440001,2026-01-10T12:00:00Z,2026-01-10T12:00:00Z
+550e8400-e29b-41d4-a716-4466554400b2,2,1,Staff Platform Engineer,San Francisco Bay Area,linkedin,false,growth,up,lateral,Kubernetes;Terraform;Go;PostgreSQL;Prometheus;AWS,550e8400-e29b-41d4-a716-446655440001,2026-01-10T12:00:00Z,2026-01-10T12:00:00Z
+550e8400-e29b-41d4-a716-4466554400b3,3,1,Senior Backend Engineer (Python API services),Remote,linkedin,false,any,lateral,up,Python;PostgreSQL;Kafka;Redis;Docker;FastAPI,550e8400-e29b-41d4-a716-446655440001,2026-01-10T12:00:00Z,2026-01-10T12:00:00Z

@@ -7,14 +7,17 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"strconv"
+	"net/http"
 	"strings"
 	"time"
+	"unicode/utf8"
 
+	workerconfig "github.com/Kanishkmittal55/bridgr-api/internal/bridgr_worker/config"
 	"github.com/Kanishkmittal55/bridgr-api/internal/cloud"
 	ierrr "github.com/Kanishkmittal55/bridgr-api/internal/errors"
 
 	jobsearchv1 "github.com/Kanishkmittal55/bridgr-api/internal/gen/radar/services/job_search/v1"
+	"github.com/Kanishkmittal55/bridgr-api/internal/llm/openaijson"
 	"github.com/Kanishkmittal55/bridgr-api/internal/logger"
 	"github.com/Kanishkmittal55/bridgr-api/internal/radar"
 	"github.com/Kanishkmittal55/bridgr-api/internal/repository"
@@ -32,11 +35,27 @@ type Processor struct {
 	repo            *repository.Repo
 	q               sqlc.Querier
 	jobSearchClient *radar.JobSearchClient
+	radarClient     *radar.Client // PDF extract + Discovery; optional when RADAR_ADDR unset
+	s3              cloud.Interface
+	s3Bucket        string // HASSLE_SKIP_S3_BUCKET — JD upload for skill-gap / feed when inline jd_text
+	workerOpts      workerconfig.WorkerOpts
+	openAIKey       string
+	prefilterLLM    *openaijson.Client
 }
 
 // NewProcessor builds a processor. jobSearch may be nil when RADAR_ADDR is unset.
-func NewProcessor(repo *repository.Repo, q sqlc.Querier, jobSearch *radar.JobSearchClient) *Processor {
-	return &Processor{repo: repo, q: q, jobSearchClient: jobSearch}
+func NewProcessor(repo *repository.Repo, q sqlc.Querier, jobSearch *radar.JobSearchClient, radarClient *radar.Client, s3 cloud.Interface, s3Bucket string, opts workerconfig.WorkerOpts, openAIAPIKey string) *Processor {
+	return &Processor{
+		repo:            repo,
+		q:               q,
+		jobSearchClient: jobSearch,
+		radarClient:     radarClient,
+		s3:              s3,
+		s3Bucket:        strings.TrimSpace(s3Bucket),
+		workerOpts:      opts,
+		openAIKey:       strings.TrimSpace(openAIAPIKey),
+		prefilterLLM:    &openaijson.Client{HTTP: &http.Client{Timeout: 90 * time.Second}},
+	}
 }
 
 // Process unmarshals the queue body, runs job discovery, always Acks the message (no SQS retries),
@@ -86,7 +105,7 @@ func (p *Processor) processJobDiscovery(ctx context.Context, payload cloud.Queue
 	now := pgtype.Timestamp{Time: time.Now().UTC(), Valid: true}
 	// pending is not redundant here.
 	if row.Status == "pending" || row.Status == "queued" {
-		// TODO : where NULL means “leave unchanged”).
+		// TODO : where NULL means “leave unchanged”.
 		_, err := p.repo.PatchJobSearchDiscoveryRun(ctx, p.q, sqlc.PatchJobSearchDiscoveryRunParams{
 			ID:                row.ID,
 			Status:            "running",
@@ -113,31 +132,301 @@ func (p *Processor) processJobDiscovery(ctx context.Context, payload cloud.Queue
 		return p.finishDiscoveryRunFailed(ctx, nil, pgtype.Timestamp{}, "radar_client_failed_health_check", fmt.Errorf("radar client failed health check before invocation: %w", ierrr.ErrInternal))
 	}
 
-	findJobReq, sourceBoard, err := findJobsRequestFromJobDiscoveryRequestParams(row.RequestParams)
+	prefs, rawParams, err := ParseDiscoveryRequestParams(row.RequestParams)
 	if err != nil {
 		return p.finishDiscoveryRunFailed(ctx, row, now, "wrong_discovery_params_bad_request", fmt.Errorf("bad discovery params in enqueued job: %w: %w", err, ierrr.ErrBadRequest))
 	}
+	if prefs.UserID != 0 && prefs.UserID != row.UserID {
+		return p.finishDiscoveryRunFailed(ctx, row, now, "discovery_params_user_mismatch", fmt.Errorf("request_params user_id %d does not match run user_id %d: %w", prefs.UserID, row.UserID, ierrr.ErrBadRequest))
+	}
 
-	log.Infow("bridgr-worker: calling Radar JobSearchService.FindJobs", "run_uuid", payload.RunUUID, "target_role", findJobReq.GetSearchQuery(), "location", findJobReq.GetLocation(), "max_results", findJobReq.GetMaxResults(), "source_board", sourceBoard)
+	resumeText := ""
+	canonical := strings.TrimSpace(prefs.CanonicalCvAnalysisUUID)
+	if canonical == "" {
+		if p.workerOpts.DiscoveryRequireCanonicalCV {
+			return p.finishDiscoveryRunFailed(ctx, row, now, "missing_canonical_cv_analysis_uuid", fmt.Errorf("canonical_cv_analysis_uuid required when discovery_require_canonical_cv is true: %w", ierrr.ErrBadRequest))
+		}
+		log.Infow("bridgr-worker: discovery run without canonical_cv_analysis_uuid; FindJobs resume_text empty", "run_uuid", payload.RunUUID, "user_id", row.UserID)
+	} else {
+		txt, rerr := resolveResumeTextForDiscovery(ctx, p.repo, p.q, p.radarClient, p.s3, row.UserID, canonical)
+		if rerr != nil {
+			if p.workerOpts.DiscoveryRequireCanonicalCV {
+				return p.finishDiscoveryRunFailed(ctx, row, now, "cv_resume_unavailable", fmt.Errorf("resolve CV/resume for discovery: %w", rerr))
+			}
+			log.Warnw("bridgr-worker: CV resume not loaded; continuing with empty resume_text", "run_uuid", payload.RunUUID, "user_id", row.UserID, "canonical_cv_analysis_uuid", canonical, "error", rerr)
+		} else {
+			resumeText = txt
+		}
+	}
 
-	resp, err := p.jobSearchClient.FindJobs(ctx, findJobReq)
+	findJobReq, sourceBoard, err := BuildFindJobsRequest(prefs, rawParams, payload.RunUUID, resumeText)
 	if err != nil {
-		return p.finishDiscoveryRunFailed(ctx, row, now, "radar_find_jobs_rpc_call_error", fmt.Errorf("radar client find jobs rpc call failed: %w: %w", err, ierrr.ErrInternal))
+		return p.finishDiscoveryRunFailed(ctx, row, now, "wrong_discovery_params_bad_request", fmt.Errorf("build FindJobs request: %w: %w", err, ierrr.ErrBadRequest))
 	}
 
-	jobs := resp.GetJobs()
-	if jobs == nil {
-		jobs = []*jobsearchv1.JobInfo{}
-		stubMeta, _ := json.Marshal(map[string]interface{}{"stub": true, "worker": "bridgr", "radar_skipped": false, "did_not_find_any_jobs": true})
-		return p.finishDiscoveryRun(ctx, row, now, 0, 0, stubMeta) // There was no error radar just did not find any jobs for that request job search profile.
+	if (p.workerOpts.DiscoveryLLMPrefilterEnabled || p.workerOpts.DiscoveryLLMScoreEnabled || p.workerOpts.DiscoveryLLMQueryRefineEnabled) && p.openAIKey == "" {
+		return p.finishDiscoveryRunFailed(ctx, row, now, "llm_discovery_misconfigured", fmt.Errorf("discovery LLM features require BRIDGR_OPENAI_API_KEY or OPENAI_API_KEY: %w", ierrr.ErrInternal))
 	}
 
-	rawCount := int32(len(jobs))
-	var ingested int32
-	for i, j := range jobs {
+	profileMax := findJobReq.GetMaxResults()
+	if profileMax <= 0 {
+		profileMax = 10
+	}
+	targetAccept := profileMax
 
+	maxIter := p.workerOpts.DiscoveryMaxIterations
+	if maxIter < 1 {
+		maxIter = 1
+	}
+
+	var deadline time.Time
+	if p.workerOpts.DiscoveryIterationTimeBudgetSec > 0 {
+		deadline = time.Now().UTC().Add(time.Duration(p.workerOpts.DiscoveryIterationTimeBudgetSec) * time.Second)
+	}
+
+	baseReq := copyFindJobsRequest(findJobReq)
+	currentQuery := strings.TrimSpace(baseReq.GetSearchQuery())
+	currentRoles := append([]string(nil), baseReq.GetTargetRoles()...)
+	if len(currentRoles) == 0 && currentQuery != "" {
+		currentRoles = []string{currentQuery}
+	}
+
+	var accum discoveryRunAccum
+	var iterationRecords []map[string]interface{}
+	var totalRaw int32
+	var lastSearchQuery string
+	var lastTargetRoles []string
+	jobSeq := 0
+
+	log.Infow("bridgr-worker: discovery iterative FindJobs",
+		"run_uuid", payload.RunUUID,
+		"location", findJobReq.GetLocation(),
+		"profile_max_results", profileMax,
+		"target_accept", targetAccept,
+		"max_iterations", maxIter,
+		"iteration_time_budget_sec", p.workerOpts.DiscoveryIterationTimeBudgetSec,
+		"findjobs_page_cap", p.workerOpts.DiscoveryFindJobsPageCap,
+		"source_board", sourceBoard,
+		"resume_text_runes", utf8.RuneCountInString(findJobReq.GetResumeText()),
+		"canonical_cv_analysis_uuid", canonical,
+		"discovery_require_canonical_cv", p.workerOpts.DiscoveryRequireCanonicalCV,
+		"discovery_score_threshold", p.workerOpts.DiscoveryScoreThreshold,
+		"discovery_llm_query_refine_enabled", p.workerOpts.DiscoveryLLMQueryRefineEnabled,
+	)
+
+	for iter := 1; iter <= int(maxIter) && accum.ingested < targetAccept; iter++ {
+		if !deadline.IsZero() && time.Now().UTC().After(deadline) {
+			iterationRecords = append(iterationRecords, map[string]interface{}{
+				"iteration":  iter,
+				"early_exit": "time_budget",
+			})
+			break
+		}
+
+		need := targetAccept - accum.ingested
+		pageMax := discoveryPageMaxResults(need, profileMax, p.workerOpts.DiscoveryFindJobsPageCap)
+
+		req := copyFindJobsRequest(baseReq)
+		req.SearchQuery = currentQuery
+		req.TargetRoles = append([]string(nil), currentRoles...)
+		if len(req.TargetRoles) == 0 && req.SearchQuery != "" {
+			req.TargetRoles = []string{req.SearchQuery}
+		}
+		req.MaxResults = pageMax
+		lastSearchQuery = req.GetSearchQuery()
+		lastTargetRoles = append([]string(nil), req.GetTargetRoles()...)
+
+		log.Infow("bridgr-worker: calling Radar JobSearchService.FindJobs",
+			"run_uuid", payload.RunUUID,
+			"iteration", iter,
+			"iteration_max", maxIter,
+			"accepted_so_far", accum.ingested,
+			"target_accept", targetAccept,
+			"search_query", req.GetSearchQuery(),
+			"target_roles", req.GetTargetRoles(),
+			"max_results_this_round", pageMax,
+			"location", req.GetLocation(),
+			"source_board", sourceBoard,
+		)
+
+		resp, err := p.jobSearchClient.FindJobs(ctx, req)
+		if err != nil {
+			return p.finishDiscoveryRunFailed(ctx, row, now, "radar_find_jobs_rpc_call_error", fmt.Errorf("radar client find jobs rpc call failed: %w: %w", err, ierrr.ErrInternal))
+		}
+
+		jobs := resp.GetJobs()
+		if jobs == nil {
+			jobs = []*jobsearchv1.JobInfo{}
+		}
+
+		if len(jobs) == 0 {
+			if iter == 1 {
+				stubMeta, _ := json.Marshal(map[string]interface{}{
+					"stub": true, "worker": "bridgr", "radar_skipped": false, "did_not_find_any_jobs": true,
+					"iterations": []interface{}{map[string]interface{}{"iteration": 1, "jobs_returned": 0, "search_query": req.GetSearchQuery()}},
+				})
+				return p.finishDiscoveryRun(ctx, row, now, 0, 0, stubMeta)
+			}
+			iterationRecords = append(iterationRecords, map[string]interface{}{
+				"iteration":     iter,
+				"jobs_returned": 0,
+				"search_query":  req.GetSearchQuery(),
+				"target_roles":  req.GetTargetRoles(),
+				"early_exit":    "no_jobs_returned",
+			})
+			break
+		}
+
+		totalRaw += int32(len(jobs))
+
+		batchHashes := uniqueURLHashesFromJobInfos(jobs)
+		excluded, xerr := p.repo.BatchExcludedURLHashes(ctx, p.q, row.UserID, batchHashes)
+		if xerr != nil {
+			return p.finishDiscoveryRunFailed(ctx, row, now, "exclusion_batch_lookup_error", fmt.Errorf("batch exclusion lookup: %w", xerr))
+		}
+		if len(batchHashes) > 0 {
+			log.Infow("bridgr-worker: exclusion batch lookup", "run_uuid", payload.RunUUID, "user_id", row.UserID, "batch_url_hashes", len(batchHashes), "already_excluded", len(excluded))
+		}
+
+		bIn := accum.ingested
+		bEx := accum.exclusionSkipped
+		bPr := accum.prefilterRejected
+		bLo := accum.lowScoreRejected
+
+		batchStats, perr := p.processDiscoveryJobsIteration(ctx, row, payload.RunUUID, prefs, canonical, resumeText, sourceBoard, pgid, now, jobs, excluded, iter, &jobSeq, &accum)
+		if perr != nil {
+			return p.finishDiscoveryRunFailed(ctx, row, now, "discovery_iteration_error", perr)
+		}
+
+		rec := map[string]interface{}{
+			"iteration":             iter,
+			"jobs_returned":         len(jobs),
+			"accepted_delta":        accum.ingested - bIn,
+			"exclusion_skipped":     accum.exclusionSkipped - bEx,
+			"prefilter_rejected":    accum.prefilterRejected - bPr,
+			"low_score_rejected":    accum.lowScoreRejected - bLo,
+			"search_query":          req.GetSearchQuery(),
+			"target_roles":          req.GetTargetRoles(),
+			"max_results_requested": pageMax,
+			"batch_stats_for_refine": map[string]interface{}{
+				"accepted":           batchStats.AcceptedDelta,
+				"exclusion_skipped":  batchStats.ExclusionSkipped,
+				"prefilter_rejected": batchStats.PrefilterRejected,
+				"low_score_rejected": batchStats.LowScoreRejected,
+			},
+		}
+
+		if accum.ingested >= targetAccept {
+			iterationRecords = append(iterationRecords, rec)
+			break
+		}
+
+		if iter < int(maxIter) && accum.ingested < targetAccept {
+			nextQ, nextR, ruleNote, llmRat := refineForNextIteration(ctx, p, prefs, currentQuery, currentRoles, batchStats, &accum.llmCallsThisRun, &accum)
+			rec["refine_rule_note"] = ruleNote
+			if llmRat != "" {
+				rec["llm_query_refine_snippet"] = llmRat
+			}
+			rec["next_search_query"] = nextQ
+			rec["next_target_roles"] = nextR
+			currentQuery = nextQ
+			currentRoles = nextR
+		}
+
+		iterationRecords = append(iterationRecords, rec)
+	}
+
+	meta, _ := json.Marshal(map[string]interface{}{
+		"radar":                              true,
+		"find_jobs":                          true,
+		"iterative_find_jobs":                true,
+		"iterations":                         iterationRecords,
+		"iteration_count":                    len(iterationRecords),
+		"jobs_returned_total":                totalRaw,
+		"target_accept":                      targetAccept,
+		"accepted_count":                     accum.ingested,
+		"excluded_this_run_total":            accum.exclusionSkipped + accum.prefilterRejected + accum.lowScoreRejected,
+		"exclusion_skipped":                  accum.exclusionSkipped,
+		"prefilter_rejected":                 accum.prefilterRejected,
+		"low_score_rejected":                 accum.lowScoreRejected,
+		"llm_calls_this_run":                 accum.llmCallsThisRun,
+		"llm_prefilter_calls":                accum.llmPrefilterCalls,
+		"llm_score_calls":                    accum.llmScoreCalls,
+		"llm_query_refine_calls":             accum.llmQueryRefineCalls,
+		"discovery_llm_prefilter_enabled":    p.workerOpts.DiscoveryLLMPrefilterEnabled,
+		"discovery_llm_score_enabled":        p.workerOpts.DiscoveryLLMScoreEnabled,
+		"discovery_llm_query_refine_enabled": p.workerOpts.DiscoveryLLMQueryRefineEnabled,
+		"candidates_upserted":                accum.ingested,
+		"feed_items_upserted":                accum.feedUpserted,
+		"source_board":                       sourceBoard,
+		"last_search_query":                  lastSearchQuery,
+		"last_target_roles":                  lastTargetRoles,
+		"location":                           findJobReq.GetLocation(),
+		"resume_text_runes":                  utf8.RuneCountInString(findJobReq.GetResumeText()),
+		"canonical_cv_analysis_uuid":         canonical,
+		"discovery_pipeline": map[string]interface{}{
+			"require_canonical_cv":      p.workerOpts.DiscoveryRequireCanonicalCV,
+			"score_threshold":           p.workerOpts.DiscoveryScoreThreshold,
+			"prefilter_min_score":       p.workerOpts.DiscoveryPrefilterMinScore,
+			"max_iterations":            p.workerOpts.DiscoveryMaxIterations,
+			"iteration_time_budget_sec": p.workerOpts.DiscoveryIterationTimeBudgetSec,
+			"findjobs_page_cap":         p.workerOpts.DiscoveryFindJobsPageCap,
+			"max_llm_calls_per_run":     p.workerOpts.DiscoveryMaxLLMCallsPerRun,
+			"llm_prefilter_enabled":     p.workerOpts.DiscoveryLLMPrefilterEnabled,
+			"llm_score_enabled":         p.workerOpts.DiscoveryLLMScoreEnabled,
+			"llm_query_refine_enabled":  p.workerOpts.DiscoveryLLMQueryRefineEnabled,
+			"openai_model":              p.workerOpts.DiscoveryOpenAIModel,
+			"scoring_version_static":    discoveryScoringVersion,
+		},
+	})
+
+	return p.finishDiscoveryRun(ctx, row, now, totalRaw, accum.ingested, meta)
+}
+
+type discoveryRunAccum struct {
+	ingested            int32
+	feedUpserted        int32
+	exclusionSkipped    int32
+	prefilterRejected   int32
+	lowScoreRejected    int32
+	llmCallsThisRun     int32
+	llmPrefilterCalls   int32
+	llmScoreCalls       int32
+	llmQueryRefineCalls int32
+}
+
+func (p *Processor) processDiscoveryJobsIteration(
+	ctx context.Context,
+	row *sqlc.BridgrJobSearchDiscoveryRun,
+	runUUID string,
+	prefs DiscoveryRequestParams,
+	canonical string,
+	resumeText string,
+	sourceBoard string,
+	pgid pgtype.UUID,
+	now pgtype.Timestamp,
+	jobs []*jobsearchv1.JobInfo,
+	excluded map[string]struct{},
+	iteration int,
+	jobSeq *int,
+	accum *discoveryRunAccum,
+) (discoveryBatchStats, error) {
+	log := logger.Get(ctx)
+	bIn := accum.ingested
+	bEx := accum.exclusionSkipped
+	bPr := accum.prefilterRejected
+	bLo := accum.lowScoreRejected
+
+	for _, j := range jobs {
 		jobURL := strings.TrimSpace(j.GetJobUrl())
 		if jobURL == "" {
+			continue
+		}
+
+		urlHash := urlHashHex(jobURL)
+		if _, isExcluded := excluded[urlHash]; isExcluded {
+			accum.exclusionSkipped++
+			log.Infow("bridgr-worker: skip job (URL on user discovery exclusion list)", "run_uuid", runUUID, "user_id", row.UserID, "url_hash", urlHash)
 			continue
 		}
 
@@ -146,34 +435,97 @@ func (p *Processor) processJobDiscovery(ctx context.Context, payload cloud.Queue
 			reqs = []string{}
 		}
 
+		jdInline := jdTextFromJobInfo(j)
+
+		if p.workerOpts.DiscoveryLLMPrefilterEnabled && p.openAIKey != "" {
+			budget := p.workerOpts.DiscoveryMaxLLMCallsPerRun
+			if budget > 0 && accum.llmCallsThisRun >= budget {
+				log.Warnw("bridgr-worker: LLM prefilter budget exhausted; skipping prefilter for this job",
+					"run_uuid", runUUID, "user_id", row.UserID, "url_hash", urlHash,
+					"budget", budget)
+			} else {
+				accum.llmCallsThisRun++
+				accum.llmPrefilterCalls++
+				userPayload, perr := buildPrefilterUserPayload(prefs, j.GetTitle(), j.GetCompany(), jdInline)
+				if perr != nil {
+					return discoveryBatchStats{}, fmt.Errorf("prefilter payload: %w", perr)
+				}
+				res, rerr := runJobPrefilterLLM(ctx, p.prefilterLLM, p.openAIKey, p.workerOpts.DiscoveryOpenAIModel, p.workerOpts.DiscoveryOpenAIBaseURL, userPayload)
+				if rerr != nil {
+					return discoveryBatchStats{}, fmt.Errorf("prefilter llm: %w", rerr)
+				}
+				if !prefilterConfidenceAccept(res, p.workerOpts.DiscoveryPrefilterMinScore) {
+					accum.prefilterRejected++
+					if exErr := p.repo.AddJobDiscoveryExclusion(ctx, p.q, row.UserID, urlHash, "prefilter", pgid); exErr != nil {
+						log.Errorw("bridgr-worker: add prefilter exclusion failed", "url_hash", urlHash, "error", exErr)
+					}
+					log.Infow("bridgr-worker: prefilter rejected job", "run_uuid", runUUID, "user_id", row.UserID, "url_hash", urlHash,
+						"pass", res.Pass, "confidence", res.Confidence, "by_dimension", res.ByDimension)
+					continue
+				}
+			}
+		}
+
+		scoreOut := computeDiscoveryScore(prefs, resumeText, jdInline, j.GetTitle(), j.GetCompany())
+		if p.workerOpts.DiscoveryLLMScoreEnabled && p.openAIKey != "" {
+			budget := p.workerOpts.DiscoveryMaxLLMCallsPerRun
+			if budget > 0 && accum.llmCallsThisRun >= budget {
+				log.Warnw("bridgr-worker: LLM score budget exhausted; using deterministic score only",
+					"run_uuid", runUUID, "user_id", row.UserID, "url_hash", urlHash,
+					"budget", budget)
+			} else {
+				accum.llmCallsThisRun++
+				accum.llmScoreCalls++
+				userPayload, sbuildErr := buildScoreLLMUserPayloadWithCV(prefs, j.GetTitle(), j.GetCompany(), jdInline, resumeText, scoreOut)
+				if sbuildErr != nil {
+					return discoveryBatchStats{}, fmt.Errorf("score llm payload: %w", sbuildErr)
+				}
+				res, rerr := runJobScoreLLM(ctx, p.prefilterLLM, p.openAIKey, p.workerOpts.DiscoveryOpenAIModel, p.workerOpts.DiscoveryOpenAIBaseURL, userPayload)
+				if rerr != nil {
+					log.Warnw("bridgr-worker: score LLM failed; using deterministic score only",
+						"run_uuid", runUUID, "user_id", row.UserID, "url_hash", urlHash, "error", rerr)
+				} else {
+					mn := strings.TrimSpace(p.workerOpts.DiscoveryOpenAIModel)
+					if mn == "" {
+						mn = "openai"
+					}
+					scoreOut = mergeDeterministicWithLLM(scoreOut, res, mn)
+				}
+			}
+		}
+
+		if float64(scoreOut.CompositeScore)+1e-9 < p.workerOpts.DiscoveryScoreThreshold {
+			accum.lowScoreRejected++
+			if exErr := p.repo.AddJobDiscoveryExclusion(ctx, p.q, row.UserID, urlHash, "low_score", pgid); exErr != nil {
+				log.Errorw("bridgr-worker: add low_score exclusion failed", "url_hash", urlHash, "error", exErr)
+			}
+			log.Infow("bridgr-worker: discovery score below threshold; excluded",
+				"run_uuid", runUUID, "user_id", row.UserID, "url_hash", urlHash,
+				"composite_score", scoreOut.CompositeScore, "threshold", p.workerOpts.DiscoveryScoreThreshold,
+				"scoring_model", scoreOut.ScoringModel)
+			continue
+		}
+
 		pl, _ := json.Marshal(map[string]interface{}{
 			"title":              j.GetTitle(),
 			"company":            j.GetCompany(),
 			"requirements":       reqs,
-			"discovery_run_uuid": payload.RunUUID,
+			"discovery_run_uuid": runUUID,
+			"composite_score":    scoreOut.CompositeScore,
+			"gap_severity":       scoreOut.GapSeverity,
+			"findjobs_iteration": iteration,
 		})
 
-		jdInline := jdTextFromJobInfo(j)
+		*jobSeq++
+		sourceID := fmt.Sprintf("findjobs-%d-it%d-%d", row.ID, iteration, *jobSeq)
 
-		suffix := ""
-
-		if i > 0 {
-			suffix = fmt.Sprintf("-%d", i)
-		}
-
-		// TODO: Finally at this point when we have the job description from one job we need to enforce the request params we set
-		// If the job follows the discovery params it is worthy for a job score
-		// If the job score is above the threshold then we do a skill analyses and upsert ? Why upsert here we should only insert
-		// Also a limit on when to stop , till the time we dont find 10 good candidates belong to the same runUUID we keep looking
-		// We have a growing exclusion list such that if a URL was visited and rejected or accepted earlier then dont vist that again
-
-		_, uerr := p.repo.UpsertJobCandidate(ctx, p.q, sqlc.UpsertJobCandidateParams{
+		cand, uerr := p.repo.UpsertJobCandidate(ctx, p.q, sqlc.UpsertJobCandidateParams{
 			UserID:           row.UserID,
 			DiscoveryRunUuid: pgid,
 			SourceBoard:      sourceBoard,
-			SourceJobID:      pgtype.Text{String: fmt.Sprintf("findjobs-%d%s", row.ID, suffix), Valid: true},
+			SourceJobID:      pgtype.Text{String: sourceID, Valid: true},
 			JobUrl:           jobURL,
-			UrlHash:          urlHashHex(jobURL),
+			UrlHash:          urlHash,
 			ContentHash:      pgtype.Text{},
 			Title:            pgtype.Text{String: j.GetTitle(), Valid: j.GetTitle() != ""},
 			Company:          pgtype.Text{String: j.GetCompany(), Valid: j.GetCompany() != ""},
@@ -189,75 +541,51 @@ func (p *Processor) processJobDiscovery(ctx context.Context, payload cloud.Queue
 			log.Errorw("bridgr-worker: upsert job candidate failed", "job_url", jobURL, "error", uerr)
 			continue
 		}
-		ingested++
+		enrichUUID := pgtype.UUID{Valid: false}
+		scoreRow, serr := p.repo.UpsertJobScore(ctx, p.q, sqlc.UpsertJobScoreParams{
+			UserID:               row.UserID,
+			JobCandidateUuid:     cand.Uuid,
+			EnrichmentUuid:       enrichUUID,
+			SkillMatchScore:      scoreOut.SkillMatchScore,
+			ExperienceMatchScore: scoreOut.ExperienceMatchScore,
+			LocationMatchScore:   scoreOut.LocationMatchScore,
+			RecencyScore:         scoreOut.RecencyScore,
+			BoardQualityScore:    scoreOut.BoardQualityScore,
+			CompositeScore:       scoreOut.CompositeScore,
+			MatchedSkills:        scoreOut.MatchedSkillsJSON,
+			GapSkills:            scoreOut.GapSkillsJSON,
+			GapSeverity:          pgtype.Text{String: scoreOut.GapSeverity, Valid: scoreOut.GapSeverity != ""},
+			ScoringModel:         pgtype.Text{String: scoreOut.ScoringModel, Valid: scoreOut.ScoringModel != ""},
+			ScoringVersion:       pgtype.Text{String: scoreOut.ScoringVersion, Valid: scoreOut.ScoringVersion != ""},
+		})
+		if serr != nil {
+			log.Errorw("bridgr-worker: upsert job score failed", "job_url", jobURL, "error", serr)
+			continue
+		}
+		if strings.TrimSpace(canonical) == "" {
+			log.Warnw("bridgr-worker: skip feed + skill-gap row (no canonical_cv_analysis_uuid)", "run_uuid", runUUID, "user_id", row.UserID, "url_hash", urlHash)
+			accum.ingested++
+			continue
+		}
+		if err := p.runDiscoveryFeedPipeline(ctx, row.UserID, pgid, canonical, cand, scoreRow, scoreOut, jdInline, jobURL, prefs.Location, now); err != nil {
+			log.Errorw("bridgr-worker: discovery feed pipeline failed", "run_uuid", runUUID, "user_id", row.UserID, "url_hash", urlHash, "error", err)
+			continue
+		}
+		accum.feedUpserted++
+		accum.ingested++
 	}
 
-	// Then we finally add the metadata to the run uuid
-	meta, _ := json.Marshal(map[string]interface{}{
-		"radar":               true,
-		"find_jobs":           true,
-		"jobs_returned":       len(jobs),
-		"candidates_upserted": ingested,
-		"source_board":        sourceBoard,
-		"target_role":         findJobReq.GetSearchQuery(),
-		"location":            findJobReq.GetLocation(),
-	})
-
-	// And we successfully finish the run
-	return p.finishDiscoveryRun(ctx, row, now, rawCount, ingested, meta)
+	return discoveryBatchStats{
+		AcceptedDelta:     accum.ingested - bIn,
+		ExclusionSkipped:  accum.exclusionSkipped - bEx,
+		PrefilterRejected: accum.prefilterRejected - bPr,
+		LowScoreRejected:  accum.lowScoreRejected - bLo,
+	}, nil
 }
 
 // ################################
 // Helpers
 // ################################
-
-// findJobsRequestFromDiscoveryParams maps bridgr.job_search_discovery_runs.request_params JSON
-// (from BuildDiscoveryRequestParams) to Radar FindJobsRequest. Returns preferred source_board label.
-func findJobsRequestFromJobDiscoveryRequestParams(requestParams []byte) (*jobsearchv1.FindJobsRequest, string, error) {
-	if len(requestParams) == 0 {
-		return nil, "radar", fmt.Errorf("empty request_params")
-	}
-	var m map[string]interface{}
-	if err := json.Unmarshal(requestParams, &m); err != nil {
-		return nil, "radar", err
-	}
-
-	searchQuery := strings.TrimSpace(stringFromMap(m, "target_role"))
-	if searchQuery == "" {
-		searchQuery = strings.TrimSpace(stringFromMap(m, "search_query"))
-	}
-	var targetRoles []string
-	if searchQuery != "" {
-		targetRoles = []string{searchQuery}
-	} else {
-		targetRoles = stringSliceFromMixed("target_roles", m)
-		searchQuery = strings.TrimSpace(strings.Join(targetRoles, " "))
-	}
-	if searchQuery == "" {
-		searchQuery = "software engineer"
-		targetRoles = []string{searchQuery}
-	}
-
-	loc := strings.TrimSpace(stringFromMap(m, "location"))
-	if loc == "" {
-		loc = firstLocationString(m)
-	}
-
-	maxN := maxResultsFromParams(m)
-
-	board := strings.TrimSpace(stringFromMap(m, "source_board"))
-	if board == "" {
-		board = firstBoard(m)
-	}
-
-	req := &jobsearchv1.FindJobsRequest{
-		TargetRoles: targetRoles,
-		SearchQuery: searchQuery,
-		Location:    loc,
-		MaxResults:  maxN,
-	}
-	return req, board, nil
-}
 
 func (p *Processor) finishDiscoveryRunFailed(ctx context.Context, row *sqlc.BridgrJobSearchDiscoveryRun, now pgtype.Timestamp, code string, cause error) error {
 	log := logger.Get(ctx)
@@ -356,100 +684,26 @@ func urlHashHex(jobURL string) string {
 	return hex.EncodeToString(sum[:])
 }
 
-func stringFromMap(m map[string]interface{}, key string) string {
-	v, ok := m[key]
-	if !ok || v == nil {
-		return ""
-	}
-	s, ok := v.(string)
-	if !ok {
-		return ""
-	}
-	return s
-}
-
-func stringSliceFromMixed(key string, m map[string]interface{}) []string {
-	v, ok := m[key]
-	if !ok || v == nil {
+func uniqueURLHashesFromJobInfos(jobs []*jobsearchv1.JobInfo) []string {
+	if len(jobs) == 0 {
 		return nil
 	}
-	raw, ok := v.([]interface{})
-	if !ok {
-		return nil
-	}
-	out := make([]string, 0, len(raw))
-	for _, it := range raw {
-		switch x := it.(type) {
-		case string:
-			if s := strings.TrimSpace(x); s != "" {
-				out = append(out, s)
-			}
-		case float64:
-			out = append(out, strconv.FormatInt(int64(x), 10))
+	seen := make(map[string]struct{}, len(jobs))
+	out := make([]string, 0, len(jobs))
+	for _, j := range jobs {
+		if j == nil {
+			continue
 		}
+		u := strings.TrimSpace(j.GetJobUrl())
+		if u == "" {
+			continue
+		}
+		h := urlHashHex(u)
+		if _, ok := seen[h]; ok {
+			continue
+		}
+		seen[h] = struct{}{}
+		out = append(out, h)
 	}
 	return out
-}
-
-func firstLocationString(m map[string]interface{}) string {
-	v, ok := m["locations"]
-	if !ok || v == nil {
-		return ""
-	}
-	raw, ok := v.([]interface{})
-	if !ok {
-		return ""
-	}
-	for _, it := range raw {
-		switch x := it.(type) {
-		case string:
-			if s := strings.TrimSpace(x); s != "" {
-				return s
-			}
-		case map[string]interface{}:
-			if s, _ := x["location"].(string); strings.TrimSpace(s) != "" {
-				return strings.TrimSpace(s)
-			}
-		}
-	}
-	return ""
-}
-
-func maxResultsFromParams(m map[string]interface{}) int32 {
-	v, ok := m["max_surfaced_jobs"]
-	if !ok {
-		return 10
-	}
-	switch x := v.(type) {
-	case float64:
-		if x > 0 && x <= 100 {
-			return int32(x)
-		}
-	case int:
-		if x > 0 && x <= 100 {
-			return int32(x)
-		}
-	case int32:
-		if x > 0 && x <= 100 {
-			return x
-		}
-	}
-	return 10
-}
-
-func firstBoard(m map[string]interface{}) string {
-	v, ok := m["boards_enabled"]
-	if !ok || v == nil {
-		return "indeed"
-	}
-	raw, ok := v.([]interface{})
-	if !ok {
-		return "indeed"
-	}
-	for _, it := range raw {
-		if s, ok := it.(string); ok && strings.TrimSpace(s) != "" {
-			return strings.TrimSpace(s)
-		}
-	}
-	return "indeed"
 }

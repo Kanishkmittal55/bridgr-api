@@ -409,8 +409,13 @@ type BridgrSkillGapUserCoverageRow struct {
 	UserId *int32                        `json:"user_id,omitempty"`
 }
 
-// CreateBridgrJobSearchDiscoveryRunRequest Optional overrides merged into request_params snapshot for this run
+// CreateBridgrJobSearchDiscoveryRunRequest Start a discovery run for one job search profile (same enqueue path as the worker scheduler).
+// When the user has more than one profile, job_search_profile_uuid is required.
 type CreateBridgrJobSearchDiscoveryRunRequest struct {
+	// JobSearchProfileUuid Profile to run; required if the user has multiple job search profiles
+	JobSearchProfileUuid *openapi_types.UUID `json:"job_search_profile_uuid"`
+
+	// RequestParams Optional overrides merged into request_params after profile fields
 	RequestParams *map[string]interface{} `json:"request_params"`
 }
 

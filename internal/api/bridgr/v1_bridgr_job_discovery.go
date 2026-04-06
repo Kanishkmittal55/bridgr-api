@@ -10,14 +10,12 @@ import (
 	"time"
 
 	"github.com/Kanishkmittal55/bridgr-api/internal/bridgr_worker"
-	"github.com/Kanishkmittal55/bridgr-api/internal/cloud"
 	"github.com/Kanishkmittal55/bridgr-api/internal/config"
 	apierrors "github.com/Kanishkmittal55/bridgr-api/internal/errors"
 	"github.com/Kanishkmittal55/bridgr-api/internal/logger"
 	"github.com/Kanishkmittal55/bridgr-api/internal/repository/sqlc"
 	"github.com/Kanishkmittal55/bridgr-api/internal/uuid"
 	types "github.com/Kanishkmittal55/bridgr-api/pkg/types"
-	guuid "github.com/gofrs/uuid/v5"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
 	openapi_types "github.com/oapi-codegen/runtime/types"
@@ -47,72 +45,65 @@ func (s *server) v1PostBridgrUserJobDiscoveryRuns(ctx context.Context, userID in
 	}
 	cfg := config.Get()
 
-	profiles, err := s.deps.Repo.ListJobSearchProfilesByUserID(ctx, s.querier(), userID)
-	if err != nil {
-		return nil, fmt.Errorf("%w: list profiles: %w", apierrors.ErrInternal, err)
+	var prof *sqlc.BridgrJobSearchProfile
+	if body.JobSearchProfileUuid != nil {
+		pgid, err := uuid.ConvertOapiUUIDToPgUUID(*body.JobSearchProfileUuid)
+		if err != nil {
+			return nil, fmt.Errorf("%w: job_search_profile_uuid: %w", apierrors.ErrBadRequest, err)
+		}
+		loaded, err := s.deps.Repo.GetJobSearchProfileByUserIDAndUUID(ctx, s.querier(), sqlc.GetJobSearchProfileByUserIDAndUUIDParams{
+			UserID: userID,
+			Uuid:   pgid,
+		})
+		if err != nil {
+			if errors.Is(err, pgx.ErrNoRows) {
+				return nil, fmt.Errorf("%w: job search profile not found for this user", apierrors.ErrNotFound)
+			}
+			return nil, fmt.Errorf("%w: load profile: %w", apierrors.ErrInternal, err)
+		}
+		prof = loaded
+	} else {
+		profiles, err := s.deps.Repo.ListJobSearchProfilesByUserID(ctx, s.querier(), userID)
+		if err != nil {
+			return nil, fmt.Errorf("%w: list profiles: %w", apierrors.ErrInternal, err)
+		}
+		switch len(profiles) {
+		case 0:
+			prof = nil
+		case 1:
+			prof = &profiles[0]
+		default:
+			return nil, fmt.Errorf("%w: job_search_profile_uuid is required when the user has multiple job search profiles", apierrors.ErrBadRequest)
+		}
 	}
-	var profPtr *sqlc.BridgrJobSearchProfile
-	if len(profiles) > 0 {
-		profPtr = &profiles[0]
+
+	hasOverrides := false
+	if body.RequestParams != nil {
+		hasOverrides = len(*body.RequestParams) > 0
 	}
+	if prof == nil && !hasOverrides {
+		return nil, fmt.Errorf("%w: add a job search profile or pass job_search_profile_uuid / request_params", apierrors.ErrBadRequest)
+	}
+
 	var overrides map[string]interface{}
 	if body.RequestParams != nil {
 		overrides = *body.RequestParams
 	}
-	reqParams, err := bridgr_worker.BuildDiscoveryRequestParams(userID, profPtr, overrides)
+
+	runPtr, err := bridgr_worker.EnqueueJobDiscoveryRunForProfile(ctx, s.deps.Repo, s.querier(), s.deps.SQSClient, cfg.BridgrQueueURL, userID, prof, overrides)
 	if err != nil {
-		return nil, fmt.Errorf("%w: %v", apierrors.ErrBadRequest, err)
+		return nil, fmt.Errorf("%w: %v", apierrors.ErrInternal, err)
 	}
 
-	runPtr, err := s.deps.Repo.CreateJobSearchDiscoveryRun(ctx, s.querier(), sqlc.CreateJobSearchDiscoveryRunParams{
-		UserID:            userID,
-		Status:            "pending",
-		RequestParams:     reqParams,
-		RadarMeta:         []byte("{}"),
-		RawCandidateCount: 0,
-		NewCandidateCount: 0,
-		StartedAt:         pgtype.Timestamp{},
-		CompletedAt:       pgtype.Timestamp{},
-		ErrorCode:         pgtype.Text{},
-		ErrorDetail:       pgtype.Text{},
-		SqsMessageID:      pgtype.Text{},
-	})
+	runUUIDStr, err := uuid.ToString(runPtr.Uuid.Bytes)
 	if err != nil {
-		return nil, fmt.Errorf("%w: create run: %w", apierrors.ErrInternal, err)
-	}
-
-	runUUID, uerr := guuid.FromBytes(runPtr.Uuid.Bytes[:])
-	if uerr != nil {
-		return nil, fmt.Errorf("%w: run uuid: %w", apierrors.ErrInternal, uerr)
-	}
-
-	if cfg.BridgrQueueURL != "" && s.deps.SQSClient != nil {
-		msgID, err := cloud.EnqueueJobDiscovery(ctx, s.deps.SQSClient, cfg.BridgrQueueURL, runUUID, userID)
-		if err != nil {
-			return nil, fmt.Errorf("%w: enqueue job discovery: %w", apierrors.ErrInternal, err)
-		}
-		updated, err := s.deps.Repo.PatchJobSearchDiscoveryRun(ctx, s.querier(), sqlc.PatchJobSearchDiscoveryRunParams{
-			ID:                runPtr.ID,
-			Status:            "queued",
-			StartedAt:         runPtr.StartedAt,
-			CompletedAt:       runPtr.CompletedAt,
-			RawCandidateCount: runPtr.RawCandidateCount,
-			NewCandidateCount: runPtr.NewCandidateCount,
-			RadarMeta:         runPtr.RadarMeta,
-			ErrorCode:         runPtr.ErrorCode,
-			ErrorDetail:       runPtr.ErrorDetail,
-			SqsMessageID:      pgtype.Text{String: msgID, Valid: msgID != ""},
-		})
-		if err != nil {
-			return nil, fmt.Errorf("%w: persist sqs id: %w", apierrors.ErrInternal, err)
-		}
-		runPtr = updated
+		return nil, fmt.Errorf("%w: run uuid: %w", apierrors.ErrInternal, err)
 	}
 
 	logger.Get(ctx).Infow(
 		"bridgr job-discovery run ready",
 		"user_id", userID,
-		"run_uuid", runUUID.String(),
+		"run_uuid", runUUIDStr,
 		"status", runPtr.Status,
 	)
 

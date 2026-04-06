@@ -7,6 +7,7 @@ import (
 	"github.com/Kanishkmittal55/bridgr-api/internal/bridgr_worker/config"
 	"github.com/Kanishkmittal55/bridgr-api/internal/bridgr_worker/dependencies"
 	"github.com/Kanishkmittal55/bridgr-api/internal/cloud"
+	apicfg "github.com/Kanishkmittal55/bridgr-api/internal/config"
 	"github.com/Kanishkmittal55/bridgr-api/internal/logger"
 	"github.com/aws/aws-sdk-go-v2/service/sqs"
 )
@@ -20,10 +21,11 @@ type Worker struct {
 
 // NewWorker constructs a worker. d.JobSearch may be nil if RADAR_ADDR is unset (discovery stub only).
 func NewWorker(d *dependencies.Deps, opts config.WorkerOpts) *Worker {
+	global := apicfg.Load()
 	return &Worker{
 		sqsClient: d.SQSClient,
 		opts:      opts,
-		proc:      NewProcessor(d.Repo, d.HsQuerier, d.JobSearch),
+		proc:      NewProcessor(d.Repo, d.HsQuerier, d.JobSearch, d.Radar, d.S3, global.HassleSkipS3Bucket, opts, d.OpenAIAPIKey),
 	}
 }
 

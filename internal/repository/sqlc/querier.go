@@ -11,6 +11,7 @@ import (
 )
 
 type Querier interface {
+	AddUserJobDiscoveryExclusion(ctx context.Context, arg AddUserJobDiscoveryExclusionParams) error
 	BulkCreateSkillGapEdges(ctx context.Context, arg []BulkCreateSkillGapEdgesParams) (int64, error)
 	BulkCreateSkillGapNodes(ctx context.Context, arg []BulkCreateSkillGapNodesParams) (int64, error)
 	BulkCreateSkillGapPathStepDeps(ctx context.Context, arg []BulkCreateSkillGapPathStepDepsParams) (int64, error)
@@ -125,6 +126,7 @@ type Querier interface {
 	DeleteSkillGapPathStepsByPath(ctx context.Context, pathUuid pgtype.UUID) error
 	DeleteSupportedJobBoardByID(ctx context.Context, id int64) error
 	DeleteSupportedJobBoardByUUID(ctx context.Context, uuid pgtype.UUID) error
+	DeleteUserJobDiscoveryExclusionByUserAndURLHash(ctx context.Context, arg DeleteUserJobDiscoveryExclusionByUserAndURLHashParams) error
 	GetAnalysisJobLinkByID(ctx context.Context, id int64) (BridgrAnalysisJobLink, error)
 	GetAnalysisJobLinkByPair(ctx context.Context, arg GetAnalysisJobLinkByPairParams) (BridgrAnalysisJobLink, error)
 	GetAnalysisJobLinkByUUID(ctx context.Context, uuid pgtype.UUID) (BridgrAnalysisJobLink, error)
@@ -173,6 +175,7 @@ type Querier interface {
 	GetSupportedJobBoardByBoardID(ctx context.Context, boardID string) (BridgrSupportedJobBoard, error)
 	GetSupportedJobBoardByID(ctx context.Context, id int64) (BridgrSupportedJobBoard, error)
 	GetSupportedJobBoardByUUID(ctx context.Context, uuid pgtype.UUID) (BridgrSupportedJobBoard, error)
+	GetUserJobDiscoveryExclusionByUserAndURLHash(ctx context.Context, arg GetUserJobDiscoveryExclusionByUserAndURLHashParams) (BridgrUserJobDiscoveryExclusion, error)
 	// =============================================================================
 	// BRIDGR JOB DISCOVERY — JOB CANDIDATES
 	// Deduped postings per user. (user_id, url_hash) unique.
@@ -213,6 +216,11 @@ type Querier interface {
 	ListSupportedJobBoards(ctx context.Context) ([]BridgrSupportedJobBoard, error)
 	// Role-requirement nodes with no candidate node sharing the same node_key (skill gaps).
 	ListUnmatchedNodes(ctx context.Context, analysisUuid pgtype.UUID) ([]BridgrSkillGapNode, error)
+	// =============================================================================
+	// BRIDGR — USER JOB DISCOVERY EXCLUSIONS
+	// Per-user url_hash registry for discovery batch skip. Unique (user_id, url_hash).
+	// =============================================================================
+	ListUserJobDiscoveryExclusionsByURLHashes(ctx context.Context, arg ListUserJobDiscoveryExclusionsByURLHashesParams) ([]string, error)
 	// Sets all mutable execution fields; callers merge from an existing row for columns they do not intend to change.
 	PatchJobSearchDiscoveryRun(ctx context.Context, arg PatchJobSearchDiscoveryRunParams) (BridgrJobSearchDiscoveryRun, error)
 	SetJobSearchDiscoveryRunStatus(ctx context.Context, arg SetJobSearchDiscoveryRunStatusParams) (BridgrJobSearchDiscoveryRun, error)
@@ -235,6 +243,8 @@ type Querier interface {
 	UpdateSkillGapPathStep(ctx context.Context, arg UpdateSkillGapPathStepParams) (BridgrSkillGapPathStep, error)
 	UpdateSupportedJobBoardByID(ctx context.Context, arg UpdateSupportedJobBoardByIDParams) (BridgrSupportedJobBoard, error)
 	UpsertFeedItem(ctx context.Context, arg UpsertFeedItemParams) (BridgrFeedItem, error)
+	// Upsert used by discovery worker: refresh score/summaries on retry but preserve user feed state and first surfaced time.
+	UpsertFeedItemFromDiscovery(ctx context.Context, arg UpsertFeedItemFromDiscoveryParams) (BridgrFeedItem, error)
 	UpsertJobCandidate(ctx context.Context, arg UpsertJobCandidateParams) (BridgrJobCandidate, error)
 	UpsertJobEnrichment(ctx context.Context, arg UpsertJobEnrichmentParams) (BridgrJobEnrichment, error)
 	UpsertJobScore(ctx context.Context, arg UpsertJobScoreParams) (BridgrJobScore, error)

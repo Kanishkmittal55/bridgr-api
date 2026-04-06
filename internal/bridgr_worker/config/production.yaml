@@ -8,3 +8,17 @@ poll_error_backoff_sec: 10
 ## "Job" Discovery Schdueler Config
 discovery_scheduler_enabled: false
 discovery_scheduler_trigger_interval: 60
+
+discovery_require_canonical_cv: true
+discovery_score_threshold: 0.72
+discovery_prefilter_min_score: 0.5
+discovery_max_iterations: 5
+discovery_max_llm_calls_per_run: 30
+discovery_iteration_time_budget_sec: 0
+discovery_findjobs_page_cap: 20
+
+discovery_llm_prefilter_enabled: false
+discovery_llm_score_enabled: false
+discovery_llm_query_refine_enabled: false
+discovery_openai_model: gpt-4o-mini
+discovery_openai_base_url: ""

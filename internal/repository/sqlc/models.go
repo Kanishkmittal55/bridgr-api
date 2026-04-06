@@ -427,3 +427,21 @@ type BridgrSupportedJobBoard struct {
 	CreatedAt pgtype.Timestamp `db:"created_at"`
 	UpdatedAt pgtype.Timestamp `db:"updated_at"`
 }
+
+// Per-user URL hashes excluded from re-processing in job discovery (prefilter reject, low score, etc.); supports batch EXISTS lookups.
+type BridgrUserJobDiscoveryExclusion struct {
+	Uuid pgtype.UUID `db:"uuid"`
+	ID   int64       `db:"id"`
+	// App-enforced FK to users.id
+	UserID int32 `db:"user_id"`
+	// Hex SHA-256 of normalized job URL (same canonicalization as job_candidates.url_hash)
+	UrlHash string `db:"url_hash"`
+	// Optional board slug when exclusion is board-scoped in app logic
+	SourceBoard pgtype.Text `db:"source_board"`
+	// Short code e.g. prefilter, low_score, duplicate
+	Reason pgtype.Text `db:"reason"`
+	// Optional app-enforced FK to job_search_discovery_runs.uuid for traceability
+	DiscoveryRunUuid pgtype.UUID      `db:"discovery_run_uuid"`
+	CreatedAt        pgtype.Timestamp `db:"created_at"`
+	UpdatedAt        pgtype.Timestamp `db:"updated_at"`
+}

@@ -46,6 +46,9 @@ type Config struct {
 
 	// RadarAddr gRPC address for the Python radar service (e.g. radar:50051 in Docker).
 	RadarAddr string
+
+	// OpenAIAPIKey for worker LLM steps (e.g. job prefilter). Prefer BRIDGR_OPENAI_API_KEY.
+	OpenAIAPIKey string
 }
 
 var (
@@ -143,6 +146,11 @@ func loadFromEnv() *Config {
 	}
 
 	setStr(&c.RadarAddr, "RADAR_ADDR")
+
+	setStr(&c.OpenAIAPIKey, "BRIDGR_OPENAI_API_KEY")
+	if c.OpenAIAPIKey == "" {
+		setStr(&c.OpenAIAPIKey, "OPENAI_API_KEY")
+	}
 
 	return c
 }

@@ -8,12 +8,10 @@ import (
 
 	"github.com/Kanishkmittal55/bridgr-api/internal/bridgr_worker/config"
 	"github.com/Kanishkmittal55/bridgr-api/internal/bridgr_worker/dependencies"
-	"github.com/Kanishkmittal55/bridgr-api/internal/cloud"
 	"github.com/Kanishkmittal55/bridgr-api/internal/logger"
 	"github.com/Kanishkmittal55/bridgr-api/internal/repository/sqlc"
 	"github.com/Kanishkmittal55/bridgr-api/internal/uuid"
 	guuid "github.com/gofrs/uuid/v5"
-	"github.com/jackc/pgx/v5/pgtype"
 )
 
 // discoverySchedulerUserID is the user whose job_search_profiles rows the scheduler loads, dummy till we get a real user.
@@ -76,28 +74,9 @@ func enqueueScheduledDiscoveryForProfile(ctx context.Context, d *dependencies.De
 		board = "indeed"
 	}
 
-	reqParams, err := BuildDiscoveryRequestParams(prof.UserID, prof, nil)
+	runPtr, err := EnqueueJobDiscoveryRunForProfile(ctx, d.Repo, d.HsQuerier, d.SQSClient, opts.QueueURL, prof.UserID, prof, nil)
 	if err != nil {
-		log.Errorw("bridgr-worker: discovery scheduler request_params", "user_id", prof.UserID, "job_search_profile_uuid", profileUUID, "error", err)
-		return false
-	}
-
-	// Creating an empty run
-	runPtr, err := d.Repo.CreateJobSearchDiscoveryRun(ctx, d.HsQuerier, sqlc.CreateJobSearchDiscoveryRunParams{
-		UserID:            prof.UserID,
-		Status:            "pending",
-		RequestParams:     reqParams,
-		RadarMeta:         []byte("{}"),
-		RawCandidateCount: 0,
-		NewCandidateCount: 0,
-		StartedAt:         pgtype.Timestamp{},
-		CompletedAt:       pgtype.Timestamp{},
-		ErrorCode:         pgtype.Text{},
-		ErrorDetail:       pgtype.Text{},
-		SqsMessageID:      pgtype.Text{},
-	})
-	if err != nil {
-		log.Errorw("bridgr-worker: discovery scheduler create run", "user_id", prof.UserID, "job_search_profile_uuid", profileUUID, "error", err)
+		log.Errorw("bridgr-worker: discovery scheduler enqueue run", "user_id", prof.UserID, "job_search_profile_uuid", profileUUID, "error", err)
 		return false
 	}
 
@@ -107,20 +86,10 @@ func enqueueScheduledDiscoveryForProfile(ctx context.Context, d *dependencies.De
 		return false
 	}
 
-	msgID, err := cloud.EnqueueJobDiscovery(ctx, d.SQSClient, opts.QueueURL, runUUID, prof.UserID)
-	if err != nil {
-		log.Errorw("bridgr-worker: discovery scheduler enqueue", "user_id", prof.UserID, "job_search_profile_uuid", profileUUID, "run_uuid", runUUID.String(), "error", err)
-		return false
+	msgID := ""
+	if runPtr.SqsMessageID.Valid {
+		msgID = runPtr.SqsMessageID.String
 	}
-
-	if _, err := d.Repo.SetJobSearchDiscoveryRunStatus(ctx, d.HsQuerier, sqlc.SetJobSearchDiscoveryRunStatusParams{
-		ID:     runPtr.ID,
-		Status: "queued",
-	}); err != nil {
-		log.Errorw("bridgr-worker: discovery scheduler mark queued", "user_id", prof.UserID, "job_search_profile_uuid", profileUUID, "error", err)
-		return false
-	}
-
 	log.Infow("bridgr-worker: discovery scheduler enqueued", "user_id", prof.UserID, "job_search_profile_uuid", profileUUID, "run_uuid", runUUID.String(), "source_board", board, "sqs_message_id", msgID)
 
 	return true

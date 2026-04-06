@@ -61,6 +61,43 @@ ON CONFLICT (job_candidate_uuid, user_id) DO UPDATE SET
     seen_at = EXCLUDED.seen_at
 RETURNING *;
 
+-- Upsert used by discovery worker: refresh score/summaries on retry but preserve user feed state and first surfaced time.
+-- name: UpsertFeedItemFromDiscovery :one
+INSERT INTO bridgr.feed_items (
+    user_id,
+    job_candidate_uuid,
+    score_uuid,
+    verification_uuid,
+    composite_score,
+    gap_severity,
+    title,
+    company,
+    location,
+    job_url,
+    match_summary,
+    gap_summary,
+    feed_status,
+    surfaced_at,
+    seen_at
+) VALUES (
+    $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15
+)
+ON CONFLICT (job_candidate_uuid, user_id) DO UPDATE SET
+    score_uuid = EXCLUDED.score_uuid,
+    verification_uuid = COALESCE(bridgr.feed_items.verification_uuid, EXCLUDED.verification_uuid),
+    composite_score = EXCLUDED.composite_score,
+    gap_severity = EXCLUDED.gap_severity,
+    title = EXCLUDED.title,
+    company = EXCLUDED.company,
+    location = EXCLUDED.location,
+    job_url = EXCLUDED.job_url,
+    match_summary = EXCLUDED.match_summary,
+    gap_summary = EXCLUDED.gap_summary,
+    feed_status = bridgr.feed_items.feed_status,
+    surfaced_at = bridgr.feed_items.surfaced_at,
+    seen_at = bridgr.feed_items.seen_at
+RETURNING *;
+
 -- name: GetFeedItemByUUID :one
 SELECT * FROM bridgr.feed_items
 WHERE uuid = $1;
